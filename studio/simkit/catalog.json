@@ -1,0 +1,9 @@
+[
+  { "id": "cartTrack", "kind": "simulation", "name": "Carts on a track", "topics": ["momentum", "collisions", "velocity", "kinetic energy", "relative motion"], "summary": "Two carts on a 10 m track with mass labels and momentum/velocity arrows; animates 1D elastic or sticky collisions." },
+  { "id": "springMass", "kind": "simulation", "name": "Spring and mass", "topics": ["Hooke's law", "simple harmonic motion", "oscillation period", "elastic energy"], "summary": "Block on a horizontal spring with ruler and restoring-force arrow; displace it and play the oscillation." },
+  { "id": "circuit", "kind": "simulation", "name": "Electric circuit", "topics": ["Ohm's law", "series circuits", "parallel circuits", "current", "voltage", "resistance", "power"], "summary": "Battery with 1–4 resistors or bulbs in series or parallel; animated charge flow, bulb brightness follows power, current/voltage labels." },
+  { "id": "gasBox", "kind": "simulation", "name": "Gas in a cylinder", "topics": ["ideal gas law", "Boyle's law", "Charles's law", "pressure", "temperature", "kinetic theory"], "summary": "Cylinder with piston (volume), moving particles (amount, speed from temperature), thermometer and pressure gauge." },
+  { "id": "plot", "kind": "picture", "name": "Line graph", "topics": ["graphs", "motion graphs", "relationships between variables", "data"], "summary": "Axes with ticks, labels and up to a few line series; points can be set or added live." },
+  { "id": "arrow", "kind": "picture", "name": "Vector arrow", "topics": ["forces", "vectors", "free-body diagrams", "velocity", "fields"], "summary": "Labelled arrow from a point with a length and direction; use several for force diagrams or vector addition." },
+  { "id": "draw", "kind": "picture", "name": "Basic shapes", "topics": ["any"], "summary": "Plain SVG shapes and text (rect, circle, line, path, text) for simple objects such as a ball, a block, a label or a ground line." }
+]

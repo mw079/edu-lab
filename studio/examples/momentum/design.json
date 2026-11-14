@@ -1,0 +1,368 @@
+{
+  "title": "Momentum and Collisions",
+  "subtitle": "Give carts momentum, make them collide, and discover what stays the same.",
+  "audience": "High school",
+  "objectives": [
+    "Calculate momentum as p = m × v, including its direction.",
+    "Use conservation of total momentum to predict the outcome of a collision.",
+    "Distinguish perfectly inelastic collisions (carts stick) from elastic ones (carts bounce)."
+  ],
+  "components": [
+    "cartTrack"
+  ],
+  "state": {
+    "mA": 2,
+    "vA": 2,
+    "mB": 2,
+    "vB": -2,
+    "type": "elastic"
+  },
+  "controls": [
+    {
+      "key": "mA",
+      "label": "Red cart mass",
+      "unit": "kg",
+      "min": 1,
+      "max": 6,
+      "step": 1
+    },
+    {
+      "key": "vA",
+      "label": "Red cart velocity",
+      "unit": "m/s",
+      "min": -6,
+      "max": 6,
+      "step": 1
+    },
+    {
+      "key": "mB",
+      "label": "Blue cart mass",
+      "unit": "kg",
+      "min": 1,
+      "max": 6,
+      "step": 1
+    },
+    {
+      "key": "vB",
+      "label": "Blue cart velocity",
+      "unit": "m/s",
+      "min": -6,
+      "max": 6,
+      "step": 1
+    },
+    {
+      "key": "type",
+      "label": "Collision",
+      "type": "select",
+      "options": [
+        {
+          "value": "elastic",
+          "label": "Bounce (elastic)"
+        },
+        {
+          "value": "sticky",
+          "label": "Stick (inelastic)"
+        }
+      ]
+    }
+  ],
+  "derived": [
+    {
+      "key": "pA",
+      "expr": "s.mA * s.vA"
+    },
+    {
+      "key": "pB",
+      "expr": "s.mB * s.vB"
+    },
+    {
+      "key": "pTotal",
+      "expr": "d.pA + d.pB"
+    },
+    {
+      "key": "collides",
+      "expr": "s.vA > s.vB"
+    },
+    {
+      "key": "vA2",
+      "expr": "d.collides ? simkit.physics.collide1D(s.mA, s.vA, s.mB, s.vB, s.type === 'sticky' ? 0 : 1).v1 : s.vA"
+    },
+    {
+      "key": "vB2",
+      "expr": "d.collides ? simkit.physics.collide1D(s.mA, s.vA, s.mB, s.vB, s.type === 'sticky' ? 0 : 1).v2 : s.vB"
+    }
+  ],
+  "readouts": [
+    {
+      "key": "pA",
+      "label": "Red momentum",
+      "unit": "kg·m/s",
+      "digits": 1
+    },
+    {
+      "key": "pB",
+      "label": "Blue momentum",
+      "unit": "kg·m/s",
+      "digits": 1
+    },
+    {
+      "key": "pTotal",
+      "label": "Total momentum",
+      "unit": "kg·m/s",
+      "digits": 1
+    },
+    {
+      "key": "vA2",
+      "label": "Red velocity after",
+      "unit": "m/s",
+      "digits": 2
+    },
+    {
+      "key": "vB2",
+      "label": "Blue velocity after",
+      "unit": "m/s",
+      "digits": 2
+    }
+  ],
+  "actions": [
+    {
+      "id": "run",
+      "label": "Run collision"
+    }
+  ],
+  "formulas": [
+    {
+      "expr": "p = m\\,v",
+      "meaning": "Momentum; the sign gives the direction (right is +)."
+    },
+    {
+      "expr": "p_\\text{total} = p_\\text{red} + p_\\text{blue}",
+      "meaning": "Total momentum of the two-cart system."
+    },
+    {
+      "expr": "p_\\text{before} = p_\\text{after}",
+      "meaning": "Conservation of momentum (no outside forces)."
+    },
+    {
+      "expr": "v_\\text{after} = \\dfrac{p_\\text{total}}{m_\\text{red} + m_\\text{blue}}",
+      "meaning": "Perfectly inelastic: the carts move together."
+    }
+  ],
+  "debrief": "In every collision the total momentum stayed the same. Sticky collisions lose kinetic energy; elastic ones keep it.",
+  "levels": [
+    {
+      "title": "Momentum of one cart",
+      "goal": "Give the red cart a momentum of +12 kg·m/s (to the right).",
+      "setup": {
+        "mA": 2,
+        "vA": 2,
+        "mB": 2,
+        "vB": -2
+      },
+      "lock": [
+        "mB",
+        "vB",
+        "type",
+        "run"
+      ],
+      "show": [
+        "pA"
+      ],
+      "hints": [
+        "Momentum is $p = m\\,v$.",
+        "Find a mass and a velocity whose product is 12, for example $3\\,\\text{kg} \\times 4\\,\\text{m/s}$."
+      ],
+      "check": "Math.abs(d.pA - 12) < 1e-9",
+      "feedback": [
+        {
+          "when": "Math.abs(d.pA + 12) < 1e-9",
+          "say": "Right size, wrong direction: positive momentum points to the right."
+        },
+        {
+          "when": "true",
+          "say": "Red momentum is now {pA} kg·m/s."
+        }
+      ],
+      "solution": {
+        "mA": 3,
+        "vA": 4
+      },
+      "solutionText": "Any pair with $m \\times v = 12$ works: $2 \\times 6$, $3 \\times 4$, $4 \\times 3$ or $6 \\times 2$.",
+      "explain": "Momentum is the product of mass and velocity, so many combinations give the same momentum."
+    },
+    {
+      "title": "Relative momentum",
+      "goal": "The blue cart has 4 kg·m/s to the right. Give the red cart three times that momentum, pointing the opposite way.",
+      "setup": {
+        "mA": 2,
+        "vA": 2,
+        "mB": 2,
+        "vB": 2
+      },
+      "lock": [
+        "mB",
+        "vB",
+        "type",
+        "run"
+      ],
+      "show": [
+        "pA",
+        "pB"
+      ],
+      "hints": [
+        "Three times $4\\,\\text{kg·m/s}$ is $12\\,\\text{kg·m/s}$.",
+        "Opposite direction means negative: you need $p = -12\\,\\text{kg·m/s}$."
+      ],
+      "check": "Math.abs(d.pA + 3 * d.pB) < 1e-9",
+      "feedback": [
+        {
+          "when": "Math.abs(d.pA - 3 * d.pB) < 1e-9",
+          "say": "The size is right, but it must point left (negative velocity)."
+        }
+      ],
+      "solution": {
+        "mA": 4,
+        "vA": -3
+      },
+      "solutionText": "Target: $p = -3 \\times 4 = -12\\,\\text{kg·m/s}$, for example $4\\,\\text{kg} \\times (-3\\,\\text{m/s})$.",
+      "explain": "Direction is part of momentum: −12 kg·m/s is just as large as +12 but points left."
+    },
+    {
+      "title": "Perfectly inelastic stop",
+      "goal": "The carts stick together on impact. Set them up so they collide and come to a complete stop.",
+      "setup": {
+        "mA": 2,
+        "vA": 3,
+        "mB": 3,
+        "vB": -1,
+        "type": "sticky"
+      },
+      "lock": [
+        "type"
+      ],
+      "show": [
+        "pA",
+        "pB",
+        "pTotal"
+      ],
+      "hints": [
+        "After a sticky collision the carts share one velocity: $v = \\dfrac{p_\\text{total}}{m_\\text{red} + m_\\text{blue}}$.",
+        "To end at rest the total momentum must be zero, and the carts must move towards each other."
+      ],
+      "check": "d.collides && Math.abs(d.pTotal) < 1e-9",
+      "feedback": [
+        {
+          "when": "!d.collides",
+          "say": "These carts never meet: the red cart must move right faster than the blue cart."
+        },
+        {
+          "when": "true",
+          "say": "Total momentum is {pTotal} kg·m/s, so the joined carts keep moving."
+        }
+      ],
+      "solution": {
+        "mA": 3,
+        "vA": 2,
+        "mB": 2,
+        "vB": -3
+      },
+      "solutionText": "Make the momenta equal and opposite: $3 \\times 2 = +6$ and $2 \\times (-3) = -6$. The total is 0, so the stuck carts stop.",
+      "explain": "Zero total momentum before the collision means zero after it, so the joined carts stop. Press Run collision to watch."
+    },
+    {
+      "title": "Predict the final velocity",
+      "goal": "A 3 kg red cart moving at 4 m/s hits a 1 kg blue cart at rest. They stick together. What is their velocity afterwards?",
+      "setup": {
+        "mA": 3,
+        "vA": 4,
+        "mB": 1,
+        "vB": 0,
+        "type": "sticky"
+      },
+      "lock": [
+        "mA",
+        "vA",
+        "mB",
+        "vB",
+        "type",
+        "run"
+      ],
+      "show": [
+        "pTotal",
+        "vA2"
+      ],
+      "hide": [
+        "vA2"
+      ],
+      "ask": {
+        "label": "Final velocity",
+        "unit": "m/s"
+      },
+      "hints": [
+        "Total momentum before: $3 \\times 4 + 1 \\times 0$.",
+        "The same momentum is shared by the combined $4\\,\\text{kg}$."
+      ],
+      "check": "Math.abs(answer - 3) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 12) < 0.05",
+          "say": "12 is the total momentum in kg·m/s. Divide by the total mass."
+        },
+        {
+          "when": "Math.abs(answer - 4) < 0.05",
+          "say": "That is the red cart's speed before the collision."
+        }
+      ],
+      "solution": {
+        "answer": 3
+      },
+      "solutionText": "$p_\\text{total} = 3 \\times 4 + 1 \\times 0 = 12\\,\\text{kg·m/s}$. After sticking, $v = \\dfrac{12}{3 + 1} = 3\\,\\text{m/s}$.",
+      "explain": "Momentum is conserved: $12\\,\\text{kg·m/s}$ shared by $4\\,\\text{kg}$ gives $3\\,\\text{m/s}$. Run the collision to see it."
+    },
+    {
+      "title": "Elastic transfer",
+      "goal": "In a bouncing (elastic) collision, make the red cart stop dead while the blue cart leaves at exactly 4 m/s.",
+      "setup": {
+        "mA": 1,
+        "vA": 2,
+        "mB": 2,
+        "vB": 0,
+        "type": "elastic"
+      },
+      "lock": [
+        "vB",
+        "type"
+      ],
+      "show": [
+        "vA2",
+        "vB2"
+      ],
+      "hints": [
+        "If the red cart stops, all of its momentum is handed to the blue cart.",
+        "Kinetic energy is also conserved, which only works out when the two masses are equal.",
+        "With equal masses the blue cart leaves with the red cart's original velocity."
+      ],
+      "check": "d.collides && Math.abs(d.vA2) < 1e-6 && Math.abs(d.vB2 - 4) < 1e-6",
+      "feedback": [
+        {
+          "when": "!d.collides",
+          "say": "The carts do not collide yet."
+        },
+        {
+          "when": "Math.abs(d.vA2) < 1e-6",
+          "say": "The red cart stops, but blue leaves at {vB2} m/s."
+        },
+        {
+          "when": "true",
+          "say": "After the collision the red cart moves at {vA2} m/s."
+        }
+      ],
+      "solution": {
+        "mA": 2,
+        "vA": 4
+      },
+      "solutionText": "Equal masses swap velocities in an elastic collision. Set the red cart to 2 kg (same as blue) moving at 4 m/s.",
+      "explain": "Momentum and kinetic energy are both conserved; with equal masses the moving cart hands over all its motion."
+    }
+  ]
+}

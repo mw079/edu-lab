@@ -1,0 +1,7 @@
+archive/
+node_modules/
+.env
+.DS_Store
+studio/dist/
+studio/data/
+.claude/settings.local.json
