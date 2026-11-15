@@ -7,9 +7,11 @@
 // distance appears only after launch(); the dashed path only with showPath(true). In a step that asks for the
 // range, lock the launch action. Choose xMax a little above the largest possible range. Same scale on both
 // axes: with xMax = 50 the stage shows about 25 m of height.
+// Direct interaction: with drag: { angle: app.link("angle"), v0: app.link("v0") } the student drags the tip of
+// the launch arrow to aim it and set the speed (the sliders follow). Pass only the links whose sliders exist.
 // Example state: { v0: 20, angle: 45 }   actions: [{ id: "launch", label: "Launch" }]
-function (stage, kit) {
-  const shot = kit.projectile(stage, { x: 80, y: 470, w: 840, xMax: 50 });
+function (stage, kit, app) {
+  const shot = kit.projectile(stage, { x: 80, y: 470, w: 840, xMax: 50, drag: { angle: app.link("angle"), v0: app.link("v0") } });
   return {
     update(s) { shot.update({ v0: s.v0, angle: s.angle }); },
     reset() { shot.reset(); },

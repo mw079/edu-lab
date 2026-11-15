@@ -78,12 +78,13 @@ Every view designs: hover, focus, disabled, loading, empty, error.
 ## 7. Simulation drawing (simkit)
 
 - Stage: 1000 × 560, warm paper (`kit.colors.paper`) with a faint grid.
-- Strokes: 1 = grid, ticks, guides · 2 = outlines, axes · 3 = main objects, strings, curves ·
-  6 = force/velocity arrows. Dashed = guides, hidden or "would be" positions.
+- Strokes (what the library uses): 1 = grid, ticks, guides · 2 = outlines, axes, small parts ·
+  3–4 = strings, rays, needles, plotted curves · 5 = waves and wires that carry the idea ·
+  6 = container walls (steel) and force/velocity arrows. Dashed = guides, hidden or "would be" positions.
 - Colour by meaning, not decoration: one colour per physical quantity or object across the lesson; the
   object colour fills shapes. **Text on the stage uses the darker text version of its colour**
   (`kit.textColor`, applied automatically by `kit.el` for `<text>`), so every label keeps ≥ 4.5:1 on paper.
-- Labels: one or two words, 16 px semibold (`simkit-label`); ticks 13 px; never on top of another object.
+- Labels: one or two words, 16 px semibold (`simkit-label`); ticks 14 px (they shrink with the stage on small screens); never on top of another object.
 - Charts: sentence-case title, light gridlines, axis labels with units, series in the object's colour,
   no 3-D, no gradients; a hidden value removes its point/bar, never just its label.
 

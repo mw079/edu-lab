@@ -31,7 +31,7 @@ export function thumbnail(id: string, html: string): Promise<string> {
       await page.setContent(html, { waitUntil: "load" });
       await page.waitForFunction(() => (window as any).__lesson?.ready === true, null, { timeout: 5000 });
       // Show only the simulation, at its natural 1000 × 560 size.
-      await page.addStyleTag({ content: ".top,.card,.readouts{display:none!important} #app{height:auto} .main{display:block;padding:0} .sim{border-radius:0;box-shadow:none} .stage svg{height:auto}" });
+      await page.addStyleTag({ content: ".top,.card,.readouts{display:none!important} #app{height:auto} .main{display:block;padding:0} .sim{border-radius:0;box-shadow:none} .stage{flex:none;aspect-ratio:1000/560} .stage svg{height:auto}" });
       await page.waitForTimeout(150);
       // Crop to the drawn parts (plus a margin) in the card's 1000 : 560 shape, so the picture is not mostly empty grid.
       const clip = await page.evaluate(() => {

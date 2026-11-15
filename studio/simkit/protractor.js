@@ -6,7 +6,7 @@
   /**
    * opts: { x=500, y=420 (the vertex), r=260 (protractor radius), angle=60 (0–180 degrees), showValue=true
    *         (the written size), showType=true (acute / right / obtuse / straight), showScale=true (numbers on
-   *         the protractor) }
+   *         the protractor), drag: { angle: app.link("key") } (the student turns the red ray by its end) }
    * Returns { update({ angle }), show({ value, type, scale }), values() }
    * values() -> { type, complement (90 − angle), supplement (180 − angle) }
    */
@@ -44,6 +44,15 @@
       kit.el("line", { x1: o.x, y1: o.y, x2: bx, y2: by, stroke: kit.colors.ink, "stroke-width": 4, "stroke-linecap": "round" }, dynamic);
       kit.el("line", { x1: o.x, y1: o.y, x2: ex, y2: ey, stroke: kit.colors.red, "stroke-width": 4, "stroke-linecap": "round" }, dynamic);
       kit.el("circle", { cx: o.x, cy: o.y, r: 6, fill: kit.colors.ink }, dynamic);
+      // Direct interaction: a ring on the red ray's end; the ray points at the pointer.
+      const link = o.drag && o.drag.angle;
+      if (kit.linked(link)) {
+        const end = kit.grip(dynamic, ex, ey, 20);
+        kit.drag(stage, end, link, (p) => {
+          const deg = (Math.atan2(o.y - p.y, p.x - o.x) * 180) / Math.PI;
+          link(deg < -90 ? 180 : deg < 0 ? 0 : deg); // below the base line: snap to the nearer end
+        });
+      }
       const parts = [];
       if (o.showValue) parts.push(`${kit.fmt(a, 0)}°`);
       if (o.showType) parts.push(type(a));

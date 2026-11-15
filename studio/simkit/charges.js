@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=500, y=300 (midpoint between the charges), pxPerM=500, q1=2, q2=-3 (µC), r=0.5 (m, 0.2 to 1.2),
-   *         showValues=true }
+   *         showValues=true, drag: { r: app.link("key") } (the student drags either charge sideways to change
+   *         the distance; both move symmetrically about the midpoint) }
    * Returns { update({ q1, q2, r }), show({ q1, q2, r, force }), showValues(bool), values() }
    * values() -> { force (N), attract }   (see simkit.physics.coulomb). A hidden value reads "?"; hiding the
    * force also removes the arrows' lengths as a clue (they are drawn at a fixed length).
@@ -22,10 +23,14 @@
       const v = sol();
       const half = (kit.clamp(o.r, 0.2, 1.2) * o.pxPerM) / 2;
       const xs = [o.x - half, o.x + half];
+      const link = o.drag && o.drag.r;
       [o.q1, o.q2].forEach((q, i) => {
         const color = q > 0 ? kit.colors.red : q < 0 ? kit.colors.blue : kit.colors.steel;
-        kit.el("circle", { cx: xs[i], cy: o.y, r: R, fill: color, stroke: kit.colors.ink, "stroke-width": 2 }, g);
-        kit.el("text", { x: xs[i], y: o.y + 9, "text-anchor": "middle", class: "simkit-label", style: "font-size: 26px", fill: "#fff", text: q > 0 ? "+" : q < 0 ? "−" : "" }, g);
+        const ball = kit.el("g", null, g);
+        if (kit.linked(link)) kit.grip(ball, xs[i], o.y, R + 12);
+        kit.el("circle", { cx: xs[i], cy: o.y, r: R, fill: color, stroke: kit.colors.ink, "stroke-width": 2 }, ball);
+        kit.el("text", { x: xs[i], y: o.y + 9, "text-anchor": "middle", class: "simkit-label", style: "font-size: 26px", fill: "#fff", text: q > 0 ? "+" : q < 0 ? "−" : "" }, ball);
+        kit.drag(stage, ball, link, (p, start, from) => link(from + ((i ? 1 : -1) * 2 * (p.x - start.x)) / o.pxPerM), () => o.r);
         const key = i ? "q2" : "q1";
         kit.el("text", { x: xs[i], y: o.y + R + 28, "text-anchor": "middle", class: "simkit-label", fill: color, text: shown[key] ? `${q > 0 ? "+" : ""}${kit.fmt(q, q % 1 ? 1 : 0)} µC` : "? µC" }, g);
       });

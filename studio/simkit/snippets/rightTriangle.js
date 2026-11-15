@@ -7,9 +7,11 @@
 // Always visible: the triangle's shape. Each written value is replaced by "?" with show({ c: false }),
 // show({ angle: false }) …; in a step that asks for c, hide c only (a and b are what the student works from).
 // With pxPerUnit 40, keep a ≤ 9 and b ≤ 12. Occupies x−110 … x + b·pxPerUnit + 110, y − a·pxPerUnit − 30 … y+40.
+// Direct interaction: with drag: { a: app.link("a"), b: app.link("b") } the student drags the top corner (a) and
+// the right-hand corner (b) (the sliders follow). Pass only the links whose sliders exist.
 // Example state: { a: 3, b: 4 }
-function (stage, kit) {
-  const tri = kit.rightTriangle(stage, { x: 280, y: 450, pxPerUnit: 40, unit: "m" });
+function (stage, kit, app) {
+  const tri = kit.rightTriangle(stage, { x: 280, y: 450, pxPerUnit: 40, unit: "m", drag: { a: app.link("a"), b: app.link("b") } });
   return {
     update(s, d, info) {
       tri.update({ a: s.a, b: s.b });

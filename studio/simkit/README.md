@@ -289,6 +289,16 @@ link in steps where the control is locked (so question steps cannot be solved by
 | `lens` | `drag: { dObj }` | drags the object along the axis |
 | `scatterPlot` | `drag: { x, y }` | drags the red point |
 | `binaryBits` | `click: { bits: [...] }` or `{ value }` | clicks a bit to flip it |
+| `springMass` | `drag: { displacement }` | pulls or pushes the block |
+| `cartTrack` | `drag: { A, B }` (velocity keys) | drags the tip of a cart's arrow |
+| `projectile` | `drag: { angle, v0 }` | aims and stretches the launch arrow |
+| `rightTriangle` | `drag: { a, b }` | drags the top and right-hand corners |
+| `fractionBars` | `click: { [barId] }` (numerator key) | clicks parts to shade them |
+| `logicGate` | `click: { a, b }` | clicks an input switch to flip it |
+| `barChart` | `drag: { [barId] }` | drags a bar's top |
+| `charges` | `drag: { r }` | drags either charge sideways |
+| `coordinatePlane` | `drag: { b, m }` | drags the y-intercept and a point on the line |
+| `protractor` | `drag: { angle }` | turns the red ray by its end |
 
 In a component: `kit.drag(stage, element, link, (point) => link(valueAt(point)))` (the point is in stage
 coordinates), `kit.click(element, link, fn)`, and `kit.grip(...)` to draw the dashed ring that marks a grabbable
@@ -299,7 +309,7 @@ give grips a radius of at least 22 so the target is about 44 px (see `DESIGN.md`
 
 ## Look (`DESIGN.md` §7)
 
-- Strokes: 1 grid/ticks/guides · 2 outlines/axes · 3 main objects and curves · 6 arrows. Dashed = guides.
+- Strokes: 1 grid/ticks/guides · 2 outlines/axes · 3–4 strings, rays, curves · 5 waves/wires · 6 container walls and arrows. Dashed = guides.
 - Colours from `kit.colors`, one per object or quantity. `<text>` filled with an object colour is drawn in its
   darker text version automatically (`kit.textColor`), so labels stay readable (≥ 4.5:1) on the paper.
 - Chart titles are sentence case. A hidden value removes its point or bar, not only its label.

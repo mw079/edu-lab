@@ -179,11 +179,13 @@
   /**
    * Let the student drag an element. `link` is what the lesson's app.link("key") returned (or a list of them);
    * with no link, or while the link is disabled (its control is locked), nothing happens.
-   * move(point) is called with the pointer in stage coordinates while dragging; it should call the link(s)
-   * with the new value. Works when the element is redrawn during the drag. Returns { refresh() } to update
-   * the cursor after the lock state may have changed.
+   * move(point, start, data) is called with the pointer in stage coordinates while dragging; it should call the
+   * link(s) with the new value. `start` is where the pointer went down and `data` what begin() returned then
+   * (e.g. the value at that moment), so an object can move by the pointer's offset instead of jumping to it.
+   * Works when the element is redrawn during the drag. Returns { refresh() } to update the cursor and the
+   * hover style after the lock state may have changed.
    */
-  kit.drag = function (stage, el, link, move) {
+  kit.drag = function (stage, el, link, move, begin) {
     const links = [].concat(link || []).filter((l) => typeof l === "function");
     const enabled = () => links.some((l) => !l.enabled || l.enabled());
     const refresh = () => {
@@ -204,7 +206,9 @@
       dragging = true;
       // Track the pointer on the window: the drag survives the element being redrawn or the pointer leaving it.
       // The object follows the pointer 1:1, with no easing (DESIGN.md §3).
-      const onMove = (ev) => ev.pointerId === e.pointerId && enabled() && move(point(ev));
+      const start = point(e);
+      const data = begin ? begin(start) : undefined;
+      const onMove = (ev) => ev.pointerId === e.pointerId && enabled() && move(point(ev), start, data);
       stage.svg.classList.add("simkit-dragging");
       const end = () => {
         dragging = false;
@@ -216,7 +220,7 @@
       window.addEventListener("pointermove", onMove);
       window.addEventListener("pointerup", end);
       window.addEventListener("pointercancel", end);
-      move(point(e));
+      move(start, start, data);
     });
     refresh();
     return { refresh };

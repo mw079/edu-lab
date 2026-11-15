@@ -14,7 +14,7 @@
     const o = Object.assign({ x: 500, y: 270, w: 520, h: 340, inside: 0.3, outside: 0.3, showValues: true, showArrows: true }, opts);
     const g = stage.layer({ class: "simkit-osmosis" });
     const R0 = 80;
-    kit.el("rect", { x: o.x - o.w / 2, y: o.y - o.h / 2, width: o.w, height: o.h, rx: 24, fill: "#dceefb", stroke: kit.colors.steel, "stroke-width": 5 }, g);
+    kit.el("rect", { x: o.x - o.w / 2, y: o.y - o.h / 2, width: o.w, height: o.h, rx: 24, fill: "#dceefb", stroke: kit.colors.steel, "stroke-width": 6 }, g);
     const outDots = kit.el("g", null, g);
     const cell = kit.el("circle", { cx: o.x, cy: o.y, fill: "#fdf3d7", stroke: kit.colors.orange, "stroke-width": 5 }, g);
     const inDots = kit.el("g", null, g);

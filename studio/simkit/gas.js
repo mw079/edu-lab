@@ -16,7 +16,7 @@
       opts
     );
     const g = stage.layer({ class: "simkit-gas" });
-    const wall = 10;
+    const wall = 6; // container walls are 6 across the library (DESIGN.md §7)
     const inner = { x: o.x + wall, y: o.y + wall, h: o.h - 2 * wall, wMax: o.w - 2 * wall - 30 };
 
     kit.el("rect", { x: o.x, y: o.y, width: o.w, height: o.h, rx: 16, fill: "#fff", stroke: kit.colors.steel, "stroke-width": wall }, g);
@@ -45,7 +45,7 @@
     const gy = o.y + 100;
     const gr = 74;
     const pipeY = o.y - 24;
-    kit.el("polyline", { points: `${o.x + 50},${o.y} ${o.x + 50},${pipeY} ${gx},${pipeY} ${gx},${gy - gr}`, fill: "none", stroke: kit.colors.steel, "stroke-width": 8, "stroke-linejoin": "round" }, gauge);
+    kit.el("polyline", { points: `${o.x + 50},${o.y} ${o.x + 50},${pipeY} ${gx},${pipeY} ${gx},${gy - gr}`, fill: "none", stroke: kit.colors.steel, "stroke-width": 6, "stroke-linejoin": "round" }, gauge);
     kit.el("circle", { cx: gx, cy: gy, r: gr, fill: "#fff", stroke: kit.colors.ink, "stroke-width": 4 }, gauge);
     const ang = (f) => Math.PI * (0.75 + 1.5 * f); // 0 -> lower left, 1 -> lower right
     for (let i = 0; i <= 8; i++) {

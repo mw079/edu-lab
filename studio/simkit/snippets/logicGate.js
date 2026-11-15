@@ -6,9 +6,11 @@
 // Always visible: the gate's name and the inputs. The output lamp and the truth table's output column show "?"
 // with show({ output: false }); the whole table is removed with show({ table: false }).
 // Occupies x−290 … x+500, y ± 110: use it alone on the stage.
+// Direct interaction: with click: { a: app.link("a"), b: app.link("b") } the student clicks an input switch to
+// flip it between 0 and 1 (the slider follows).
 // Example state: { a: 1, b: 0, type: "AND" }
-function (stage, kit) {
-  const gate = kit.logicGate(stage, { x: 330, y: 270 });
+function (stage, kit, app) {
+  const gate = kit.logicGate(stage, { x: 330, y: 270, click: { a: app.link("a"), b: app.link("b") } });
   return {
     update(s, d, info) {
       gate.update({ type: s.type, a: s.a, b: s.b });

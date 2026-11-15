@@ -33,6 +33,8 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
     page.on("console", (m) => m.type() === "error" && errors.push(`console: ${m.text()}`));
     await page.setContent(html, { waitUntil: "load" });
     await page.waitForFunction(() => (window as any).__lesson?.ready === true, null, { timeout: 5000 }).catch(() => errors.push("Lesson never became ready"));
+    // Stage screenshots at the drawing's own 1000 : 560 shape (the page lets the stage grow to fill the window).
+    await page.addStyleTag({ content: ".sim{align-self:start} .stage{flex:none;aspect-ratio:1000/560}" }).catch(() => {});
 
     const shot = async (name: string) => {
       const file = join(outDir, name);

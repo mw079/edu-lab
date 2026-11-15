@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=330, y=270 (centre of the gate), type="AND" ("AND", "OR", "XOR", "NAND", "NOR", "NOT"), a=0, b=0,
-   *         showOutput=true (lamp and the table's output column), showTable=true }
+   *         showOutput=true (lamp and the table's output column), showTable=true,
+   *         click: { a: app.link("key"), b: app.link("key") } (the student clicks an input switch to flip it) }
    * Returns { update({ type, a, b }), show({ output, table }), values() }   values() -> { out }
    */
   kit.logicGate = function (stage, opts) {
@@ -23,11 +24,16 @@
       const B = o.b ? 1 : 0;
       const out = sol().out;
       const wire = (x1, y1, x2, y2, live) => kit.el("line", { x1, y1, x2, y2, stroke: live ? on : off, "stroke-width": 5, "stroke-linecap": "round" }, g);
-      const inputs = single ? [[A, 0, "A"]] : [[A, -36, "A"], [B, 36, "B"]];
-      inputs.forEach(([bit, dy, name]) => {
+      const inputs = single ? [[A, 0, "A", "a"]] : [[A, -36, "A", "a"], [B, 36, "B", "b"]];
+      inputs.forEach(([bit, dy, name, key]) => {
         wire(o.x - 190, o.y + dy, o.x - 56, o.y + dy, bit);
-        kit.el("circle", { cx: o.x - 206, cy: o.y + dy, r: 20, fill: bit ? on : "#fff", stroke: kit.colors.ink, "stroke-width": 2 }, g);
-        kit.el("text", { x: o.x - 206, y: o.y + dy + 6, "text-anchor": "middle", class: "simkit-label", fill: bit ? "#fff" : kit.colors.ink, text: String(bit) }, g);
+        // An input is a switch: with a link the student clicks it (ring and number together) to flip it.
+        const link = o.click && o.click[key];
+        const sw = kit.el("g", null, g);
+        if (kit.linked(link)) kit.grip(sw, o.x - 206, o.y + dy, 26);
+        kit.el("circle", { cx: o.x - 206, cy: o.y + dy, r: 20, fill: bit ? on : "#fff", stroke: kit.colors.ink, "stroke-width": 2 }, sw);
+        kit.el("text", { x: o.x - 206, y: o.y + dy + 6, "text-anchor": "middle", class: "simkit-label", fill: bit ? "#fff" : kit.colors.ink, text: String(bit) }, sw);
+        kit.click(sw, link, () => link(bit ? 0 : 1));
         kit.el("text", { x: o.x - 240, y: o.y + dy + 6, "text-anchor": "end", class: "simkit-label", fill: kit.colors.ink, text: name }, g);
       });
       const live = o.showOutput && out;

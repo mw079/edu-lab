@@ -8,7 +8,8 @@
    *   x=60, y=400 (track top), width=880, range=[0,10] metres shown,
    *   carts: [{ id, mass, v, pos (m), color, label }],
    *   arrows: "momentum" | "velocity" | "none"   (default "momentum"),
-   *   arrowScale: px per unit (default 12 for momentum, 30 for velocity)
+   *   arrowScale: px per unit (default 12 for momentum, 30 for velocity),
+   *   drag: { [cartId]: app.link("vKey") }  (the student drags the arrow's tip to set that cart's velocity)
    * }
    * Returns {
    *   update({ [id]: { mass, v, pos } }), showArrows(bool),
@@ -70,13 +71,21 @@
       const value = o.arrows === "velocity" ? c.v : c.mass * c.v;
       const unit = o.arrows === "velocity" ? "m/s" : "kg·m/s";
       const len = kit.clamp(value * scale, -260, 260);
+      const link = o.drag && o.drag[c.id];
+      const handle = kit.linked(link) && !anim;
       const ay = top - 34 - (lift || 0);
       if (Math.abs(len) < 2) {
         kit.el("text", { x: cx, y: ay + 4, "text-anchor": "middle", class: "simkit-label", fill: c.color, text: `0 ${unit}` }, c.arrowG);
-        return;
+      } else {
+        kit.arrowShape(c.arrowG, cx, ay, cx + len, ay, { color: c.color, width: 8, head: 18 });
+        kit.el("text", { x: cx + len / 2, y: ay - (handle ? 30 : 16), "text-anchor": "middle", class: "simkit-label", fill: c.color, text: `${kit.fmt(Math.abs(value), 1)} ${unit}` }, c.arrowG);
       }
-      kit.arrowShape(c.arrowG, cx, ay, cx + len, ay, { color: c.color, width: 8, head: 18 });
-      kit.el("text", { x: cx + len / 2, y: ay - 16, "text-anchor": "middle", class: "simkit-label", fill: c.color, text: `${kit.fmt(Math.abs(value), 1)} ${unit}` }, c.arrowG);
+      // Direct interaction: a ring on the arrow's tip; dragging it sideways sets the velocity.
+      if (handle) {
+        const tip = kit.grip(c.arrowG, cx + len, ay, 22);
+        const perPx = 1 / scale / (o.arrows === "velocity" ? 1 : Math.max(c.mass, 1e-9));
+        kit.drag(stage, tip, link, (p, start, from) => link(from + (p.x - start.x) * perPx), () => c.v);
+      }
     }
 
     function labelX(c) {

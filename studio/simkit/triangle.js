@@ -5,7 +5,9 @@
 
   /**
    * opts: { x=300, y=440 (the right-angle corner), pxPerUnit=40, a=3 (vertical side), b=4 (horizontal side),
-   *         unit="" (e.g. "m"), showValues=true }
+   *         unit="" (e.g. "m"), showValues=true,
+   *         drag: { a: app.link("key"), b: app.link("key") } (the student drags the top corner up and down for a,
+   *         the right-hand corner sideways for b) }
    * Returns { update({ a, b }), show({ a, b, c, angle }), showValues(bool), values() }   A hidden value reads "?".
    * values() -> { c (hypotenuse), angle (degrees, between b and c), area }
    */
@@ -34,7 +36,12 @@
       const r = Math.min(54, B * 0.4);
       const t = Math.atan2(A, B);
       kit.el("path", { d: `M ${o.x + B - r} ${o.y} A ${r} ${r} 0 0 1 ${o.x + B - r * Math.cos(t)} ${o.y - r * Math.sin(t)}`, fill: "none", stroke: kit.colors.orange, "stroke-width": 2.5 }, g);
-      kit.el("text", { x: o.x + B + 12, y: o.y - 8, "text-anchor": "start", class: "simkit-label", fill: kit.colors.orange, text: `θ = ${val("angle", v.angle, 1)}${shown.angle ? "°" : ""}` }, g);
+      const dragA = o.drag && o.drag.a;
+      const dragB = o.drag && o.drag.b;
+      kit.el("text", { x: o.x + B + (kit.linked(dragB) ? 30 : 12), y: o.y - 8, "text-anchor": "start", class: "simkit-label", fill: kit.colors.orange, text: `θ = ${val("angle", v.angle, 1)}${shown.angle ? "°" : ""}` }, g);
+      // Direct interaction: rings on the two free corners.
+      if (kit.linked(dragA)) kit.drag(stage, kit.grip(g, o.x, o.y - A, 20), dragA, (p) => dragA((o.y - p.y) / o.pxPerUnit));
+      if (kit.linked(dragB)) kit.drag(stage, kit.grip(g, o.x + B, o.y, 20), dragB, (p) => dragB((p.x - o.x) / o.pxPerUnit));
     }
 
     draw();

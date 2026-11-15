@@ -9,7 +9,8 @@
 
   /**
    * opts: { x=170, y=70 (top-left of the plot area), w=660, h=340, bars: [{ id, label, value, color }] (2–6),
-   *         max (top of the axis; default fits the data), yLabel="", showValues=true (number above each bar) }
+   *         max (top of the axis; default fits the data), yLabel="", showValues=true (number above each bar),
+   *         drag: { [barId]: app.link("key") } (the student drags the top of that bar up or down) }
    * Returns { update({ bars: { [id]: { value } } }), show({ [id]: bool }), showValues(bool), values() }
    * values() -> { [id]: value, total, largest (id) }   A hidden bar is drawn as an empty outline with "?".
    */
@@ -33,9 +34,17 @@
         const known = b.shown;
         // A hidden bar is a faint full-height column, so its outline says nothing about the value.
         const y = known ? Y(b.value) : o.y;
-        kit.el("rect", { x: bx, y, width: slot * 0.6, height: o.y + o.h - y, rx: 4, fill: known ? b.color : kit.colors.muted, "fill-opacity": known ? 1 : 0.08, stroke: known ? "none" : kit.colors.muted, "stroke-width": 2, "stroke-dasharray": known ? null : "6 5" }, g);
+        const link = known && o.drag && o.drag[b.id];
+        const handle = kit.linked(link);
+        const bar = kit.el("g", null, g);
+        kit.el("rect", { x: bx, y, width: slot * 0.6, height: o.y + o.h - y, rx: 4, fill: known ? b.color : kit.colors.muted, "fill-opacity": known ? 1 : 0.08, stroke: known ? "none" : kit.colors.muted, "stroke-width": 2, "stroke-dasharray": known ? null : "6 5" }, bar);
+        // Direct interaction: a ring on the bar's top; dragging the bar sets its value on the axis.
+        if (handle) {
+          kit.grip(bar, bx + slot * 0.3, y, 18);
+          kit.drag(stage, bar, link, (p) => link(((o.y + o.h - p.y) / o.h) * top));
+        }
         if (!known) kit.el("text", { x: bx + slot * 0.3, y: o.y + o.h / 2 + 10, "text-anchor": "middle", class: "simkit-label", style: "font-size: 30px", fill: kit.colors.muted, text: "?" }, g);
-        else if (o.showValues) kit.el("text", { x: bx + slot * 0.3, y: y - 10, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink, text: num(b.value) }, g);
+        else if (o.showValues) kit.el("text", { x: bx + slot * 0.3, y: y - (handle ? 28 : 10), "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink, text: num(b.value) }, g);
         kit.el("text", { x: bx + slot * 0.3, y: o.y + o.h + 24, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink, text: b.label }, g);
       });
     }

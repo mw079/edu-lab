@@ -101,7 +101,7 @@ then open. A teacher can delete their own lessons (moved to `data/trash/`, not e
 | M2 | Pipeline plan → steps → simulation with check-and-fix rounds; teacher app; redesign; LaTeX; pasted source text | done |
 | M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on 10 requests | done |
 | M4 | More components (toward 50–100 objects) and example lessons | 57 components across physics, chemistry, biology, earth science, astronomy, maths, computer science and data; second example lesson (pendulum) |
-| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | started: pendulum, number line, lever, lens, scatter plot (drag) and binary bits (click) |
+| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 16 components: pendulum, number line, lever, lens, scatter plot, spring, carts, projectile, right triangle, bar chart, charges, coordinate plane, protractor (drag); binary bits, fraction bars, logic gate (click) |
 
 ### Evaluation (`eval/requests.json`)
 

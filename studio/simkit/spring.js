@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=80, y=300 (centre line), restLength=320 px, pxPerM=400, k=20 (N/m), mass=1 (kg),
-   *         displacement=0 (m, + to the right), showForce=true, onSample(t, x) }
+   *         displacement=0 (m, + to the right), showForce=true, onSample(t, x),
+   *         drag: { displacement: app.link("key") } (the student pulls or pushes the block) }
    * Returns { update({ k, mass, displacement }), showForce(bool), play({ amplitude, duration }) -> Promise, stop(), period() }
    */
   kit.springMass = function (stage, opts) {
@@ -34,6 +35,8 @@
 
     const spring = kit.el("polyline", { fill: "none", stroke: kit.colors.ink, "stroke-width": 4, "stroke-linejoin": "round" }, g);
     const block = kit.el("g", null, g);
+    const pull = o.drag && o.drag.displacement;
+    const dragger = kit.drag(stage, block, pull, (p, start, from) => pull(from + (p.x - start.x) / o.pxPerM), () => x);
     const forceG = kit.el("g", null, g);
 
     function blockSize() {
@@ -53,6 +56,8 @@
       kit.set(spring, { points: pts.join(" ") });
 
       block.textContent = "";
+      if (kit.linked(pull) && !anim) kit.grip(block, left + size / 2, floorY - size / 2, size / 2 + 14);
+      dragger.refresh();
       kit.el("rect", { x: left, y: floorY - size, width: size, height: size, rx: 10, fill: kit.colors.purple }, block);
       kit.el("text", { x: left + size / 2, y: floorY - size / 2 + 7, "text-anchor": "middle", class: "simkit-cart-label", text: `${kit.fmt(o.mass, o.mass < 1 ? 2 : 1)} kg` }, block);
 

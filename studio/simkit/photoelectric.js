@@ -29,7 +29,7 @@
     const midY = o.y + o.h / 2;
     const lamp = { x: o.x + 250, y: o.y - 70 };
     const beam = kit.el("polygon", { points: `${lamp.x - 18},${lamp.y + 16} ${lamp.x + 18},${lamp.y + 16} ${plateX + 14},${midY + 80} ${plateX + 14},${midY - 80}` }, g);
-    kit.el("rect", { x: o.x, y: o.y, width: o.w, height: o.h, rx: 40, fill: "#fff", "fill-opacity": 0.35, stroke: kit.colors.steel, "stroke-width": 5 }, g);
+    kit.el("rect", { x: o.x, y: o.y, width: o.w, height: o.h, rx: 40, fill: "#fff", "fill-opacity": 0.35, stroke: kit.colors.steel, "stroke-width": 6 }, g);
     kit.el("rect", { x: lamp.x - 34, y: lamp.y - 26, width: 68, height: 42, rx: 8, fill: kit.colors.steel }, g);
     const lampLabel = kit.el("text", { x: lamp.x + 48, y: lamp.y + 2, class: "simkit-label", fill: kit.colors.ink }, g);
     kit.el("rect", { x: plateX - 14, y: midY - 96, width: 28, height: 192, rx: 4, fill: "#b9bfc6", stroke: kit.colors.ink, "stroke-width": 2 }, g);

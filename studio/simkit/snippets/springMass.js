@@ -7,11 +7,13 @@
 // showForce(false); hide it in a step that asks for the force or the stretch.
 // The spring is horizontal (a block on a floor), never hanging vertically.
 // Pair with kit.plot through onSample to draw x(t) while it oscillates.
+// Direct interaction: with drag: { displacement: app.link("x") } the student pulls or pushes the block to set the
+// stretch (the slider follows). Link it to the key of the displacement slider.
 // Example state: { k: 20, m: 1, x: 0.2 }   actions: [{ id: "play", label: "Release" }]
-function (stage, kit) {
+function (stage, kit, app) {
   // The spring uses the top half of the stage (with its ruler), the graph the bottom half.
   let points = [];
-  const spring = kit.springMass(stage, { x: 120, y: 130, onSample: (t, x) => { points.push([t, x]); graph.set("x", points); } });
+  const spring = kit.springMass(stage, { x: 120, y: 130, drag: { displacement: app.link("x") }, onSample: (t, x) => { points.push([t, x]); graph.set("x", points); } });
   const graph = kit.plot(stage, { x: 120, y: 290, w: 800, h: 230, title: "Position", xLabel: "t (s)", yLabel: "x (m)",
     xRange: [0, 6], yRange: [-0.3, 0.3], series: [{ id: "x", color: kit.colors.purple }] });
   return {

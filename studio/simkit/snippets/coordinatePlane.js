@@ -7,9 +7,11 @@
 // The written equation is hidden with show({ equation: false }), the rise/run triangle with show({ slope: false }),
 // the line itself with show({ line: false }) (for steps about plotting points).
 // The equation is written to the right of the grid: leave 200 px free there. Keep |m| ≤ 5 and |b| ≤ range.
+// Direct interaction: with drag: { b: app.link("b"), m: app.link("m") } the student drags the y-intercept point
+// (b) and a second ring on the line (slope) (the sliders follow). Pass only the links whose sliders exist.
 // Example state: { m: 2, b: 1 }
-function (stage, kit) {
-  const plane = kit.coordinatePlane(stage, { x: 250, y: 50, size: 440, range: 10 });
+function (stage, kit, app) {
+  const plane = kit.coordinatePlane(stage, { x: 250, y: 50, size: 440, range: 10, drag: { b: app.link("b"), m: app.link("m") } });
   return {
     update(s, d, info) {
       plane.update({ m: s.m, b: s.b });

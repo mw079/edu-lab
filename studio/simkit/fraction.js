@@ -5,7 +5,9 @@
 
   /**
    * opts: { x=170, y=110, w=640, barHeight=70, gap=56, bars: [{ id, n, d, color, label }] (1–3; n of d parts
-   *         shaded, d from 1 to 20), showValues=true (the fraction written next to each bar) }
+   *         shaded, d from 1 to 20), showValues=true (the fraction written next to each bar),
+   *         click: { [barId]: app.link("nKey") } (the student clicks a part to shade up to it; clicking the last
+   *         shaded part unshades it) }
    * All bars stand for the same whole, so equal shaded lengths mean equal fractions.
    * Returns { update({ bars: { [id]: { n, d } } }), show({ [id]: bool }), showValues(bool), values() }
    * values() -> { [id]: n / d }
@@ -23,7 +25,11 @@
         const d = kit.clamp(Math.round(b.d), 1, 20);
         const n = kit.clamp(Math.round(b.n), 0, d);
         const part = o.w / d;
-        for (let k = 0; k < d; k++) kit.el("rect", { x: o.x + k * part, y, width: part, height: o.barHeight, fill: k < n ? b.color : "#fff", "fill-opacity": k < n ? 0.85 : 1, stroke: kit.colors.ink, "stroke-width": 2 }, g);
+        const link = o.click && o.click[b.id];
+        for (let k = 0; k < d; k++) {
+          const cell = kit.el("rect", { x: o.x + k * part, y, width: part, height: o.barHeight, fill: k < n ? b.color : "#fff", "fill-opacity": k < n ? 0.85 : 1, stroke: kit.colors.ink, "stroke-width": 2 }, g);
+          kit.click(cell, link, () => link(k + 1 === n ? k : k + 1));
+        }
         if (b.label) kit.el("text", { x: o.x - 18, y: y + o.barHeight / 2 + 6, "text-anchor": "end", class: "simkit-label", fill: b.color, text: b.label }, g);
         // The fraction, written as a stack: numerator, line, denominator.
         const fx = o.x + o.w + 44;

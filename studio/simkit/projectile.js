@@ -5,7 +5,9 @@
 
   /**
    * opts: { x=80, y=470 (ground level at the launch point), w=840 (ground length in px), xMax=50 (m shown),
-   *         v0=20 (m/s), angle=45 (deg), h0=0 (m), g=9.8, showPath=false (dashed predicted path) }
+   *         v0=20 (m/s), angle=45 (deg), h0=0 (m), g=9.8, showPath=false (dashed predicted path),
+   *         drag: { angle: app.link("key"), v0: app.link("key") } (either or both: the student drags the
+   *         launch arrow's tip to aim it and, with v0, to make it longer or shorter) }
    * Same scale on both axes. Returns { update({ v0, angle, h0, g }), showPath(bool),
    *   launch() -> Promise (animated flight; leaves a trail and marks the landing distance), reset(), stop(), values() }
    * values() -> { range, time, maxHeight, vx, vy }
@@ -54,7 +56,19 @@
       kit.set(ball, { cx: X(0), cy: Y(o.h0) - 11 });
       arrowG.textContent = "";
       const len = kit.clamp(o.v0 * 4.5, 40, 170);
-      kit.arrowShape(arrowG, X(0), Y(o.h0) - 11, X(0) + Math.cos(a) * len, Y(o.h0) - 11 - Math.sin(a) * len, { color: kit.colors.blue, width: 5, head: 14 });
+      const bx = X(0);
+      const by = Y(o.h0) - 11;
+      kit.arrowShape(arrowG, bx, by, bx + Math.cos(a) * len, by - Math.sin(a) * len, { color: kit.colors.blue, width: 5, head: 14 });
+      // Direct interaction: a ring on the arrow's tip; the arrow points at the pointer (angle) and stretches to it (speed).
+      const aim = o.drag && o.drag.angle;
+      const speed = o.drag && o.drag.v0;
+      if ((kit.linked(aim) || kit.linked(speed)) && !anim) {
+        const tip = kit.grip(arrowG, bx + Math.cos(a) * len, by - Math.sin(a) * len, 22);
+        kit.drag(stage, tip, [aim, speed].filter(Boolean), (p) => {
+          if (kit.linked(aim)) aim((Math.atan2(by - p.y, p.x - bx) * 180) / Math.PI);
+          if (kit.linked(speed)) speed(Math.hypot(p.x - bx, p.y - by) / 4.5);
+        });
+      }
       // Under the launch point, where the flight path can never cross it.
       kit.set(launchLabel, { x: o.x - 30, y: o.y + 54, text: `Launch: ${kit.fmt(o.v0, o.v0 % 1 ? 1 : 0)} m/s at ${kit.fmt(o.angle, 0)}°` });
       kit.set(path, { points: o.showPath ? points(s.time) : "" });

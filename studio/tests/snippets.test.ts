@@ -78,7 +78,9 @@ test("the circuit switches between series and parallel when a step changes its l
 test("draggable and clickable components call their links", { timeout: 60_000 }, async () => {
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
-    for (const id of ["pendulum", "numberLine", "lever", "lens", "scatterPlot", "binaryBits"]) {
+    const ids = ["pendulum", "numberLine", "lever", "lens", "scatterPlot", "binaryBits",
+      "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor"];
+    for (const id of ids) {
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)![1];
       const code = src.split("\n").filter((l) => !l.startsWith("//")).join("\n");
@@ -98,10 +100,14 @@ test("draggable and clickable components call their links", { timeout: 60_000 },
       assert.ok(box, `${id}: has something to grab`);
       const x = box!.x + box!.width / 2;
       const y = box!.y + box!.height / 2;
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      await page.mouse.move(x + 40, y + 10);
-      await page.mouse.up();
+      const clickable = (await handle.evaluate((el) => (el as SVGElement).style.cursor)) === "pointer";
+      if (clickable) await page.mouse.click(x, y);
+      else {
+        await page.mouse.move(x, y);
+        await page.mouse.down();
+        await page.mouse.move(x + 40, y - 30);
+        await page.mouse.up();
+      }
       const calls = (await page.evaluate(`window.__calls`)) as [string, unknown][];
       assert.ok(calls.length > 0, `${id}: the link was called`);
       assert.ok(calls.every(([, v]) => typeof v === "number" && Number.isFinite(v)), `${id}: links get numbers (${JSON.stringify(calls.slice(0, 3))})`);

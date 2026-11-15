@@ -31,7 +31,9 @@
 
   /**
    * opts: { x=280, y=50 (top-left of the square grid), size=440, range=10 (axes from −range to range), m=1, b=0,
-   *         showLine=true, showEquation=true, showSlope=true (rise/run triangle), points: [{ id, x, y, label, color }] }
+   *         showLine=true, showEquation=true, showSlope=true (rise/run triangle), points: [{ id, x, y, label, color }],
+   *         drag: { b: app.link("key"), m: app.link("key") } (the student drags the y-intercept point up and down
+   *         for b, and a second point on the line for the slope m) }
    * Returns { update({ m, b, points: { [id]: { x, y } } }), show({ line, equation, slope }), values() }
    * values() -> { m, b, xIntercept (null for a horizontal line) }
    */
@@ -56,6 +58,15 @@
           kit.el("text", { x: (X(0) + x2) / 2, y: y1 + (o.m > 0 ? 20 : -10), "text-anchor": "middle", class: "simkit-tick", fill: kit.colors.orange, style: "font-weight: 600", text: `run ${run}` }, dynamic);
           kit.el("text", { x: x2 + 8, y: (y1 + y2) / 2 + 4, class: "simkit-tick", fill: kit.colors.orange, style: "font-weight: 600", text: `rise ${num(o.m * run)}` }, dynamic);
         }
+      }
+      // Direct interaction: rings on the y-intercept (b) and on the line at x = h (slope).
+      const dragB = o.drag && o.drag.b;
+      const dragM = o.drag && o.drag.m;
+      const valueAt = (py) => (o.y + o.size / 2 - py) / (o.size / (2 * o.range));
+      if (o.showLine && kit.linked(dragB)) kit.drag(stage, kit.grip(outside, X(0), Y(o.b), 18), dragB, (p) => dragB(valueAt(p.y)));
+      if (o.showLine && kit.linked(dragM)) {
+        const h = [4, 2, 1].find((r) => Math.abs(o.b + o.m * r) <= o.range) || 1;
+        kit.drag(stage, kit.grip(outside, X(h), Y(o.b + o.m * h), 18), dragM, (p, _s, run) => dragM((valueAt(p.y) - o.b) / run), () => h);
       }
       points.forEach((p) => {
         kit.el("circle", { cx: X(p.x), cy: Y(p.y), r: 7, fill: p.color, stroke: "#fff", "stroke-width": 2 }, dynamic);
