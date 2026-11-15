@@ -62,3 +62,37 @@ test("chemistry and biology helpers", () => {
   assert.deepEqual(JSON.parse(JSON.stringify(P.element(11, 10))), { symbol: "Na", name: "Sodium", shells: [2, 8] });
   assert.deepEqual(JSON.parse(JSON.stringify(P.element(17).shells)), [2, 8, 7]);
 });
+
+test("lens, lever, buoyancy, charges and photoelectric helpers", () => {
+  near(P.lens(20, 60).dImg, 30);
+  near(P.lens(20, 60).m, -0.5);
+  assert.deepEqual([P.lens(20, 10).dImg, P.lens(20, 10).real, P.lens(20, 10).upright], [-20, false, true]);
+  near(P.lens(-20, 20).dImg, -10);
+  assert.equal(P.lens(20, 20).dImg, Infinity);
+  assert.equal(P.lever(4, 1, 2, 2).balanced, true);
+  assert.ok(P.lever(4, 1, 2, 1.5).net > 0); // the left side goes down
+  near(P.lever(4, 1, 2, 2).torque1, 39.2);
+  assert.deepEqual([P.buoyancy(600, 1000, 1).floats, P.buoyancy(600, 1000, 1).submerged], [true, 0.6]);
+  near(P.buoyancy(600, 1000, 1).buoyant, P.buoyancy(600, 1000, 1).weight);
+  near(P.buoyancy(2700, 1000, 2).buoyant, 19.6);
+  near(P.buoyancy(2700, 1000, 2).weight, 52.92);
+  near(P.coulomb(2, -3, 0.5).force, 0.2158, 0.001);
+  assert.equal(P.coulomb(2, -3, 0.5).attract, true);
+  near(P.coulomb(1, 1, 1).force * 4, P.coulomb(1, 1, 0.5).force); // inverse-square law
+  near(P.photoelectric(400, 2.3).keEV, 0.7996, 0.001);
+  assert.equal(P.photoelectric(650, 2.3).emitted, false);
+  near(P.photoelectric(400, 2.3).thresholdNm, 539.06, 0.01);
+});
+
+test("Punnett square and moon phase helpers", () => {
+  const cross = P.punnett(1, 1);
+  assert.deepEqual([cross.AA, cross.Aa, cross.aa, cross.dominant], [1, 2, 1, 0.75]);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.punnett("AA", "aa").cells)), ["Aa", "Aa", "Aa", "Aa"]);
+  assert.equal(P.punnett(1, 0).dominant, 0.5);
+  assert.equal(P.punnett("Bb", "Bb", "B").aa, 1);
+  assert.deepEqual([0, 45, 90, 135, 180, 225, 270, 315, 360].map((a) => P.moonPhase(a).name), [
+    "New moon", "Waxing crescent", "First quarter", "Waxing gibbous", "Full moon", "Waning gibbous", "Last quarter", "Waning crescent", "New moon",
+  ]);
+  near(P.moonPhase(90).lit, 0.5);
+  near(P.moonPhase(180).day, 14.75);
+});

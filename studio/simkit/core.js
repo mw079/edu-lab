@@ -336,6 +336,79 @@
       }
       return { symbol, name, shells };
     },
+    /**
+     * Thin lens with focal length f (negative = diverging) and an object at dObj in front of it (same unit).
+     * Returns { dImg (negative = virtual, on the object's side; Infinity at dObj = f), m (magnification,
+     * negative = upside down), real (bool), upright (bool) }.
+     */
+    lens(f, dObj) {
+      const dImg = Math.abs(dObj - f) < 1e-9 ? Infinity : (f * dObj) / (dObj - f);
+      const m = Number.isFinite(dImg) ? -dImg / dObj : Infinity;
+      return { dImg, m, real: dImg > 0, upright: m > 0 };
+    },
+    /**
+     * Lever with mass m1 (kg) at d1 (m) left of the pivot and m2 at d2 right of it.
+     * Returns { torque1, torque2 (N·m), net (torque1 − torque2; positive = left side goes down), balanced }.
+     */
+    lever(m1, d1, m2, d2, g) {
+      const G = g || 9.8;
+      const torque1 = m1 * G * d1;
+      const torque2 = m2 * G * d2;
+      return { torque1, torque2, net: torque1 - torque2, balanced: Math.abs(torque1 - torque2) < 1e-6 };
+    },
+    /**
+     * Cross of two parents for one gene. Each parent is its number of dominant alleles: 2 = AA, 1 = Aa, 0 = aa.
+     * Returns { cells: 4 genotypes (row by row), AA, Aa, aa (how many of the 4), dominant (fraction that
+     * shows the dominant trait) }.
+     */
+    punnett(p1, p2, letter) {
+      const L = letter || "A";
+      const alleles = (p) => (p >= 2 ? [L, L] : p >= 1 ? [L, L.toLowerCase()] : [L.toLowerCase(), L.toLowerCase()]);
+      // A parent may also be written as a genotype such as "Aa" (capital letters are dominant alleles).
+      const num = (p) => (typeof p === "string" ? [...p].filter((ch) => ch !== ch.toLowerCase()).length : Math.round(p));
+      const top = alleles(num(p1));
+      const side = alleles(num(p2));
+      const cells = [];
+      for (const s of side) for (const t of top) cells.push([t, s].sort().join(""));
+      const count = (n) => cells.filter((c) => [...c].filter((ch) => ch === L).length === n).length;
+      return { cells, AA: count(2), Aa: count(1), aa: count(0), dominant: (count(2) + count(1)) / 4, top, side };
+    },
+    /**
+     * Photoelectric effect: light of wavelengthNm on a metal with work function workEV.
+     * Returns { photonEV, emitted (bool), keEV (max kinetic energy, 0 if none), stopV (volts), thresholdNm }.
+     */
+    photoelectric(wavelengthNm, workEV) {
+      const photonEV = 1239.84 / wavelengthNm;
+      const keEV = Math.max(0, photonEV - workEV);
+      return { photonEV, emitted: keEV > 0, keEV, stopV: keEV, thresholdNm: 1239.84 / workEV };
+    },
+    /** Force between two point charges q1, q2 (in µC) r metres apart: { force (N, size), attract (bool) }. */
+    coulomb(q1, q2, r) {
+      return { force: (8.99e9 * Math.abs(q1 * q2) * 1e-12) / (r * r), attract: q1 * q2 < 0 };
+    },
+    /**
+     * Block of density rhoObj in a fluid of density rhoFluid (kg/m³), volume in litres.
+     * Returns { weight, buoyant (N), floats (bool), submerged (fraction of the block under the surface) }.
+     * A sunk block rests on the bottom, so its buoyant force is smaller than its weight.
+     */
+    buoyancy(rhoObj, rhoFluid, volumeL, g) {
+      const G = g || 9.8;
+      const V = (volumeL == null ? 1 : volumeL) / 1000;
+      const floats = rhoObj <= rhoFluid;
+      const submerged = floats ? rhoObj / rhoFluid : 1;
+      return { weight: rhoObj * V * G, buoyant: rhoFluid * V * submerged * G, floats, submerged };
+    },
+    /**
+     * Moon phase for the angle Sun–Earth–Moon in degrees (0 = new moon, 180 = full moon).
+     * Returns { name, lit (fraction of the disc that looks lit, 0–1), day (of the 29.5-day cycle) }.
+     */
+    moonPhase(angleDeg) {
+      const a = ((angleDeg % 360) + 360) % 360;
+      const names = ["New moon", "Waxing crescent", "First quarter", "Waxing gibbous", "Full moon", "Waning gibbous", "Last quarter", "Waning crescent"];
+      const main = Math.round(a / 90) * 90;
+      const name = Math.abs(a - main) <= 6 ? names[((main / 90) % 4) * 2] : names[Math.floor(a / 90) * 2 + 1];
+      return { name, lit: (1 - Math.cos((a * Math.PI) / 180)) / 2, day: (a / 360) * 29.5 };
+    },
     /** Pendulum small-angle period in seconds. */
     pendulumPeriod(L, g) {
       return 2 * Math.PI * Math.sqrt(L / (g || 9.8));

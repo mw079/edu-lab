@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js", "orbit.js", "beaker.js", "reaction.js", "atom.js", "plant.js", "numberline.js"];
+const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js", "orbit.js", "beaker.js", "reaction.js", "atom.js", "plant.js", "numberline.js", "lens.js", "wave.js", "lever.js", "punnett.js", "photoelectric.js", "fraction.js", "triangle.js", "charges.js", "moon.js", "buoyancy.js"];
 
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 

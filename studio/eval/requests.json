@@ -90,6 +90,56 @@
     "request": "Integers on the number line: negative numbers and the distance between two numbers"
   },
   {
+    "id": "lens",
+    "audience": "High school",
+    "request": "Converging lenses: where the image forms and how big it is (thin lens equation)"
+  },
+  {
+    "id": "waves",
+    "audience": "High school",
+    "request": "Waves: how wavelength, frequency and wave speed are related"
+  },
+  {
+    "id": "lever",
+    "audience": "Middle school",
+    "request": "Levers: how to balance a seesaw with different weights"
+  },
+  {
+    "id": "buoyancy",
+    "audience": "Middle school",
+    "request": "Why some things float and others sink: density and buoyancy"
+  },
+  {
+    "id": "coulomb",
+    "audience": "High school",
+    "request": "Coulomb's law: the force between two electric charges"
+  },
+  {
+    "id": "photoelectric",
+    "audience": "Undergraduate",
+    "request": "The photoelectric effect: threshold wavelength, work function and electron energy"
+  },
+  {
+    "id": "genetics",
+    "audience": "Middle school",
+    "request": "Punnett squares: predicting the traits of offspring from dominant and recessive alleles"
+  },
+  {
+    "id": "moon",
+    "audience": "Middle school",
+    "request": "Why the Moon has phases"
+  },
+  {
+    "id": "fractions",
+    "audience": "Middle school",
+    "request": "Equivalent fractions and comparing fractions"
+  },
+  {
+    "id": "pythagoras",
+    "audience": "Middle school",
+    "request": "The Pythagorean theorem in right triangles"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",

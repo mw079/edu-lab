@@ -28,6 +28,13 @@ Physical inputs are SI unless stated.
 | `kit.physics.reactionRate(cA, cB, T, EaKJ)` | Relative rate, 1 at cA = cB = 1 and 300 K. |
 | `kit.physics.photosynthesis(light, co2, temp)` | `{ rate (bubbles/min), limiting }`. |
 | `kit.physics.element(protons, electrons)` | `{ symbol, name, shells }` for elements 1–20. |
+| `kit.physics.lens(f, dObj)` | `{ dImg, m, real, upright }`; negative `f` = diverging, negative `dImg` = virtual. |
+| `kit.physics.lever(m1, d1, m2, d2)` | `{ torque1, torque2, net, balanced }` in N·m. |
+| `kit.physics.buoyancy(rhoObj, rhoFluid, volumeL)` | `{ weight, buoyant, floats, submerged }`. |
+| `kit.physics.coulomb(q1, q2, r)` | `{ force (N), attract }` with charges in µC. |
+| `kit.physics.photoelectric(wavelengthNm, workEV)` | `{ photonEV, emitted, keEV, stopV, thresholdNm }`. |
+| `kit.physics.punnett(p1, p2, letter)` | `{ cells, AA, Aa, aa, dominant }`; a parent is 0–2 dominant alleles or `"Aa"`. |
+| `kit.physics.moonPhase(angleDeg)` | `{ name, lit, day }`; 0 = new moon, 180 = full moon. |
 
 ## Components
 
@@ -94,6 +101,46 @@ Photosynthesis, limiting factors.
 **`kit.numberLine(stage, { x, y, w, min, max, step, markers, distance, showValues, showDistance })`**
 Number line with up to three markers and a distance bracket. `update({ markers: { id: { value } } })`, `values()`.
 Integers, distance, absolute value.
+
+**`kit.lens(stage, { x, y, pxPerCm, f, dObj, hObj, showImage })`**
+Thin lens (converging or diverging) with object, image and two principal rays. `update({ f, dObj, hObj })`,
+`showImage(bool)`, `values()`. Lenses, image formation, magnification.
+
+**`kit.wave(stage, { x, y, w, pxPerM, amplitude, wavelength, frequency, showValues })`**
+Travelling wave over a metre ruler with wavelength and amplitude marked. `update({ amplitude, wavelength, frequency })`,
+`show({ wavelength, amplitude })`, `values() → { speed, period }`. Waves, v = fλ.
+
+**`kit.lever(stage, { x, y, pxPerM, m1, d1, m2, d2, showValues })`**
+Beam on a pivot with a load on each side; tips toward the larger turning effect. `update({ m1, d1, m2, d2 })`,
+`show({ m1, m2 })`, `values()`. Torque, balance, simple machines.
+
+**`kit.buoyancy(stage, { x, y, w, h, density, fluidDensity, volume, fluidLabel, showForces, showValues })`**
+Block that floats partly submerged or sinks, with weight and buoyant-force arrows.
+`update({ density, fluidDensity, volume })`, `show({ density, forces })`, `values()`. Density, Archimedes' principle.
+
+**`kit.charges(stage, { x, y, pxPerM, q1, q2, r, showValues })`**
+Two point charges with the force on each. `update({ q1, q2, r })`, `show({ q1, q2, r, force })`, `values()`.
+Coulomb's law.
+
+**`kit.photoelectric(stage, { x, y, w, h, wavelength, intensity, work, metal, showValues })`**
+Light on a metal plate in a vacuum tube; electrons leave below the threshold wavelength.
+`update({ wavelength, intensity, work, metal })`, `values()`. Photons, work function.
+
+**`kit.punnett(stage, { x, y, size, parent1, parent2, letter, dominantColor, recessiveColor, showOffspring })`**
+Punnett square for one gene with flower-colour offspring. `update({ parent1, parent2 })`, `showOffspring(bool)`,
+`values()`. Inheritance, dominant and recessive alleles.
+
+**`kit.moonPhases(stage, { x, y, R, angle, showName, showView })`**
+Moon on its orbit with sunlight from the right, and its appearance from Earth. `update({ angle })`,
+`show({ name, view })`, `values()`. Moon phases.
+
+**`kit.fractionBars(stage, { x, y, w, barHeight, gap, bars: [{ id, n, d, color, label }], showValues })`**
+One to three equal bars cut into parts. `update({ bars: { id: { n, d } } })`, `show({ id: bool })`, `values()`.
+Fractions, equivalence, comparison.
+
+**`kit.rightTriangle(stage, { x, y, pxPerUnit, a, b, unit, showValues })`**
+Right triangle with labelled legs, hypotenuse and angle. `update({ a, b })`, `show({ a, b, c, angle })`, `values()`.
+Pythagorean theorem, trigonometry.
 
 ## Adding a component
 
