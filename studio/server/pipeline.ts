@@ -257,13 +257,11 @@ async function tryScene(d: Draft, design: Design, text: string, shotsDir: string
 const blockingProblems = (r: Attempt["report"]) => [...r.errors, ...r.levels.filter((l) => !l.solvedViaUi).map((l) => `level ${l.level} could not be solved in the browser`)];
 const problemList = (p: string[]) => p.map((x) => `- ${x}`).join("\n");
 
-async function build(d: Draft) {
-  if (!d.design) throw new Error("Design the levels first");
-  const design = d.design;
+/** The conversation that asks the model for the scene function. */
+function sceneMessages(d: Draft, design: Design): Message[] {
   const components = [...new Set([...(design.components || []), "draw"])];
   const example = JSON.parse(read("examples", "momentum", "design.json")) as Design;
-  const shots = (name: string) => join(dirOf(d.id), name);
-  const messages: Message[] = [
+  return [
     {
       role: "system",
       content: fill(read("prompts", "scene.md"), {
@@ -274,6 +272,16 @@ async function build(d: Draft) {
     },
     { role: "user", content: `Lesson: ${design.title}\nIdea: ${d.plan?.idea || ""}\n\nDesign:\n${JSON.stringify(sceneBrief(design), null, 2)}\n\nWrite the scene function.` },
   ];
+}
+
+/** Whether the visual review runs (EDU_REVIEW=off turns it off, e.g. for comparisons). */
+const reviewEnabled = () => process.env.EDU_REVIEW !== "off";
+
+async function build(d: Draft) {
+  if (!d.design) throw new Error("Design the levels first");
+  const design = d.design;
+  const shots = (name: string) => join(dirOf(d.id), name);
+  const messages = sceneMessages(d, design);
 
   // 1. Draw, then fix until it plays in Chrome without errors (layout problems get the same rounds).
   let accepted: Attempt | null = null;
@@ -296,8 +304,23 @@ async function build(d: Draft) {
     messages.push({ role: "assistant", content: text }, { role: "user", content: `Running the lesson in a browser found these problems (positions are in stage units, 1000 × 560):\n${problemList(problems)}\n\nFix the scene function and reply with the complete function in one js code block.` });
   }
 
-  // 2. Visual review of the step screenshots; one fix attempt that is kept only if it still works and
-  //    has no more layout problems than before.
+  // 2. Visual review of the step screenshots (suggestions, see reviewAndFix).
+  if (reviewEnabled()) accepted = await reviewAndFix(d, design, messages, accepted);
+
+  const r = accepted.report;
+  d.check = { ok: r.ok, errors: r.errors, layout: r.layout, levels: r.levels.map(({ level, startsUnsolved, solvedViaUi }) => ({ level, startsUnsolved, solvedViaUi })) };
+  writeFileSync(join(dirOf(d.id), "scene.js"), accepted.scene + "\n");
+  writeFileSync(join(dirOf(d.id), "lesson.js"), accepted.js);
+  d.status = "ready";
+}
+
+// ---------- Visual review ----------
+
+/**
+ * Review the accepted simulation's step screenshots; one fix round, kept only if the lesson still works,
+ * has no more layout problems and a second review finds fewer problems. Returns the version to keep.
+ */
+async function reviewAndFix(d: Draft, design: Design, messages: Message[], accepted: Attempt): Promise<Attempt> {
   const issues = await visualReview(d, design, accepted.report.stageShots);
   d.review = { issues, fixed: false };
   for (let round = 0; issues.length && round < MAX_REVIEW_ROUNDS; round++) {
@@ -307,7 +330,7 @@ async function build(d: Draft) {
     });
     const text = await ask(d, "build", "Fixing what the visual review found", messages);
     try {
-      const a = await tryScene(d, design, text, shots("screenshots-review"));
+      const a = await tryScene(d, design, text, join(dirOf(d.id), "screenshots-review"));
       if (!a.report.ok || a.report.layout.length > accepted.report.layout.length) {
         d.review.note = "The fix was not kept: it broke the lesson or added layout problems.";
       } else {
@@ -322,22 +345,36 @@ async function build(d: Draft) {
       d.review.note = `The fix was not kept: ${(e as Error).message}`;
     }
   }
-
-  const r = accepted.report;
-  d.check = { ok: r.ok, errors: r.errors, layout: r.layout, levels: r.levels.map(({ level, startsUnsolved, solvedViaUi }) => ({ level, startsUnsolved, solvedViaUi })) };
-  writeFileSync(join(dirOf(d.id), "scene.js"), accepted.scene + "\n");
-  writeFileSync(join(dirOf(d.id), "lesson.js"), accepted.js);
-  d.status = "ready";
+  return accepted;
 }
 
-// ---------- Visual review ----------
+/** Run only the visual review (and its fix round) on a finished lesson's current simulation. */
+export async function reviewExisting(d: Draft): Promise<void> {
+  if (!d.design || !existsSync(join(dirOf(d.id), "scene.js"))) throw new Error("No finished simulation to review");
+  const scene = readFileSync(join(dirOf(d.id), "scene.js"), "utf8").trim();
+  const messages = [...sceneMessages(d, d.design), { role: "assistant" as const, content: "```js\n" + scene + "\n```" }];
+  const accepted = await tryScene(d, d.design, messages[messages.length - 1].content as string, join(dirOf(d.id), "screenshots"));
+  if (!accepted.report.ok) throw new Error("The current simulation does not pass the browser check");
+  const kept = await reviewAndFix(d, d.design, messages, accepted);
+  writeFileSync(join(dirOf(d.id), "scene.js"), kept.scene + "\n");
+  writeFileSync(join(dirOf(d.id), "lesson.js"), kept.js);
+  d.activity = undefined;
+  saveDraft(d);
+}
+
 
 /** Ask the vision model what a student would notice in the step screenshots. Never throws: no review = no issues. */
 async function visualReview(d: Draft, design: Design, images: string[]): Promise<ReviewIssue[]> {
   if (!images.length) return [];
   const label = (key: string) => design.readouts?.find((r) => r.key === key)?.label || key;
+  // Say what the student changes in each step, so a picture that is not yet at the target is not reported.
+  const changes = (l: Design["levels"][number]) => {
+    const free = design.controls.filter((c) => !(l.lock || []).includes(c.key)).map((c) => c.label);
+    if (l.ask) return "the student types an answer; the picture shows the situation described";
+    return free.length ? `the student will change: ${free.join(", ")}` : "";
+  };
   const steps = design.levels
-    .map((l, i) => `Step ${i + 1}: ${l.goal}${l.hide?.length ? ` (hidden: ${l.hide.map(label).join(", ")})` : ""}`)
+    .map((l, i) => `Step ${i + 1}: ${l.goal} [${changes(l)}]${l.hide?.length ? ` (hidden: ${l.hide.map(label).join(", ")})` : ""}`)
     .join("\n");
   const content: Part[] = [{ type: "text", text: `Lesson: ${design.title}\n${steps}\n\nScreenshots follow, one per step.` }];
   images.forEach((file, i) => {

@@ -95,7 +95,8 @@
       h("main", { class: "main" }, [h("div", { class: "sim" }, [stageHost, readouts]), card])
     );
 
-    const view = config.scene(window.simkit.stage(stageHost, config.stage || {}), window.simkit) || {};
+    const stage = window.simkit.stage(stageHost, config.stage || {});
+    const view = config.scene(stage, window.simkit) || {};
 
     // ---------- Controls (built once, shown per step) ----------
     const rows = {};
@@ -209,6 +210,7 @@
     function goTo(i) {
       if (i < 0 || i > EXPLORE) return;
       if (view.stop) view.stop();
+      stage.stopAnimations(); // also animations a scene forgot to stop (they would redraw the old step)
       busy = false;
       current = i;
       state = { ...config.state, ...(exploring() ? {} : level().setup || {}) };

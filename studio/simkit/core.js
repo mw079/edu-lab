@@ -92,6 +92,8 @@
     container.appendChild(svg);
 
     const frameFns = new Set();
+
+    const running = new Set(); // cancel functions of animate() calls in progress
     let raf = 0;
     let last = 0;
     function loop(now) {
@@ -124,6 +126,7 @@
        */
       animate(duration, step) {
         let elapsed = 0;
+        let cancel;
         let stop;
         let resolveFn;
         const promise = new Promise((resolve) => {
@@ -134,15 +137,22 @@
             const keep = step(p, elapsed, dt);
             if (keep === false || p >= 1) {
               stop();
+              running.delete(cancel);
               resolve(keep !== false);
             }
           });
         });
-        promise.cancel = () => {
+        cancel = promise.cancel = () => {
           stop();
+          running.delete(cancel);
           resolveFn(false);
         };
+        running.add(cancel);
         return promise;
+      },
+      /** Cancel every running animate() (not onFrame loops such as charge flow). The shell calls this when a step changes. */
+      stopAnimations() {
+        [...running].forEach((c) => c());
       },
       destroy() {
         frameFns.clear();

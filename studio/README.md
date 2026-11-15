@@ -101,3 +101,19 @@ then open. No UI library: plain CSS on shared tokens, because each lesson must s
 
 The reviewer is a language model: findings vary between runs and some are false (e.g. reporting the start
 of a step as wrong). It is used for suggestions, never to block a lesson.
+
+**With vs. without the review (paired test, 10 requests).** Each lesson was generated without the review
+(A), then the review and its fix round were applied to the same simulation (B), and the final step
+pictures were judged blind.
+
+| Outcome | Lessons |
+|---|---|
+| B clearly better (newton2: wrong values and a shown answer fixed; refraction: light drawn leaving the glass as the step describes) | 2 |
+| No visible difference (fix kept but nothing changed at step start) | 1 |
+| Unchanged: nothing found (3) or fix rejected by the guard (4) | 7 |
+| B worse | 0 |
+
+Findings judged by hand: 11 of 14 real (~80%); all 3 false ones treat a step's starting picture as wrong.
+The review costs 7–52 s per lesson (about 30 s on average). It also exposed a bug no code check caught:
+an action's animation kept running into the next step and redrew the old values; the shell now stops all
+animations when the step changes (`stage.stopAnimations()`).
