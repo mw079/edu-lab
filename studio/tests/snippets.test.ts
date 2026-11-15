@@ -15,7 +15,7 @@ test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs it
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)?.[1];
       assert.ok(state, `${id}: snippet needs an "Example state: {…}" comment`);
-      const page = await browser.newPage();
+      const page = await browser.newPage({ reducedMotion: "reduce" });
       const errors: string[] = [];
       page.on("pageerror", (e) => errors.push(e.message));
       await page.setContent(`<div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
@@ -54,7 +54,7 @@ test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs it
 test("the circuit switches between series and parallel when a step changes its layout", { timeout: 30_000 }, async () => {
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
-    const page = await browser.newPage();
+    const page = await browser.newPage({ reducedMotion: "reduce" });
     await page.setContent(`<div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
     // Passed as a string: the test runner's compiler would otherwise add helpers the page does not have.
     const r = (await page.evaluate(`(() => {
@@ -82,7 +82,7 @@ test("draggable and clickable components call their links", { timeout: 60_000 },
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)![1];
       const code = src.split("\n").filter((l) => !l.startsWith("//")).join("\n");
-      const page = await browser.newPage({ viewport: { width: 1000, height: 560 } });
+      const page = await browser.newPage({ viewport: { width: 1000, height: 560 }, reducedMotion: "reduce" });
       await page.setContent(`<body style="margin:0"><div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
       // The stand-in app records every value a link receives; update() is called again as the real app would.
       await page.evaluate(`(() => {

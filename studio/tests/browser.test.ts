@@ -24,7 +24,7 @@ test("momentum lesson: every level starts unsolved and is solvable through the U
 test("shell behaviour: steps, wrong answers, hidden controls and readouts, hints, explore", { timeout: 60_000 }, async () => {
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
     await page.setContent(html);
     const lesson = (fn: string, ...args: unknown[]) => page.evaluate(([f, a]) => (window as any).__lesson[f as string](...(a as unknown[])), [fn, args] as const);
 
@@ -86,7 +86,7 @@ test("direct interaction: dragging the pendulum's bob moves its slider, and is b
   const src = lessonSourceFromDir("examples/pendulum");
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
-    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
     await page.setContent(buildLessonHtml(src, loadLesson(src).title));
     // Screen position of a point on the stage, and of the bob (the circle with the dark outline).
     const toScreen = (x: number, y: number) =>
@@ -123,6 +123,33 @@ test("direct interaction: dragging the pendulum's bob moves its slider, and is b
     assert.equal(await angle(), "15");
     await dragBobTo(-25);
     assert.equal(await angle(), "15");
+    assert.deepEqual(await page.evaluate(`window.__lesson.errors`), []);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("motion: app-made value changes travel, state is final at once; labels use the darker text colours", { timeout: 60_000 }, async () => {
+  const src = lessonSourceFromDir("examples/pendulum");
+  const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } }); // normal motion
+    await page.setContent(buildLessonHtml(src, loadLesson(src).title));
+    const bobX = `document.querySelector('.simkit-pendulum circle[stroke="#2b2f2c"]').getBoundingClientRect().x`;
+    const start = (await page.evaluate(bobX)) as number;
+    // "Set it up for me": the state (and so Check) is final immediately, the drawing still shows the old value…
+    const right = (await page.evaluate(`(() => { window.__lesson.applySolution(0); return [window.__lesson.isSolvedNow(), ${bobX}]; })()`)) as [boolean, number];
+    assert.equal(right[0], true);
+    assert.ok(Math.abs(right[1] - start) < 1, "drawing starts from the old value");
+    // …and arrives at the new one shortly after.
+    await page.waitForTimeout(500);
+    assert.ok(((await page.evaluate(bobX)) as number) - start > 20, "drawing reached the new value");
+    // Moving the slider is followed at once (no travel).
+    await page.evaluate(`(() => { const r = document.querySelector("#ctl-angle"); r.value = "5"; r.dispatchEvent(new Event("input")); })()`);
+    assert.ok(Math.abs(((await page.evaluate(bobX)) as number) - start) < 1);
+    // Text drawn in an object colour is darkened for contrast.
+    const fills = (await page.evaluate(`[...document.querySelectorAll(".stage svg text")].map((t) => t.getAttribute("fill"))`)) as string[];
+    assert.ok(!fills.includes("#f08c2e") && !fills.includes("#8a63d2"));
     assert.deepEqual(await page.evaluate(`window.__lesson.errors`), []);
   } finally {
     await browser.close();

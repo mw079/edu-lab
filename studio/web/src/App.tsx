@@ -99,7 +99,13 @@ function Home() {
           <div key={l.id} className="lesson-card">
             <a href={`#/lesson/${l.id}`}>
               <div className="thumb">
-                <img src={`/lessons/${l.id}/thumb.png`} alt="" loading="lazy" onLoad={(e) => e.currentTarget.classList.add("loaded")} />
+                <img
+                  src={`/lessons/${l.id}/thumb.png`}
+                  alt=""
+                  loading="lazy"
+                  onLoad={(e) => e.currentTarget.parentElement?.classList.add("loaded")}
+                  onError={(e) => e.currentTarget.parentElement?.classList.add("failed")}
+                />
               </div>
               <h3>{l.title}</h3>
             </a>

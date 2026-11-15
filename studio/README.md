@@ -60,6 +60,7 @@ npm run typecheck
 
 | Path | What |
 |---|---|
+| `DESIGN.md` | Design rules for the fixed parts (tokens, motion, interaction, states, drawing), taken from three design-skill repos |
 | `simkit/` | SVG science components (`README.md`), the catalogue the planner picks from (`catalog.json`) and a usage example per component (`snippets/`) |
 | `template/` | Fixed student UI (`shell.js`, `shell.css`, `lesson.html`), design tokens shared with the teacher app (`tokens.css`), lesson format (`CONTRACT.md`) |
 | `examples/` | Reference lessons as `design.json` + `scene.js`: `momentum` is shown to the generator, `pendulum` shows direct interaction |
@@ -71,6 +72,13 @@ npm run typecheck
 
 A lesson is one HTML file: `server/lesson.ts` inlines the shell, simkit, the lesson and (when it has
 math) KaTeX's stylesheet and fonts. No AI runs while students use a lesson.
+
+**Design.** `DESIGN.md` holds the rules; the fixed parts apply them, so every generated lesson inherits them.
+Buttons respond to presses; a new step's task fades in; when the page itself changes values (step start,
+Reset, "Set it up for me") the picture moves to them in 260 ms instead of jumping, while dragging and sliders
+follow the pointer 1:1; solving a step is the one animated moment. Labels on the stage are drawn in darker
+versions of the object colours for contrast. With reduced motion, movement is dropped (checks and screenshots
+run that way).
 
 **Student UI.** The simulation on the left (kept at its own proportions), one task card on the right:
 goal → controls this step needs → Check → hints ending in a worked solution. At most 3 readouts per step,

@@ -165,6 +165,7 @@
 
     function set(key, value) {
       if (locked(key) || busy) return;
+      stopTravel(); // the student's own input is followed 1:1
       state = { ...state, [key]: value };
       update();
     }
@@ -197,12 +198,61 @@
       renderSteps();
     }
 
+    // ---------- Value changes made by the app (DESIGN.md §3) ----------
+    // When a step starts, Reset is pressed or "Set it up for me" applies the solution, the drawing moves from
+    // the old to the new values instead of jumping, so the student sees what changed. State, checks and
+    // readouts are final at once; only the picture travels. Slider values move on their own step. Off with
+    // reduced motion (tests and screenshots run that way, so they see final states).
+    const TRAVEL_MS = 260;
+    let travelFrame = 0;
+    const reduceMotion = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    function stopTravel() {
+      if (travelFrame) cancelAnimationFrame(travelFrame);
+      travelFrame = 0;
+    }
+    function travel(from) {
+      stopTravel();
+      if (!from || !view.update || reduceMotion()) return;
+      const target = state;
+      const moving = controls.filter((c) => c.type !== "select" && typeof from[c.key] === "number" && typeof target[c.key] === "number" && from[c.key] !== target[c.key]);
+      if (!moving.length) return;
+      const info = sceneInfo();
+      const ease = (t) => 1 - Math.pow(1 - t, 4); // close to --ease-out
+      const draw = (t) => {
+        const s = { ...target };
+        for (const c of moving) {
+          const step = c.step || 1;
+          const v = from[c.key] + (target[c.key] - from[c.key]) * ease(t);
+          s[c.key] = Number((c.min + Math.round((v - c.min) / step) * step).toFixed((String(step).split(".")[1] || "").length));
+        }
+        try {
+          view.update(s, { ...s, ...(config.model ? config.model(s) : {}) }, info);
+        } catch (err) {
+          stopTravel();
+          view.update(state, derived, sceneInfo());
+        }
+      };
+      draw(0);
+      const start = performance.now();
+      const frame = (now) => {
+        travelFrame = 0;
+        if (state !== target || busy) return; // something else changed the state; it already redrew
+        const t = Math.min(1, (now - start) / TRAVEL_MS);
+        if (t < 1) {
+          draw(t);
+          travelFrame = requestAnimationFrame(frame);
+        } else view.update(state, derived, sceneInfo());
+      };
+      travelFrame = requestAnimationFrame(frame);
+    }
+
     function fmt(v, digits) {
       return typeof v === "number" ? window.simkit.fmt(v, digits == null ? 2 : digits) : typeof v === "boolean" ? (v ? "yes" : "no") : String(v);
     }
 
     async function runAction(a) {
       if (busy) return;
+      stopTravel();
       busy = true;
       update();
       try {
@@ -215,12 +265,15 @@
     }
 
     // ---------- Step navigation ----------
+    let justSolved = -1; // the step dot that settles into green once (the "Correct" moment)
     function renderSteps() {
       const reachable = (i) => i === 0 || progress[i - 1].solved;
+      const just = justSolved;
+      justSolved = -1;
       steps.replaceChildren(
         ...levels.map((lv, i) =>
           h("button", {
-            class: "step" + (progress[i].solved ? " done" : ""),
+            class: "step" + (progress[i].solved ? " done" : "") + (i === just ? " just" : ""),
             text: progress[i].solved && i !== current ? "✓" : String(i + 1),
             title: lv.title,
             "aria-label": `Step ${i + 1}: ${lv.title}`,
@@ -237,12 +290,16 @@
       if (i < 0 || i > EXPLORE) return;
       if (view.stop) view.stop();
       stage.stopAnimations(); // also animations a scene forgot to stop (they would redraw the old step)
+      stopTravel();
       busy = false;
+      const changedStep = i !== current;
+      const before = state;
       current = i;
       state = { ...config.state, ...(exploring() ? {} : level().setup || {}) };
       resetView();
       update();
-      renderCard();
+      travel(before);
+      renderCard(changedStep);
     }
 
     // ---------- Task card ----------
@@ -250,8 +307,13 @@
     const feedback = h("p", { class: "feedback", role: "status" });
     const hintList = h("ol", { class: "hints" });
 
-    function renderCard() {
+    function renderCard(enter) {
       answerInput = null;
+      head.classList.remove("enter");
+      if (enter) {
+        void head.offsetWidth; // restart the entrance animation
+        head.classList.add("enter");
+      }
       feedback.textContent = "";
       feedback.className = "feedback";
       hintList.replaceChildren();
@@ -345,6 +407,7 @@
         return true;
       }
       p.solved = true;
+      justSolved = current;
       update();
       renderCard();
       return true;
@@ -353,9 +416,11 @@
     function applySolution(i) {
       if (i !== current) goTo(i);
       const { answer, ...values } = levels[i].solution || {};
+      const before = state;
       state = { ...state, ...values };
       if (answer != null && answerInput) answerInput.value = String(answer);
       update();
+      travel(before);
     }
 
     // ---------- Test hooks (used by automated checks) ----------

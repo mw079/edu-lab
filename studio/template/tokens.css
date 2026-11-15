@@ -23,6 +23,13 @@
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(20, 22, 26, 0.04), 0 4px 16px rgba(20, 22, 26, 0.05);
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Motion (DESIGN.md §2): strong ease-out for responses, ease-in-out for movement; never ease-in. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms;
+  --dur-fast: 160ms;
+  --dur-base: 220ms;
+  --dur-moment: 360ms;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
@@ -30,17 +37,35 @@ body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); -we
 button { font: inherit; color: inherit; cursor: pointer; }
 button:disabled { cursor: default; opacity: 0.45; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Browser surfaces carry the design too: selection, caret, native controls, scrollbars. */
+::selection { background: var(--accent-soft); color: var(--ink); }
+html { accent-color: var(--accent); caret-color: var(--accent); scrollbar-color: #cfcec9 transparent; scrollbar-width: thin; }
 [hidden] { display: none !important; }
 
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14.5px; text-decoration: none; transition: background 0.15s, border-color 0.15s; }
-.btn:hover:not(:disabled) { border-color: #cfcec9; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14.5px; text-decoration: none; transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
+/* Press feedback on everything pressable; hover only where a real pointer can hover. */
+.btn:active:not(:disabled), .segmented button:active, .pill:active, .step:active:not(:disabled), .chip:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) { border-color: #cfcec9; }
+  .btn.primary:hover:not(:disabled) { background: #34383f; }
+  .link:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+}
 .btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
-.btn.primary:hover:not(:disabled) { background: #34383f; }
 .link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; text-decoration: none; }
 .link.quiet { color: var(--muted); font-weight: 500; }
 .muted { color: var(--muted); }
 
 /* Option buttons (lesson select controls, teacher audience picker) */
 .segmented { display: flex; gap: 2px; padding: 3px; border-radius: var(--radius-sm); background: var(--fill); }
-.segmented button { flex: 1; border: 0; background: none; padding: 7px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
+.segmented button { flex: 1; border: 0; background: none; padding: 7px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
 .segmented button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(20, 22, 26, 0.12); }
+
+/* Entrances: fade and rise a few pixels from an almost-final state (never from scale 0). */
+@keyframes rise { from { opacity: 0; transform: translateY(var(--rise-y, 6px)) scale(var(--rise-s, 1)); } }
+@keyframes fade { from { opacity: 0; } }
+
+/* Reduced motion: movement goes, opacity and colour changes stay (DESIGN.md §3). */
+@media (prefers-reduced-motion: reduce) {
+  * { --rise-y: 0px !important; --rise-s: 1 !important; }
+  .btn:active, .segmented button:active, .pill:active, .step:active, .chip:active { transform: none !important; }
+}

@@ -26,7 +26,7 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
   const stageShots: string[] = []; // the simulation only, at the start of each step (for the visual review)
   const layout = new Set<string>();
   try {
-    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, offline: true });
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, offline: true, reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.route("**/*", (route) => route.abort()); // lessons must not use the network
     page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));

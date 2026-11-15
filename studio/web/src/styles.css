@@ -8,26 +8,35 @@ h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
 h2 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px; }
 .small { font-size: 13px; }
 .back { display: inline-block; margin-bottom: 14px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
-.back:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .back:hover { color: var(--ink); } }
 .error { color: var(--no); white-space: pre-wrap; font: inherit; }
 .warn { color: var(--warn); }
 
 /* Overview */
 .home-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin: 16px 0 28px; }
 .chips { display: flex; gap: 8px; flex-wrap: wrap; }
-.chip { height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 500; color: var(--ink-2); }
-.chip:hover { border-color: #cfcec9; }
+.chip { height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); font-size: 14px; font-weight: 500; color: var(--ink-2); transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .chip:hover { border-color: #cfcec9; } }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 36px 24px; }
 .lesson-card a { display: block; color: inherit; text-decoration: none; }
-.thumb { aspect-ratio: 1000 / 560; border-radius: 14px; overflow: hidden; background: var(--fill); box-shadow: var(--shadow); }
-.thumb img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s, transform 0.3s; }
-.thumb img.loaded { opacity: 1; }
-.lesson-card:hover .thumb img { transform: scale(1.03); }
+/* Picture card: a soft shimmer while the picture is made (the first time can take a few seconds), then it fades
+ * in; a plain paper card if it fails. On hover the picture zooms inside a card that stays still. */
+.thumb { position: relative; aspect-ratio: 1000 / 560; border-radius: 14px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow); }
+.thumb::before { content: ""; position: absolute; inset: 0; background: linear-gradient(100deg, var(--fill) 30%, #f6f5f2 50%, var(--fill) 70%); background-size: 300% 100%; animation: shimmer 1.6s linear infinite; }
+.thumb.loaded::before, .thumb.failed::before { content: none; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.thumb img { position: relative; display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity var(--dur-base) ease, transform 400ms var(--ease-out); }
+.thumb.loaded img { opacity: 1; }
+.thumb.failed img { display: none; }
+@media (hover: hover) and (pointer: fine) { .lesson-card a:hover .thumb img { transform: scale(1.03); } }
+.lesson-card a:focus-visible { outline: none; }
+.lesson-card a:focus-visible .thumb { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .thumb::before { animation: none; } }
 .lesson-card h3 { margin: 12px 0 2px; font-size: 15.5px; font-weight: 600; line-height: 1.35; }
 .lesson-card p { margin: 0; font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 /* Delete stays out of the way until the card is pointed at or reached with the keyboard. */
-.lesson-card .delete { opacity: 0; font-size: 13px; }
+.lesson-card .delete { opacity: 0; font-size: 13px; transition: opacity var(--dur-fast) ease; }
 .lesson-card:hover .delete, .lesson-card .delete:focus-visible { opacity: 1; }
 @media (hover: none) { .lesson-card .delete { opacity: 1; } }
 .drafts .status { margin-left: auto; }
@@ -66,6 +75,7 @@ legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
 .working p { margin: 2px 0 0; }
 .spinner { width: 22px; height: 22px; border: 3px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; flex: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
 
 .levels { padding-left: 22px; margin: 20px 0; display: grid; gap: 16px; }
 .levels > li { padding-left: 6px; }

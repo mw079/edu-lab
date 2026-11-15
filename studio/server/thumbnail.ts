@@ -26,7 +26,7 @@ export function thumbnail(id: string, html: string): Promise<string> {
   // One render at a time: the overview asks for every card at once.
   const job = queue.then(async () => {
     if (existsSync(file)) return file;
-    const page = await (await launch()).newPage({ viewport: { width: 1000, height: 700 }, deviceScaleFactor: 1.5 });
+    const page = await (await launch()).newPage({ viewport: { width: 1000, height: 700 }, deviceScaleFactor: 1.5, reducedMotion: "reduce" });
     try {
       await page.setContent(html, { waitUntil: "load" });
       await page.waitForFunction(() => (window as any).__lesson?.ready === true, null, { timeout: 5000 });

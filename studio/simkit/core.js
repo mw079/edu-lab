@@ -9,7 +9,7 @@
 
   kit.colors = {
     ink: "#2b2f2c",
-    muted: "#7a827c",
+    muted: "#646d67",
     line: "#c9cfc9",
     paper: "#f7f4ee",
     grid: "#efebe4",
@@ -25,6 +25,18 @@
     steel: "#8f9aa3",
   };
 
+  /**
+   * Darker versions of the object colours for text on the paper, so every label keeps at least 4.5:1 contrast
+   * (DESIGN.md §7). Applied automatically to the fill of <text> and <tspan>: components and scenes keep
+   * using kit.colors.* for both the object and its label.
+   */
+  const c = kit.colors;
+  kit.textColors = {
+    [c.red]: "#b23a28", [c.redDark]: "#b23a28", [c.blue]: c.blueDark, [c.green]: c.greenDark,
+    [c.yellow]: "#8a6400", [c.orange]: "#a85a12", [c.purple]: "#6e4fc0", [c.steel]: "#5f6872",
+  };
+  kit.textColor = (color) => kit.textColors[String(color).toLowerCase()] || color;
+
   /** Create an SVG element. attrs.text sets textContent. Returns the element. */
   kit.el = function (tag, attrs, parent) {
     const node = document.createElementNS(NS, tag);
@@ -38,6 +50,7 @@
     for (const key in attrs) {
       const value = attrs[key];
       if (key === "text") node.textContent = value == null ? "" : String(value);
+      else if (key === "fill" && value != null && (node.tagName === "text" || node.tagName === "tspan")) node.setAttribute(key, kit.textColor(value));
       else if (value == null || value === false) node.removeAttribute(key);
       else node.setAttribute(key, String(value));
     }
@@ -174,7 +187,9 @@
     const links = [].concat(link || []).filter((l) => typeof l === "function");
     const enabled = () => links.some((l) => !l.enabled || l.enabled());
     const refresh = () => {
-      el.style.cursor = links.length && enabled() ? "grab" : "";
+      const on = links.length > 0 && enabled();
+      el.style.cursor = on ? "grab" : "";
+      el.classList.toggle("simkit-draggable", on);
     };
     if (!links.length) return { refresh };
     el.style.touchAction = "none";
@@ -182,11 +197,18 @@
       const m = stage.svg.getScreenCTM();
       return { x: (e.clientX - m.e) / m.a, y: (e.clientY - m.f) / m.d };
     };
+    let dragging = false;
     el.addEventListener("pointerdown", (e) => {
-      if (!enabled()) return;
+      if (!enabled() || dragging || !e.isPrimary) return; // a second finger does not take over the drag
       e.preventDefault();
-      const onMove = (ev) => enabled() && move(point(ev));
+      dragging = true;
+      // Track the pointer on the window: the drag survives the element being redrawn or the pointer leaving it.
+      // The object follows the pointer 1:1, with no easing (DESIGN.md §3).
+      const onMove = (ev) => ev.pointerId === e.pointerId && enabled() && move(point(ev));
+      stage.svg.classList.add("simkit-dragging");
       const end = () => {
+        dragging = false;
+        stage.svg.classList.remove("simkit-dragging");
         window.removeEventListener("pointermove", onMove);
         window.removeEventListener("pointerup", end);
         window.removeEventListener("pointercancel", end);
@@ -205,6 +227,7 @@
     if (typeof link !== "function") return;
     const enabled = () => !link.enabled || link.enabled();
     el.style.cursor = enabled() ? "pointer" : "";
+    el.classList.toggle("simkit-clickable", enabled());
     el.addEventListener("click", () => enabled() && fn());
   };
 

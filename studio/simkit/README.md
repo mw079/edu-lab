@@ -293,11 +293,24 @@ link in steps where the control is locked (so question steps cannot be solved by
 In a component: `kit.drag(stage, element, link, (point) => link(valueAt(point)))` (the point is in stage
 coordinates), `kit.click(element, link, fn)`, and `kit.grip(...)` to draw the dashed ring that marks a grabbable
 object while `kit.linked(link)` is true. Every linked value keeps its slider, for keyboards and small screens.
+`kit.drag` and `kit.click` also mark the element (`simkit-draggable`, `simkit-clickable`) so it lifts on hover,
+and the stage gets `simkit-dragging` while a drag runs (grabbing cursor). The object follows the pointer 1:1;
+give grips a radius of at least 22 so the target is about 44 px (see `DESIGN.md` §4).
+
+## Look (`DESIGN.md` §7)
+
+- Strokes: 1 grid/ticks/guides · 2 outlines/axes · 3 main objects and curves · 6 arrows. Dashed = guides.
+- Colours from `kit.colors`, one per object or quantity. `<text>` filled with an object colour is drawn in its
+  darker text version automatically (`kit.textColor`), so labels stay readable (≥ 4.5:1) on the paper.
+- Chart titles are sentence case. A hidden value removes its point or bar, not only its label.
+- Value changes made by the lesson page (step start, Reset, "Set it up for me") are animated by the page,
+  which calls `update` with in-between values; components need nothing for this.
 
 ## Adding a component
 
 1. New file in `simkit/`, appended to `SIMKIT_FILES` in `server/lesson.ts`.
 2. Factory `kit.name = (stage, opts) => api`; draw into `stage.layer()`; animate only via `stage.onFrame`/`stage.animate`.
+   Follow the look above; `update` must accept any in-range value (the page passes in-between values).
 3. Physics in `kit.physics` when lessons also need it in `model()`.
 4. Add a snippet in `snippets/` (API, physics helper, an "Always visible" note, an example state and scene),
    an entry in `catalog.json`, and document it here. `tests/snippets.test.ts` then runs it automatically.
