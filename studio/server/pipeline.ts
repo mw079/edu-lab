@@ -3,11 +3,11 @@
 //   2. design – plan -> design.json: data + expressions, 5 levels      (logic validated; teacher approves)
 //   3. scene  – design -> scene function using the chosen components   (played in headless Chrome)
 // Drafts live in data/lessons/<id>/ (draft.json, design.json, scene.js, lesson.js, llm/ replies, screenshots/).
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { ROOT } from "./env.ts";
-import { chat, extractJson, type Message } from "./llm.ts";
+import { chat, extractJson, type Message, type Part } from "./llm.ts";
 import { catalog, catalogSummary, snippet, snippetApi } from "./catalog.ts";
 import { assembleLesson, checkDesign, type Design, type Issue } from "./design.ts";
 import { buildLessonHtml, loadLesson } from "./lesson.ts";
@@ -16,9 +16,12 @@ import { cleanText, sourceBlock, type Source } from "./source.ts";
 
 export const DATA = join(ROOT, "data", "lessons");
 const MAX_FIX_ROUNDS = 2;
+const MAX_REVIEW_ROUNDS = 1; // visual review findings are suggestions: one fix attempt, never blocking
 
+export type ReviewIssue = { step?: number; problem: string; fix?: string };
 export type Plan = { title: string; audience: string; idea: string; objectives: string[]; components: string[]; fit?: string; note?: string };
 export type Stage = "plan" | "design" | "build";
+type LogStage = Stage | "review";
 export type Draft = {
   id: string;
   createdAt: string;
@@ -32,8 +35,10 @@ export type Draft = {
   design?: Design;
   warnings?: Issue[];
   check?: { ok: boolean; errors: string[]; layout: string[]; levels: { level: number; startsUnsolved: boolean; solvedViaUi: boolean }[] };
+  review?: { issues: ReviewIssue[]; fixed: boolean; found?: ReviewIssue[]; note?: string }; // issues = what remains; found = before the fix
+  eval?: string; // evaluation run id: hidden from the teacher app
   error?: string;
-  log: { at: string; stage: Stage; what: string; ms?: number; tokens?: number }[];
+  log: { at: string; stage: LogStage; what: string; ms?: number; tokens?: number }[];
 };
 
 // ---------- Storage ----------
@@ -42,7 +47,7 @@ const dirOf = (id: string) => join(DATA, id);
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 const fill = (template: string, vars: Record<string, string>) => template.replace(/\{\{(\w+)\}\}/g, (m, k: string) => vars[k] ?? m);
 
-function saveDraft(d: Draft) {
+export function saveDraft(d: Draft) {
   mkdirSync(dirOf(d.id), { recursive: true });
   writeFileSync(join(dirOf(d.id), "draft.json"), JSON.stringify(d, null, 2));
 }
@@ -109,9 +114,9 @@ export async function runAll(d: Draft, from: Stage = "plan"): Promise<Draft> {
 
 let replyCount = 0;
 // How long the model may think per step. Unlimited thinking used the whole budget without answering.
-const EFFORT: Record<Stage, "low" | "medium"> = { plan: "low", design: "medium", build: "medium" };
+const EFFORT: Record<LogStage, "low" | "medium"> = { plan: "low", design: "medium", build: "medium", review: "low" };
 
-async function ask(d: Draft, stage: Stage, what: string, messages: Message[]): Promise<string> {
+async function ask(d: Draft, stage: LogStage, what: string, messages: Message[]): Promise<string> {
   d.activity = what;
   saveDraft(d);
   let r = await chat(messages, { maxTokens: 24000, temperature: 0.3, reasoningEffort: EFFORT[stage] });
@@ -235,11 +240,29 @@ function sceneBrief(design: Design) {
   };
 }
 
+type Attempt = { scene: string; js: string; report: Awaited<ReturnType<typeof browserCheck>> };
+
+/** Assemble a scene reply into a lesson and play it in Chrome. Throws if the reply is not usable code. */
+async function tryScene(d: Draft, design: Design, text: string, shotsDir: string): Promise<Attempt> {
+  const scene = extractCode(text);
+  const js = assembleLesson(design, scene);
+  loadLesson(js); // syntax
+  d.activity = "Playing every step in Chrome";
+  saveDraft(d);
+  rmSync(shotsDir, { recursive: true, force: true });
+  const report = await browserCheck(buildLessonHtml(js, design.title), shotsDir);
+  return { scene, js, report };
+}
+
+const blockingProblems = (r: Attempt["report"]) => [...r.errors, ...r.levels.filter((l) => !l.solvedViaUi).map((l) => `level ${l.level} could not be solved in the browser`)];
+const problemList = (p: string[]) => p.map((x) => `- ${x}`).join("\n");
+
 async function build(d: Draft) {
   if (!d.design) throw new Error("Design the levels first");
   const design = d.design;
   const components = [...new Set([...(design.components || []), "draw"])];
   const example = JSON.parse(read("examples", "momentum", "design.json")) as Design;
+  const shots = (name: string) => join(dirOf(d.id), name);
   const messages: Message[] = [
     {
       role: "system",
@@ -251,33 +274,95 @@ async function build(d: Draft) {
     },
     { role: "user", content: `Lesson: ${design.title}\nIdea: ${d.plan?.idea || ""}\n\nDesign:\n${JSON.stringify(sceneBrief(design), null, 2)}\n\nWrite the scene function.` },
   ];
+
+  // 1. Draw, then fix until it plays in Chrome without errors (layout problems get the same rounds).
+  let accepted: Attempt | null = null;
   for (let round = 0; ; round++) {
     const text = await ask(d, "build", round ? `Fixing the simulation (round ${round})` : "Drawing the simulation", messages);
-    let problems: string[] = [];
+    let problems: string[];
     try {
-      const scene = extractCode(text);
-      const js = assembleLesson(design, scene);
-      loadLesson(js); // syntax
-      d.activity = "Playing every step in Chrome";
-      saveDraft(d);
-      const html = buildLessonHtml(js, design.title);
-      const report = await browserCheck(html, join(dirOf(d.id), "screenshots"));
-      d.check = { ok: report.ok, errors: report.errors, layout: report.layout, levels: report.levels.map(({ level, startsUnsolved, solvedViaUi }) => ({ level, startsUnsolved, solvedViaUi })) };
-      const blocking = [...report.errors, ...report.levels.filter((l) => !l.solvedViaUi).map((l) => `level ${l.level} could not be solved in the browser`)];
-      problems = [...blocking, ...report.layout.slice(0, 8)];
-      // Layout problems get fix rounds, but do not block a lesson that works once the rounds are used up.
-      if (report.ok && (!report.layout.length || round >= MAX_FIX_ROUNDS)) {
-        writeFileSync(join(dirOf(d.id), "scene.js"), scene + "\n");
-        writeFileSync(join(dirOf(d.id), "lesson.js"), js);
-        d.status = "ready";
-        return;
+      const a = await tryScene(d, design, text, shots("screenshots"));
+      problems = [...blockingProblems(a.report), ...a.report.layout.slice(0, 8)];
+      // Layout problems do not block a lesson that works once the rounds are used up.
+      if (a.report.ok && (!a.report.layout.length || round >= MAX_FIX_ROUNDS)) {
+        accepted = a;
+        messages.push({ role: "assistant", content: text });
+        break;
       }
     } catch (e) {
       problems = [(e as Error).message];
     }
-    if (round >= MAX_FIX_ROUNDS) throw new Error(`The simulation still fails after ${round + 1} attempts:\n${problems.map((p) => `- ${p}`).join("\n")}`);
-    messages.push({ role: "assistant", content: text }, { role: "user", content: `Running the lesson in a browser found these problems (positions are in stage units, 1000 × 560):\n${problems.map((p) => `- ${p}`).join("\n")}\n\nFix the scene function and reply with the complete function in one js code block.` });
+    if (round >= MAX_FIX_ROUNDS) throw new Error(`The simulation still fails after ${round + 1} attempts:\n${problemList(problems)}`);
+    messages.push({ role: "assistant", content: text }, { role: "user", content: `Running the lesson in a browser found these problems (positions are in stage units, 1000 × 560):\n${problemList(problems)}\n\nFix the scene function and reply with the complete function in one js code block.` });
   }
+
+  // 2. Visual review of the step screenshots; one fix attempt that is kept only if it still works and
+  //    has no more layout problems than before.
+  const issues = await visualReview(d, design, accepted.report.stageShots);
+  d.review = { issues, fixed: false };
+  for (let round = 0; issues.length && round < MAX_REVIEW_ROUNDS; round++) {
+    messages.push({
+      role: "user",
+      content: `A reviewer looked at screenshots of the drawing at the start of each step and found:\n${problemList(issues.map((i) => `${i.step ? `step ${i.step}: ` : ""}${i.problem}${i.fix ? ` (suggested: ${i.fix})` : ""}`))}\n\nFix the problems that are real; keep everything else as it is. Reply with the complete function in one js code block.`,
+    });
+    const text = await ask(d, "build", "Fixing what the visual review found", messages);
+    try {
+      const a = await tryScene(d, design, text, shots("screenshots-review"));
+      if (!a.report.ok || a.report.layout.length > accepted.report.layout.length) {
+        d.review.note = "The fix was not kept: it broke the lesson or added layout problems.";
+      } else {
+        // Look again: keep the fix only if it leaves fewer problems than it set out to fix.
+        const after = await visualReview(d, design, a.report.stageShots);
+        if (after.length < issues.length) {
+          accepted = a;
+          d.review = { issues: after, fixed: true, found: issues };
+        } else d.review.note = `The fix was not kept: the review still found ${after.length} problem(s).`;
+      }
+    } catch (e) {
+      d.review.note = `The fix was not kept: ${(e as Error).message}`;
+    }
+  }
+
+  const r = accepted.report;
+  d.check = { ok: r.ok, errors: r.errors, layout: r.layout, levels: r.levels.map(({ level, startsUnsolved, solvedViaUi }) => ({ level, startsUnsolved, solvedViaUi })) };
+  writeFileSync(join(dirOf(d.id), "scene.js"), accepted.scene + "\n");
+  writeFileSync(join(dirOf(d.id), "lesson.js"), accepted.js);
+  d.status = "ready";
+}
+
+// ---------- Visual review ----------
+
+/** Ask the vision model what a student would notice in the step screenshots. Never throws: no review = no issues. */
+async function visualReview(d: Draft, design: Design, images: string[]): Promise<ReviewIssue[]> {
+  if (!images.length) return [];
+  const label = (key: string) => design.readouts?.find((r) => r.key === key)?.label || key;
+  const steps = design.levels
+    .map((l, i) => `Step ${i + 1}: ${l.goal}${l.hide?.length ? ` (hidden: ${l.hide.map(label).join(", ")})` : ""}`)
+    .join("\n");
+  const content: Part[] = [{ type: "text", text: `Lesson: ${design.title}\n${steps}\n\nScreenshots follow, one per step.` }];
+  images.forEach((file, i) => {
+    content.push({ type: "text", text: `Step ${i + 1}:` }, { type: "image_url", image_url: { url: `data:image/png;base64,${readFileSync(file).toString("base64")}` } });
+  });
+  try {
+    const text = await ask(d, "review", "Reviewing the screenshots", [
+      { role: "system", content: fill(read("prompts", "review.md"), { AUDIENCE: (d.audience || "high school").toLowerCase() }) },
+      { role: "user", content },
+    ]);
+    const issues = extractJson<{ issues?: ReviewIssue[] }>(text).issues || [];
+    return issues.filter((i) => i && typeof i.problem === "string" && i.problem.trim()).slice(0, 5);
+  } catch (e) {
+    d.log.push({ at: new Date().toISOString(), stage: "review", what: `Visual review skipped: ${(e as Error).message}` });
+    return [];
+  }
+}
+
+/** Review the finished lesson again (evaluation: which problems remain after the fix round). */
+export async function reviewFinal(d: Draft): Promise<ReviewIssue[]> {
+  if (!d.design || !existsSync(join(dirOf(d.id), "lesson.js"))) return [];
+  const dir = join(dirOf(d.id), "screenshots-final");
+  rmSync(dir, { recursive: true, force: true });
+  const report = await browserCheck(buildLessonHtml(readFileSync(join(dirOf(d.id), "lesson.js"), "utf8"), d.design.title), dir);
+  return visualReview(d, d.design, report.stageShots);
 }
 
 /** Drafts left "working" by a stopped server can never finish; mark them failed so they can be retried. */

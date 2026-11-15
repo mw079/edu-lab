@@ -6,7 +6,7 @@
   /**
    * opts: { x=80, y=300 (centre line), restLength=320 px, pxPerM=400, k=20 (N/m), mass=1 (kg),
    *         displacement=0 (m, + to the right), showForce=true, onSample(t, x) }
-   * Returns { update({ k, mass, displacement }), play({ amplitude, duration }) -> Promise, stop(), period() }
+   * Returns { update({ k, mass, displacement }), showForce(bool), play({ amplitude, duration }) -> Promise, stop(), period() }
    */
   kit.springMass = function (stage, opts) {
     const o = Object.assign({ x: 80, y: 300, restLength: 320, pxPerM: 400, k: 20, mass: 1, displacement: 0, showForce: true }, opts);
@@ -42,7 +42,8 @@
 
     function draw() {
       const size = blockSize();
-      const left = eqX + x * o.pxPerM - size / 2;
+      // The spring's end (the block's left face) sits at the displacement, so the ruler reads the stretch.
+      const left = eqX + x * o.pxPerM;
       const coils = 12;
       const amp = 16;
       const pts = [`${wallX},${o.y}`, `${wallX + 16},${o.y}`];
@@ -58,7 +59,7 @@
       forceG.textContent = "";
       if (o.showForce && Math.abs(x) > 1e-6) {
         const F = -o.k * x;
-        const len = kit.clamp(F * 6, -200, 200);
+        const len = Math.sign(F) * kit.clamp(Math.abs(F) * 6, 40, 200); // at least 40 px so small forces stay visible
         const fy = floorY - size - 30;
         const cx = left + size / 2;
         kit.arrowShape(forceG, cx, fy, cx + len, fy, { color: kit.colors.orange, width: 6, head: 14 });
@@ -79,6 +80,11 @@
         if (next.k != null) o.k = next.k;
         if (next.mass != null) o.mass = next.mass;
         if (next.displacement != null) x = o.displacement = next.displacement;
+        draw();
+      },
+      /** Show or hide the force arrow and its value (hide it when a step asks for the force). */
+      showForce(visible) {
+        o.showForce = visible;
         draw();
       },
       period() {

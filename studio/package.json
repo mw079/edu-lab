@@ -11,7 +11,8 @@
     "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "generate": "tsx scripts/generate.ts",
-    "regenerate": "tsx scripts/regenerate.ts"
+    "regenerate": "tsx scripts/regenerate.ts",
+    "eval": "tsx scripts/eval.ts"
   },
   "engines": {
     "node": ">=20"

@@ -3,7 +3,7 @@ import { config } from "./env.ts";
 
 const URL = "https://api.fireworks.ai/inference/v1/chat/completions";
 
-type Part = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+export type Part = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 export type Message = { role: "system" | "user" | "assistant"; content: string | Part[] };
 type ChatOptions = { model?: string; maxTokens?: number; temperature?: number; timeoutMs?: number; retries?: number; reasoningEffort?: "low" | "medium" | "high" };
 type ChatResult = { text: string; reasoning: string; ms: number; usage: { prompt_tokens?: number; completion_tokens?: number } };

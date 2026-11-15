@@ -2,6 +2,7 @@
 //   carts: [{ id: "A", color, label, mass, v, pos }, { id: "B", … }] })   (exactly two carts, A starts on the left)
 // → { update({ A: { mass, v, pos }, B: { … } }), showArrows(bool), reset(), stop(),
 //     runCollision({ e }) → Promise }   e = 1 elastic (bounce), e = 0 sticky
+// Always visible: each cart's mass (on the cart). The momentum/velocity value is visible unless showArrows(false).
 // Physics for derived values: simkit.physics.collide1D(m1, v1, m2, v2, e) → { v1, v2 } (after the collision)
 // Example state: { mA: 2, vA: 2, mB: 2, vB: -2, type: "elastic" }   actions: [{ id: "run", label: "Run collision" }]
 function (stage, kit) {

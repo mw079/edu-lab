@@ -27,7 +27,7 @@ function listLessons() {
       return { id, title: d.title as string, audience: audienceLevel(d.audience) };
     });
   const generated = listDrafts()
-    .filter((d) => d.status === "ready" && d.design)
+    .filter((d) => d.status === "ready" && d.design && !d.eval)
     .map((d) => ({ id: d.id, title: d.design!.title, audience: audienceLevel(d.audience) }));
   return [...generated, ...examples];
 }
@@ -47,7 +47,7 @@ app.get("/api/lessons", (_req, res) => {
 // ---------- Drafts: request -> plan -> design -> build ----------
 
 app.get("/api/drafts", (_req, res) => {
-  res.json(listDrafts().map(({ id, request, status, stage, createdAt, plan }) => ({ id, request, status, stage, createdAt, title: plan?.title })));
+  res.json(listDrafts().filter((d) => !d.eval).map(({ id, request, status, stage, createdAt, plan }) => ({ id, request, status, stage, createdAt, title: plan?.title })));
 });
 
 app.get("/api/drafts/:id", (req, res) => {

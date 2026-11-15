@@ -7,7 +7,8 @@
    * opts: { x=140, y=110, w=600, h=320, layout: "series"|"parallel", V=9,
    *         parts: [{ id, type: "resistor"|"bulb", R, label }]  (1-4 parts),
    *         showValues=true (current/voltage labels next to parts), flow=true }
-   * Returns { update({ V, parts: { [id]: { R } } }), showValues(bool), values() }
+   * Returns { update({ V, layout, parts: { [id]: { R } } }), showValues(bool), values() }
+ * Changing layout redraws the circuit (e.g. a step that switches from series to parallel).
    * values() -> { totalR, current, parts: { [id]: { R, I, V, P } } }
    */
   kit.circuit = function (stage, opts) {
@@ -26,88 +27,96 @@
     let solved;
     let showValues = o.showValues;
 
-    // Geometry: where each part sits and the loop each charge path follows.
-    const slots = parts.map((p, i) => {
-      if (o.layout === "parallel") {
-        // The last branch forms the right-hand side of the circuit.
-        return { x: L + (o.w * (i + 1)) / parts.length, y: midY, vertical: true };
-      }
-      return { x: L + (o.w * (i + 1)) / (parts.length + 1), y: T, vertical: false };
-    });
+    let slots, segments, partEls;
 
-    // Straight wire segments in the direction of conventional current (out of + at the top).
-    // current(sol) gives the current through that segment.
-    function buildSegments() {
-      const segs = [];
-      const add = (x1, y1, x2, y2, current) => segs.push({ x1, y1, x2, y2, current });
-      add(L, midY, L, T, (sol) => sol.current);
-      if (o.layout === "parallel") {
-        let prev = L;
-        slots.forEach((sl, i) => {
-          const remaining = (sol) => sol.parts.slice(i).reduce((sum, q) => sum + q.I, 0);
-          add(prev, T, sl.x, T, remaining);
-          add(sl.x, T, sl.x, B, (sol) => sol.parts[i].I);
-          add(sl.x, B, prev, B, remaining);
-          prev = sl.x;
-        });
-      } else {
-        add(L, T, R, T, (sol) => sol.current);
-        add(R, T, R, B, (sol) => sol.current);
-        add(R, B, L, B, (sol) => sol.current);
+    // Battery (vertical on the left side; long plate = + at the top). Drawn once.
+    const bat = kit.el("g", null, g);
+    const batLabel = kit.el("text", { x: L + 52, y: midY + 6, "text-anchor": "start", class: "simkit-label", fill: kit.colors.ink }, g);
+
+    // (Re)build everything that depends on the layout: wires, parts, labels, charge dots.
+    function build() {
+      [wires, dotsG, bodies, labels].forEach((el) => (el.textContent = ""));
+      // Geometry: where each part sits and the loop each charge path follows.
+      slots = parts.map((p, i) => {
+        if (o.layout === "parallel") {
+          // The last branch forms the right-hand side of the circuit.
+          return { x: L + (o.w * (i + 1)) / parts.length, y: midY, vertical: true };
+        }
+        return { x: L + (o.w * (i + 1)) / (parts.length + 1), y: T, vertical: false };
+      });
+
+      // Straight wire segments in the direction of conventional current (out of + at the top).
+      // current(sol) gives the current through that segment.
+      function buildSegments() {
+        const segs = [];
+        const add = (x1, y1, x2, y2, current) => segs.push({ x1, y1, x2, y2, current });
+        add(L, midY, L, T, (sol) => sol.current);
+        if (o.layout === "parallel") {
+          let prev = L;
+          slots.forEach((sl, i) => {
+            const remaining = (sol) => sol.parts.slice(i).reduce((sum, q) => sum + q.I, 0);
+            add(prev, T, sl.x, T, remaining);
+            add(sl.x, T, sl.x, B, (sol) => sol.parts[i].I);
+            add(sl.x, B, prev, B, remaining);
+            prev = sl.x;
+          });
+        } else {
+          add(L, T, R, T, (sol) => sol.current);
+          add(R, T, R, B, (sol) => sol.current);
+          add(R, B, L, B, (sol) => sol.current);
+        }
+        add(L, B, L, midY, (sol) => sol.current);
+        return segs;
       }
-      add(L, B, L, midY, (sol) => sol.current);
-      return segs;
+      segments = buildSegments();
+      segments.forEach((sg) => kit.el("line", { x1: sg.x1, y1: sg.y1, x2: sg.x2, y2: sg.y2, stroke: kit.colors.ink, "stroke-width": 4, "stroke-linecap": "square" }, wires));
+
+      bat.textContent = "";
+      kit.el("rect", { x: L - 40, y: midY - 30, width: 80, height: 60, fill: kit.colors.paper }, bat);
+      kit.el("line", { x1: L - 34, x2: L + 34, y1: midY - 10, y2: midY - 10, stroke: kit.colors.ink, "stroke-width": 4 }, bat);
+      kit.el("line", { x1: L - 18, x2: L + 18, y1: midY + 10, y2: midY + 10, stroke: kit.colors.ink, "stroke-width": 8 }, bat);
+      kit.el("text", { x: L + 44, y: midY - 14, class: "simkit-tick", text: "+" }, bat);
+
+      partEls = parts.map((p, i) => {
+        const s = slots[i];
+        const pg = kit.el("g", { transform: `translate(${s.x} ${s.y})${s.vertical ? " rotate(90)" : ""}` }, bodies);
+        kit.el("rect", { x: -48, y: -22, width: 96, height: 44, fill: kit.colors.paper }, pg);
+        let glow = null;
+        if (p.type === "bulb") {
+          glow = kit.el("circle", { cx: 0, cy: 0, r: 44, fill: kit.colors.yellow, opacity: 0 }, pg);
+          kit.el("line", { x1: -48, x2: -22, y1: 0, y2: 0, stroke: kit.colors.ink, "stroke-width": 4 }, pg);
+          kit.el("line", { x1: 22, x2: 48, y1: 0, y2: 0, stroke: kit.colors.ink, "stroke-width": 4 }, pg);
+          kit.el("circle", { cx: 0, cy: 0, r: 22, fill: "#fff", "fill-opacity": 0.6, stroke: kit.colors.ink, "stroke-width": 3 }, pg);
+          kit.el("path", { d: "M -15 -15 L 15 15 M -15 15 L 15 -15", stroke: kit.colors.ink, "stroke-width": 3 }, pg);
+        } else {
+          const pts = [`-48,0`, `-36,0`];
+          for (let k = 0; k < 6; k++) pts.push(`${-30 + k * 12},${k % 2 ? 12 : -12}`);
+          pts.push(`36,0`, `48,0`);
+          kit.el("polyline", { points: pts.join(" "), fill: "none", stroke: kit.colors.ink, "stroke-width": 4, "stroke-linejoin": "round" }, pg);
+        }
+        const name = kit.el("text", { "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink }, labels);
+        const value = kit.el("text", { "text-anchor": "middle", class: "simkit-tick" }, labels);
+        if (s.vertical) {
+          kit.set(name, { x: s.x + 58, y: s.y - 4, "text-anchor": "start" });
+          kit.set(value, { x: s.x + 58, y: s.y + 16, "text-anchor": "start" });
+        } else {
+          kit.set(name, { x: s.x, y: s.y - 34 });
+          kit.set(value, { x: s.x, y: s.y + 44 });
+        }
+        return { glow, name, value };
+      });
+
+      // Charge-flow dots: evenly spaced on each segment, moving at a speed proportional to its current.
+      const SPACING = 44;
+      segments.forEach((sg) => {
+        sg.len = Math.hypot(sg.x2 - sg.x1, sg.y2 - sg.y1);
+        const count = Math.max(1, Math.round(sg.len / SPACING));
+        sg.gap = sg.len / count;
+        sg.offset = 0;
+        sg.speed = 0;
+        sg.dots = Array.from({ length: count }, () => kit.el("circle", { r: 5, fill: kit.colors.yellow, stroke: kit.colors.orange, "stroke-width": 1.5 }, dotsG));
+      });
     }
-    const segments = buildSegments();
-    segments.forEach((sg) => kit.el("line", { x1: sg.x1, y1: sg.y1, x2: sg.x2, y2: sg.y2, stroke: kit.colors.ink, "stroke-width": 4, "stroke-linecap": "square" }, wires));
-
-    // Battery (vertical on the left side; long plate = + at the top).
-    const bat = kit.el("g", null, bodies);
-    kit.el("rect", { x: L - 40, y: midY - 30, width: 80, height: 60, fill: kit.colors.paper }, bat);
-    kit.el("line", { x1: L - 34, x2: L + 34, y1: midY - 10, y2: midY - 10, stroke: kit.colors.ink, "stroke-width": 4 }, bat);
-    kit.el("line", { x1: L - 18, x2: L + 18, y1: midY + 10, y2: midY + 10, stroke: kit.colors.ink, "stroke-width": 8 }, bat);
-    kit.el("text", { x: L + 44, y: midY - 14, class: "simkit-tick", text: "+" }, bat);
-    const batLabel = kit.el("text", { x: L + 52, y: midY + 6, "text-anchor": "start", class: "simkit-label", fill: kit.colors.ink }, bat);
-
-    const partEls = parts.map((p, i) => {
-      const s = slots[i];
-      const pg = kit.el("g", { transform: `translate(${s.x} ${s.y})${s.vertical ? " rotate(90)" : ""}` }, bodies);
-      kit.el("rect", { x: -48, y: -22, width: 96, height: 44, fill: kit.colors.paper }, pg);
-      let glow = null;
-      if (p.type === "bulb") {
-        glow = kit.el("circle", { cx: 0, cy: 0, r: 44, fill: kit.colors.yellow, opacity: 0 }, pg);
-        kit.el("line", { x1: -48, x2: -22, y1: 0, y2: 0, stroke: kit.colors.ink, "stroke-width": 4 }, pg);
-        kit.el("line", { x1: 22, x2: 48, y1: 0, y2: 0, stroke: kit.colors.ink, "stroke-width": 4 }, pg);
-        kit.el("circle", { cx: 0, cy: 0, r: 22, fill: "#fff", "fill-opacity": 0.6, stroke: kit.colors.ink, "stroke-width": 3 }, pg);
-        kit.el("path", { d: "M -15 -15 L 15 15 M -15 15 L 15 -15", stroke: kit.colors.ink, "stroke-width": 3 }, pg);
-      } else {
-        const pts = [`-48,0`, `-36,0`];
-        for (let k = 0; k < 6; k++) pts.push(`${-30 + k * 12},${k % 2 ? 12 : -12}`);
-        pts.push(`36,0`, `48,0`);
-        kit.el("polyline", { points: pts.join(" "), fill: "none", stroke: kit.colors.ink, "stroke-width": 4, "stroke-linejoin": "round" }, pg);
-      }
-      const name = kit.el("text", { "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink }, labels);
-      const value = kit.el("text", { "text-anchor": "middle", class: "simkit-tick" }, labels);
-      if (s.vertical) {
-        kit.set(name, { x: s.x + 58, y: s.y - 4, "text-anchor": "start" });
-        kit.set(value, { x: s.x + 58, y: s.y + 16, "text-anchor": "start" });
-      } else {
-        kit.set(name, { x: s.x, y: s.y - 34 });
-        kit.set(value, { x: s.x, y: s.y + 44 });
-      }
-      return { glow, name, value };
-    });
-
-    // Charge-flow dots: evenly spaced on each segment, moving at a speed proportional to its current.
-    const SPACING = 44;
-    segments.forEach((sg) => {
-      sg.len = Math.hypot(sg.x2 - sg.x1, sg.y2 - sg.y1);
-      const count = Math.max(1, Math.round(sg.len / SPACING));
-      sg.gap = sg.len / count;
-      sg.offset = 0;
-      sg.speed = 0;
-      sg.dots = Array.from({ length: count }, () => kit.el("circle", { r: 5, fill: kit.colors.yellow, stroke: kit.colors.orange, "stroke-width": 1.5 }, dotsG));
-    });
 
     function placeDots() {
       segments.forEach((sg) => {
@@ -132,6 +141,7 @@
       segments.forEach((sg) => (sg.speed = kit.clamp(sg.current(solved) * 40, 0, 400)));
     }
 
+    build();
     solve();
     placeDots();
     if (o.flow) {
@@ -144,6 +154,11 @@
     return {
       update(next) {
         if (next.V != null) o.V = next.V;
+        if (next.layout && next.layout !== o.layout) {
+          o.layout = next.layout === "parallel" ? "parallel" : "series";
+          build();
+          placeDots();
+        }
         if (next.parts) parts.forEach((p) => next.parts[p.id] && next.parts[p.id].R != null && (p.R = next.parts[p.id].R));
         solve();
       },

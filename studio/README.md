@@ -4,8 +4,8 @@ A teacher describes a science lesson (optionally pasting a textbook section); Ed
 five-step interactive simulation, checks it automatically and lets the teacher review it. Inspired by
 Google's "Harnessing Generative UI for Education: Tailored Learning Interactives" (arXiv 2609.20738).
 
-Status: **M0–M2 done** (component library, lesson template, worked example, automatic checks, generator
-with teacher review). Next: visual review by a vision model and an evaluation set (M3).
+Status: **M0–M3 done** (component library, lesson template, worked example, automatic checks, generator
+with teacher review, visual review and evaluation set). Next: more components and examples (M4).
 
 ## How a lesson is generated
 
@@ -16,6 +16,7 @@ The model only fills in small, checked pieces; templates and examples do the res
 | 1. Plan | request, audience, pasted source text, one-line catalogue (`simkit/catalog.json`) | title, idea, objectives, 1–2 components | known component ids | edits/approves objectives |
 | 2. Steps | plan + chosen components' API + `examples/momentum/design.json` | `design.json`: data, short JS expressions, LaTeX text, 5 levels | `checkDesign` (`server/design.ts`): expressions and LaTeX parse; each level starts unsolved and its solution solves it with unlocked, in-range controls; readout limits | approves or asks for changes |
 | 3. Simulation | design summary + chosen components' snippets (`simkit/snippets/`) + example scene | one `scene` function (≈15–40 lines) | every level played and solved in headless Chrome; layout check (`server/layout-check.js`) | opens the lesson |
+| 4. Visual review | a screenshot of the simulation at the start of each step + the step goals and hidden values (`prompts/review.md`) | up to 5 problems a student would notice | — (suggestions: one fix round, kept only if the lesson still works, has no more layout problems and a second review finds fewer problems) | — |
 
 Each step gets up to two fix rounds with the check results sent back to the model. `assembleLesson`
 turns `design.json` + `scene.js` into `lesson.js`; the model never writes the UI or the level logic.
@@ -50,6 +51,7 @@ Command line:
 ```sh
 npm run generate -- "Ohm's law with series resistors" --audience "High school"   # whole pipeline, no review
 npm run regenerate -- <lesson-id> [--from design|build]   # redo named lessons only; backs up to data/backups/
+npm run eval [-- --only id1,id2]   # eval/requests.json through the whole pipeline → data/eval/<run>/summary.md
 npm test               # validator, design checks, math, snippets, browser tests
 npm run typecheck
 ```
@@ -64,7 +66,8 @@ npm run typecheck
 | `prompts/` | Prompts for plan, steps and simulation |
 | `server/` | Express API (`index.ts`), pipeline (`pipeline.ts`), design checks and assembly (`design.ts`), lesson build and logic validation (`lesson.ts`), math (`math.ts`), Chrome check (`browser-check.ts`, `layout-check.js`), card pictures (`thumbnail.ts`), Fireworks client (`llm.ts`) |
 | `web/` | React teacher app |
-| `scripts/` | `generate`, `regenerate` |
+| `scripts/` | `generate`, `regenerate`, `eval` |
+| `eval/` | Evaluation requests (`requests.json`) |
 
 A lesson is one HTML file: `server/lesson.ts` inlines the shell, simkit, the lesson and (when it has
 math) KaTeX's stylesheet and fonts. No AI runs while students use a lesson.
@@ -86,5 +89,15 @@ then open. No UI library: plain CSS on shared tokens, because each lesson must s
 | M0 | Scaffold, archive old prototypes, `.env` | done |
 | M1 | simkit (core, plot, carts, spring, circuit, gas) + template + momentum example + checks | done |
 | M2 | Pipeline plan → steps → simulation with check-and-fix rounds; teacher app; redesign; LaTeX; pasted source text | done |
-| M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on ~10 requests | next |
-| M4 | More components (toward 50–100 objects) and example lessons beyond physics | |
+| M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on 10 requests | done |
+| M4 | More components (toward 50–100 objects) and example lessons beyond physics | next |
+
+### Evaluation (10 requests, `eval/requests.json`)
+
+| Run | Ready | Avg. time | Review findings | Lessons with findings left |
+|---|---|---|---|---|
+| Before the evaluation fixes | 10/10 | 109 s | 20 | 7 |
+| After (circuit layout switch, spring end on the ruler, min. arrow length, "always visible" notes, hidden values also on graphs, start-of-step note for the reviewer) | 10/10 | 125 s | 8 | 3 → after re-review of fixes: Hooke clean |
+
+The reviewer is a language model: findings vary between runs and some are false (e.g. reporting the start
+of a step as wrong). It is used for suggestions, never to block a lesson.

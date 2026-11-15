@@ -21,7 +21,8 @@ Rules:
 - Components already draw their own rulers, axes, scales and value labels (see each component's notes).
   Never draw a second ruler or repeat a label a component already shows.
 - Read values from s and d only. Use the exact keys from the design.
-- Never show a number on the stage that is in info.hidden (unless info.solved).
+- Never reveal a value that is in info.hidden (unless info.solved): no number, and no graph line, point or
+  scale from which it can be read. Hide or clear those parts while the value is hidden.
 - Do not write the title, instructions or the readouts as text on the stage: the app already shows them.
   Label objects with one or two words and put a value next to an object only when it helps to see it there.
 - No timers, no fetch, no document access, no global variables. Plain JavaScript.

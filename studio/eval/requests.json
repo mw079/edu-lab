@@ -1,0 +1,17 @@
+[
+  { "id": "explosion", "audience": "High school", "request": "Momentum in explosions: two carts pushed apart by a spring from rest, total momentum stays zero" },
+  { "id": "hooke", "audience": "High school", "request": "Hooke's law: how the spring force depends on stretch and spring constant" },
+  { "id": "parallel", "audience": "Undergraduate", "request": "Resistors in series and parallel: equivalent resistance and current" },
+  { "id": "charles", "audience": "Middle school", "request": "What happens to a gas when you heat it: volume and temperature" },
+  { "id": "newton2", "audience": "Middle school", "request": "Newton's second law: a bigger push gives a bigger acceleration, a bigger mass a smaller one" },
+  { "id": "shm-graph", "audience": "Undergraduate", "request": "Simple harmonic motion: reading amplitude and period from a position-time graph" },
+  { "id": "power", "audience": "High school", "request": "Electric power in a circuit: P = V I and how bright a bulb is" },
+  { "id": "kinetic", "audience": "High school", "request": "Kinetic theory for chemistry: temperature, particle speed and gas pressure" },
+  { "id": "refraction", "audience": "High school", "request": "Refraction of light: Snell's law at a glass surface", "note": "no matching component: expect partial fit" },
+  {
+    "id": "pasted",
+    "audience": "Middle school",
+    "request": "A lesson based on this text",
+    "sourceText": "When two objects collide and stick together, the collision is perfectly inelastic. Momentum is conserved: the total momentum before equals the total momentum after. Kinetic energy is not conserved; some of it becomes heat and sound. Example: a 2 kg cart moving at 3 m/s hits a 1 kg cart at rest and they stick. Their common velocity is 6/3 = 2 m/s. The kinetic energy drops from 9 J to 6 J, so 3 J is lost. In an elastic collision both momentum and kinetic energy are conserved, and the objects bounce apart."
+  }
+]

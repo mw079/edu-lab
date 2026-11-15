@@ -47,3 +47,26 @@ test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs it
     await browser.close();
   }
 });
+
+test("the circuit switches between series and parallel when a step changes its layout", { timeout: 30_000 }, async () => {
+  const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
+  try {
+    const page = await browser.newPage();
+    await page.setContent(`<div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
+    // Passed as a string: the test runner's compiler would otherwise add helpers the page does not have.
+    const r = (await page.evaluate(`(() => {
+      const kit = window.simkit;
+      const c = kit.circuit(kit.stage(document.querySelector(".stage"), { width: 1000, height: 560 }), {
+        layout: "series", V: 12, parts: [{ id: "R1", R: 6 }, { id: "R2", R: 6 }], flow: false,
+      });
+      const vertical = () => document.querySelectorAll('[transform*="rotate(90)"]').length;
+      const series = { current: c.values().current, vertical: vertical() };
+      c.update({ layout: "parallel" });
+      return { series, parallel: { current: c.values().current, vertical: vertical() } };
+    })()`)) as { series: unknown; parallel: unknown };
+    assert.deepEqual(r.series, { current: 1, vertical: 0 }); // 12 V / 12 Ω, parts drawn along the top wire
+    assert.deepEqual(r.parallel, { current: 4, vertical: 2 }); // 12 V / 3 Ω, parts drawn as vertical branches
+  } finally {
+    await browser.close();
+  }
+});

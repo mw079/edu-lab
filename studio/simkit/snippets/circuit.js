@@ -1,8 +1,10 @@
 // kit.circuit(stage, { x, y, w, h, layout: "series" | "parallel", V (volts),
 //   parts: [{ id, type: "resistor" | "bulb", R (ohms), label }] (1–4 parts), showValues })
-// → { update({ V, parts: { [id]: { R } } }), showValues(bool), values() }
+// → { update({ V, layout, parts: { [id]: { R } } }), showValues(bool), values() }   layout can change per step
 // Physics for derived values: simkit.physics.circuit(layout, V, [R1, R2, …])
 //   → { totalR, current, parts: [{ R, I, V, P }, …] }   (same order as the R list)
+// Always visible: the battery voltage and each part's resistance. Current and voltage per part are visible
+// unless showValues(false).
 // Use showValues(false) in a level that asks the student to calculate a current or voltage.
 // Example state: { V: 9, R1: 2, R2: 4 }
 function (stage, kit) {

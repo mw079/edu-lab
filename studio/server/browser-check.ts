@@ -7,7 +7,7 @@ import { chromium, type Browser } from "playwright";
 const LAYOUT_CHECK = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "layout-check.js"), "utf8");
 
 type LevelResult = { level: number; startsUnsolved: boolean; solvedViaUi: boolean; feedback: string; screenshots: string[] };
-type BrowserReport = { ok: boolean; errors: string[]; layout: string[]; levels: LevelResult[]; screenshots: string[] };
+type BrowserReport = { ok: boolean; errors: string[]; layout: string[]; levels: LevelResult[]; screenshots: string[]; stageShots: string[] };
 
 async function launch(): Promise<Browser> {
   try {
@@ -23,6 +23,7 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
   const errors: string[] = [];
   const levels: LevelResult[] = [];
   const screenshots: string[] = [];
+  const stageShots: string[] = []; // the simulation only, at the start of each step (for the visual review)
   const layout = new Set<string>();
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, offline: true });
@@ -39,7 +40,7 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
       screenshots.push(file);
       return file;
     };
-    if (!(await page.evaluate(() => !!(window as any).__lesson?.levelCount))) return { ok: false, errors, layout: [], levels, screenshots };
+    if (!(await page.evaluate(() => !!(window as any).__lesson?.levelCount))) return { ok: false, errors, layout: [], levels, screenshots, stageShots };
 
     const count: number = await page.evaluate(() => (window as any).__lesson.levelCount);
     for (let i = 0; i < count; i++) {
@@ -47,6 +48,9 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
       await page.evaluate((n) => (window as any).__lesson.goTo(n), i);
       await page.waitForTimeout(150);
       files.push(await shot(`${String(i + 1).padStart(2, "0")}-start.png`));
+      const stageFile = join(outDir, `stage-${i + 1}.png`);
+      await page.locator(".stage svg").screenshot({ path: stageFile });
+      stageShots.push(stageFile);
       for (const m of (await page.evaluate(LAYOUT_CHECK)) as string[]) layout.add(`level ${i + 1}: ${m}`);
       const startsUnsolved = await page.evaluate(() => !(window as any).__lesson.isSolvedNow(undefined));
       await page.evaluate((n) => (window as any).__lesson.applySolution(n), i);
@@ -70,7 +74,7 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
     await browser.close();
   }
   const ok = errors.length === 0 && levels.length > 0 && levels.every((l) => l.startsUnsolved && l.solvedViaUi);
-  return { ok, errors, layout: dedupe([...layout]), levels, screenshots };
+  return { ok, errors, layout: dedupe([...layout]), levels, screenshots, stageShots };
 }
 
 /** The same layout problem usually appears on every level; report it once with the levels listed. */
