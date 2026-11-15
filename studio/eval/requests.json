@@ -1,13 +1,64 @@
 [
-  { "id": "explosion", "audience": "High school", "request": "Momentum in explosions: two carts pushed apart by a spring from rest, total momentum stays zero" },
-  { "id": "hooke", "audience": "High school", "request": "Hooke's law: how the spring force depends on stretch and spring constant" },
-  { "id": "parallel", "audience": "Undergraduate", "request": "Resistors in series and parallel: equivalent resistance and current" },
-  { "id": "charles", "audience": "Middle school", "request": "What happens to a gas when you heat it: volume and temperature" },
-  { "id": "newton2", "audience": "Middle school", "request": "Newton's second law: a bigger push gives a bigger acceleration, a bigger mass a smaller one" },
-  { "id": "shm-graph", "audience": "Undergraduate", "request": "Simple harmonic motion: reading amplitude and period from a position-time graph" },
-  { "id": "power", "audience": "High school", "request": "Electric power in a circuit: P = V I and how bright a bulb is" },
-  { "id": "kinetic", "audience": "High school", "request": "Kinetic theory for chemistry: temperature, particle speed and gas pressure" },
-  { "id": "refraction", "audience": "High school", "request": "Refraction of light: Snell's law at a glass surface", "note": "no matching component: expect partial fit" },
+  {
+    "id": "explosion",
+    "audience": "High school",
+    "request": "Momentum in explosions: two carts pushed apart by a spring from rest, total momentum stays zero"
+  },
+  {
+    "id": "hooke",
+    "audience": "High school",
+    "request": "Hooke's law: how the spring force depends on stretch and spring constant"
+  },
+  {
+    "id": "parallel",
+    "audience": "Undergraduate",
+    "request": "Resistors in series and parallel: equivalent resistance and current"
+  },
+  {
+    "id": "charles",
+    "audience": "Middle school",
+    "request": "What happens to a gas when you heat it: volume and temperature"
+  },
+  {
+    "id": "newton2",
+    "audience": "Middle school",
+    "request": "Newton's second law: a bigger push gives a bigger acceleration, a bigger mass a smaller one"
+  },
+  {
+    "id": "shm-graph",
+    "audience": "Undergraduate",
+    "request": "Simple harmonic motion: reading amplitude and period from a position-time graph"
+  },
+  {
+    "id": "power",
+    "audience": "High school",
+    "request": "Electric power in a circuit: P = V I and how bright a bulb is"
+  },
+  {
+    "id": "kinetic",
+    "audience": "High school",
+    "request": "Kinetic theory for chemistry: temperature, particle speed and gas pressure"
+  },
+  {
+    "id": "refraction",
+    "audience": "High school",
+    "request": "Refraction of light: Snell's law at a glass surface"
+  },
+  {
+    "id": "projectile",
+    "audience": "High school",
+    "request": "Projectile motion: how launch angle and speed decide the range"
+  },
+  {
+    "id": "pendulum",
+    "audience": "High school",
+    "request": "The pendulum: what the period depends on (length, not mass)"
+  },
+  {
+    "id": "incline",
+    "audience": "Undergraduate",
+    "request": "Forces on a block on an inclined plane with friction"
+  },
   {
     "id": "pasted",
     "audience": "Middle school",

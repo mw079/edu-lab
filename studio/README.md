@@ -90,7 +90,7 @@ then open. No UI library: plain CSS on shared tokens, because each lesson must s
 | M1 | simkit (core, plot, carts, spring, circuit, gas) + template + momentum example + checks | done |
 | M2 | Pipeline plan → steps → simulation with check-and-fix rounds; teacher app; redesign; LaTeX; pasted source text | done |
 | M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on 10 requests | done |
-| M4 | More components (toward 50–100 objects) and example lessons beyond physics | next |
+| M4 | More components (toward 50–100 objects) and example lessons beyond physics | in progress: 11 of them so far (added projectile, pendulum, inclined plane, refraction); next chemistry and biology |
 
 ### Evaluation (10 requests, `eval/requests.json`)
 

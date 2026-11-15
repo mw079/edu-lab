@@ -248,6 +248,44 @@
     springPeriod(k, m) {
       return 2 * Math.PI * Math.sqrt(m / k);
     },
+    /**
+     * Projectile launched at v0 (m/s), angleDeg above horizontal, from height h0 (m).
+     * Returns { vx, vy, time (s in the air), range (m), maxHeight (m above ground) }.
+     */
+    projectile(v0, angleDeg, h0, g) {
+      const G = g || 9.8;
+      const a = (angleDeg * Math.PI) / 180;
+      const vx = v0 * Math.cos(a);
+      const vy = v0 * Math.sin(a);
+      const y0 = h0 || 0;
+      const time = (vy + Math.sqrt(vy * vy + 2 * G * y0)) / G;
+      return { vx, vy, time, range: vx * time, maxHeight: y0 + (vy * vy) / (2 * G) };
+    },
+    /**
+     * Block of mass m (kg) on a slope of angleDeg with friction coefficient mu.
+     * Returns { weight, normal, parallel (weight component down the slope), friction, net, a } in N and m/s².
+     * The block stays at rest (a = 0) when friction can hold it.
+     */
+    incline(m, angleDeg, mu, g) {
+      const G = g || 9.8;
+      const t = (angleDeg * Math.PI) / 180;
+      const weight = m * G;
+      const normal = weight * Math.cos(t);
+      const parallel = weight * Math.sin(t);
+      const friction = Math.min(parallel, (mu || 0) * normal);
+      const net = parallel - friction;
+      return { weight, normal, parallel, friction, net, a: net / m };
+    },
+    /**
+     * Snell's law for light going from index n1 into n2 at angleDeg from the normal.
+     * Returns { theta2 (degrees, null when totally reflected), tir (bool), critical (degrees, null if n1 <= n2) }.
+     */
+    snell(n1, n2, angleDeg) {
+      const sin2 = (n1 * Math.sin((angleDeg * Math.PI) / 180)) / n2;
+      const critical = n1 > n2 ? (Math.asin(n2 / n1) * 180) / Math.PI : null;
+      const tir = sin2 > 1;
+      return { theta2: tir ? null : (Math.asin(sin2) * 180) / Math.PI, tir, critical };
+    },
     /** Pendulum small-angle period in seconds. */
     pendulumPeriod(L, g) {
       return 2 * Math.PI * Math.sqrt(L / (g || 9.8));

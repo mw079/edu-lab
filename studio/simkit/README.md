@@ -20,6 +20,9 @@ Physical inputs are SI unless stated.
 | `kit.physics.circuit(layout, V, [R…])` | `{ totalR, current, parts: [{ R, I, V, P }] }` for `"series"`/`"parallel"`. |
 | `kit.physics.gasPressure(n, T, V)` | kPa, with n mol, T kelvin, V litres. |
 | `kit.physics.springPeriod(k, m)`, `pendulumPeriod(L, g)` | Seconds. |
+| `kit.physics.projectile(v0, angleDeg, h0, g)` | `{ vx, vy, time, range, maxHeight }`. |
+| `kit.physics.incline(m, angleDeg, mu, g)` | `{ weight, normal, parallel, friction, net, a }`; `a = 0` when friction holds the block. |
+| `kit.physics.snell(n1, n2, angleDeg)` | `{ theta2, tir, critical }` in degrees. |
 
 ## Components
 
@@ -43,11 +46,30 @@ Ohm's law, series/parallel, power.
 
 **`kit.gasBox(stage, { x, y, w, h, n, T, V, Vmax, Pmax, showGauge, showThermometer, showValues })`**
 Cylinder with piston (position ∝ V), moving particles (count ∝ n, speed ∝ √T), thermometer, pressure gauge.
-`update({ n, T, V })`, `showValues(bool)`, `pressure()` (kPa). Gas laws, kinetic theory.
+`update({ n, T, V })`, `show({ P, V, T })`, `showValues(bool)`, `pressure()` (kPa). A hidden value shows "?" and
+its instrument stops reading (no needle, no mercury). Gas laws, kinetic theory.
+
+**`kit.projectile(stage, { x, y, w, xMax, v0, angle, h0, g, showPath })`**
+Ball launched over marked ground. `update({ v0, angle, h0, g })`, `showPath(bool)`, `launch() → promise`
+(trail + landing mark), `reset()`, `stop()`, `values()`. Projectile motion, range, kinematics.
+
+**`kit.pendulum(stage, { x, y, pxPerM, L, angle, mass, g, showValues, onSample(t, angleDeg) })`**
+Bob on a string with length and angle labels. `update({ L, angle, mass, g })`, `play({ duration }) → promise`,
+`period()`, `stop()`. Period, oscillation, gravity.
+
+**`kit.incline(stage, { x, y, base, angle, mass, mu, g, lengthM, showForces, showValues, showComponents })`**
+Block on a ramp with weight, normal and friction arrows (and optionally the along-slope part of the weight).
+`update({ angle, mass, mu, g })`, `slide() → promise`, `values()`. Forces, friction, Newton's second law.
+
+**`kit.refraction(stage, { x, y, w, h, n1, n2, angle, label1, label2, showRefracted })`**
+Light ray crossing between two materials; total internal reflection above the critical angle.
+`update({ n1, n2, angle, label1, label2 })`, `showRefracted(bool)`, `values()`. Snell's law, optics.
 
 ## Adding a component
 
 1. New file in `simkit/`, appended to `SIMKIT_FILES` in `server/lesson.ts`.
 2. Factory `kit.name = (stage, opts) => api`; draw into `stage.layer()`; animate only via `stage.onFrame`/`stage.animate`.
 3. Physics in `kit.physics` when lessons also need it in `model()`.
-4. Add a snippet in `snippets/`, an entry in `catalog.json`, and document it here.
+4. Add a snippet in `snippets/` (API, physics helper, an "Always visible" note, an example state and scene),
+   an entry in `catalog.json`, and document it here. `tests/snippets.test.ts` then runs it automatically.
+5. Add a request for it to `eval/requests.json` and run `npm run eval -- --only <id>`.

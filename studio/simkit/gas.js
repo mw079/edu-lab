@@ -7,7 +7,8 @@
    * opts: { x=80, y=120, w=520, h=300, n=1 (mol), T=300 (K), V=20 (L), Vmax=40 (L),
    *         Pmax=400 (kPa, gauge full scale), particlesPerMol=30, showGauge=true, showThermometer=true,
    *         showValues=true (numbers on gauge/thermometer) }
-   * Returns { update({ n, T, V }), showValues(bool), pressure() }   pressure in kPa.
+   * Returns { update({ n, T, V }), showValues(bool), show({ P, V, T }), pressure() }   pressure in kPa.
+   * A hidden value shows "?" and its instrument stops reading (no gauge needle, no mercury level).
    */
   kit.gasBox = function (stage, opts) {
     const o = Object.assign(
@@ -62,7 +63,7 @@
     if (!o.showThermometer) thermo.style.display = "none";
 
     let particles = [];
-    let showValues = o.showValues;
+    const shown = { P: o.showValues, V: o.showValues, T: o.showValues };
     const width = () => kit.clamp(o.V / o.Vmax, 0.05, 1) * inner.wMax;
 
     function syncParticles() {
@@ -79,15 +80,15 @@
       kit.set(gasFill, { width: wpx });
       kit.set(pistonPlate, { x: inner.x + wpx });
       kit.set(pistonRod, { x: inner.x + wpx + 18, width: Math.max(0, o.x + o.w + 20 - (inner.x + wpx + 18)) });
-      kit.set(vLabel, { x: inner.x + wpx / 2, text: showValues ? `V = ${kit.fmt(o.V, 1)} L` : "V = ?" });
+      kit.set(vLabel, { x: inner.x + wpx / 2, text: shown.V ? `V = ${kit.fmt(o.V, 1)} L` : "V = ?" });
       const f = kit.clamp((o.T - tMin) / (tMax - tMin), 0, 1);
       const top = tBot - f * (tBot - tTop - 8);
-      kit.set(mercury, { y: top, height: tBot + 10 - top });
-      kit.set(tLabel, { text: showValues ? `${kit.fmt(o.T, 0)} K` : "? K" });
+      kit.set(mercury, { y: top, height: tBot + 10 - top, opacity: shown.T ? 1 : 0 });
+      kit.set(tLabel, { text: shown.T ? `${kit.fmt(o.T, 0)} K` : "? K" });
       const P = api.pressure();
       const a = ang(kit.clamp(P / o.Pmax, 0, 1.02));
-      kit.set(needle, { x2: gx + Math.cos(a) * (gr - 14), y2: gy + Math.sin(a) * (gr - 14) });
-      kit.set(pLabel, { text: showValues ? `P = ${kit.fmt(P, 1)} kPa` : "P = ?" });
+      kit.set(needle, { x2: gx + Math.cos(a) * (gr - 14), y2: gy + Math.sin(a) * (gr - 14), opacity: shown.P ? 1 : 0 });
+      kit.set(pLabel, { text: shown.P ? `P = ${kit.fmt(P, 1)} kPa` : "P = ?" });
     }
 
     stage.onFrame((dt) => {
@@ -113,7 +114,12 @@
         draw();
       },
       showValues(visible) {
-        showValues = visible;
+        shown.P = shown.V = shown.T = visible;
+        draw();
+      },
+      /** Show or hide single values, e.g. show({ P: false }) while the pressure is the question. */
+      show(which) {
+        Object.assign(shown, which);
         draw();
       },
       pressure() {
