@@ -96,3 +96,29 @@ test("Punnett square and moon phase helpers", () => {
   near(P.moonPhase(90).lit, 0.5);
   near(P.moonPhase(180).day, 14.75);
 });
+
+test("motion, pulley, heat, interference and decay helpers", () => {
+  assert.deepEqual(JSON.parse(JSON.stringify(P.motion(0, 5, 2, 4))), { x: 36, v: 13 });
+  near(P.atwood(3, 2).a, 1.96);
+  near(P.atwood(3, 2).tension, 23.52);
+  assert.deepEqual([P.atwood(2, 2).a, P.atwood(2, 2).heavier, P.atwood(1, 8).heavier], [0, "none", "m2"]);
+  near(P.mixTemp(200, 4.18, 20, 100, 0.39, 100).final, 23.57);
+  near(P.mixTemp(100, 4.18, 20, 100, 4.18, 80).final, 50);
+  near(P.fringeSpacing(550, 0.2, 2), 5.5);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.decay(100, 20, 10))), { fraction: 0.25, remaining: 25 });
+  assert.deepEqual([P.stateOf(-5, 0, 100), P.stateOf(20, 0, 100), P.stateOf(100, 0, 100)], ["solid", "liquid", "gas"]);
+});
+
+test("equation balancing and natural selection helpers", () => {
+  assert.equal(P.balance("water", [2, 1, 2]).balanced, true);
+  assert.equal(P.balance("water", [1, 1, 1]).balanced, false);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.balance("water", [1, 1, 1]).left)), { H: 2, O: 2 });
+  assert.equal(P.balance("ammonia", [1, 3, 2]).balanced, true);
+  assert.equal(P.balance("methane", [1, 2, 1, 2]).balanced, true);
+  assert.equal(P.balance("rust", [4, 3, 2]).balanced, true);
+  assert.equal(P.balance("magnesium", [2, 1, 2]).balanced, true);
+  assert.equal(P.balance("water", [0, 0, 0]).balanced, false);
+  near(P.selection(0.1, 0.5, 10), 0.1); // bark that hides neither colour changes nothing
+  assert.ok(P.selection(0.1, 0.8, 3) > 0.7);
+  assert.ok(P.selection(0.9, 0.1, 5) < 0.1);
+});

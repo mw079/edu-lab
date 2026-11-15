@@ -9,7 +9,7 @@ function (stage, kit) {
   return {
     update(s, d, info) { … },   // called after every change. s = state, d = state + derived values,
                                 // info = { level, solved, hidden: Set of readout keys shown as "?" }
-    reset(s) { … },             // optional: a step starts or the student presses Reset
+    reset(s, d, info) { … },    // optional: a step starts or the student presses Reset
     stop() { … },               // optional: stop running animations
     // one method per action id in the design, returning a Promise (e.g. an animation):
     run(s, d) { return …; },

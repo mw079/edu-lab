@@ -39,7 +39,7 @@ defineLesson({
     const track = kit.cartTrack(stage, { … });
     return {
       update(s, d, info) { … },               // called after every change; info = { level, hidden:Set, solved }
-      reset(s) { … },                         // optional: level start / Reset button
+      reset(s, d, info) { … },                // optional: level start / Reset button
       stop() { … },                           // optional: stop animations
       run(s, d) { return promise; },          // optional: anything actions call
     };

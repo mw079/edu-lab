@@ -140,6 +140,56 @@
     "request": "The Pythagorean theorem in right triangles"
   },
   {
+    "id": "kinematics",
+    "audience": "High school",
+    "request": "Constant acceleration: how a car's speed and position change with time"
+  },
+  {
+    "id": "atwood",
+    "audience": "Undergraduate",
+    "request": "The Atwood machine: acceleration and tension for two masses over a pulley"
+  },
+  {
+    "id": "specific-heat",
+    "audience": "High school",
+    "request": "Specific heat capacity: the final temperature when a hot metal block is put into water"
+  },
+  {
+    "id": "double-slit",
+    "audience": "Undergraduate",
+    "request": "Young's double-slit experiment: how fringe spacing depends on wavelength, slit separation and distance"
+  },
+  {
+    "id": "half-life",
+    "audience": "High school",
+    "request": "Radioactive decay and half-life"
+  },
+  {
+    "id": "states-of-matter",
+    "audience": "Middle school",
+    "request": "Solids, liquids and gases: how particles move and what happens at the melting and boiling point"
+  },
+  {
+    "id": "balancing",
+    "audience": "Middle school",
+    "request": "Balancing chemical equations"
+  },
+  {
+    "id": "natural-selection",
+    "audience": "Middle school",
+    "request": "Natural selection: why the peppered moth changed colour"
+  },
+  {
+    "id": "linear-functions",
+    "audience": "Middle school",
+    "request": "Slope and y-intercept of a straight line, y = mx + b"
+  },
+  {
+    "id": "circles",
+    "audience": "Middle school",
+    "request": "Circumference and area of a circle"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",

@@ -147,9 +147,13 @@
       update();
     }
 
+    const sceneInfo = () => ({ level: current, solved: solved(), hidden: new Set(solved() ? [] : level().hide || []) });
+    // reset() gets the same arguments as update(), so a scene that shares one drawing function for both works.
+    const resetView = () => view.reset && view.reset(state, { ...state, ...(config.model ? config.model(state) : {}) }, sceneInfo());
+
     function update() {
       derived = { ...state, ...(config.model ? config.model(state) : {}) };
-      if (view.update) view.update(state, derived, { level: current, solved: solved(), hidden: new Set(solved() ? [] : level().hide || []) });
+      if (view.update) view.update(state, derived, sceneInfo());
       for (const c of controls) {
         rows[c.key].sync(state[c.key]);
         rows[c.key].el.hidden = locked(c.key);
@@ -214,7 +218,7 @@
       busy = false;
       current = i;
       state = { ...config.state, ...(exploring() ? {} : level().setup || {}) };
-      if (view.reset) view.reset(state);
+      resetView();
       update();
       renderCard();
     }

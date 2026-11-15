@@ -35,6 +35,14 @@ Physical inputs are SI unless stated.
 | `kit.physics.photoelectric(wavelengthNm, workEV)` | `{ photonEV, emitted, keEV, stopV, thresholdNm }`. |
 | `kit.physics.punnett(p1, p2, letter)` | `{ cells, AA, Aa, aa, dominant }`; a parent is 0–2 dominant alleles or `"Aa"`. |
 | `kit.physics.moonPhase(angleDeg)` | `{ name, lit, day }`; 0 = new moon, 180 = full moon. |
+| `kit.physics.motion(x0, v0, a, t)` | `{ x, v }` for constant acceleration. |
+| `kit.physics.atwood(m1, m2)` | `{ a, tension, heavier }`. |
+| `kit.physics.mixTemp(m1, c1, T1, m2, c2, T2)` | `{ final, heat }`; g, J/(g·°C), °C. |
+| `kit.physics.fringeSpacing(wavelengthNm, dMm, Lm)` | Millimetres between bright fringes. |
+| `kit.physics.decay(n0, t, halfLife)` | `{ fraction, remaining }`. |
+| `kit.physics.stateOf(T, melt, boil)` | `"solid"`, `"liquid"` or `"gas"`. |
+| `kit.physics.balance(reaction, coefficients)` | `{ left, right, balanced }` atom counts; reactions in `kit.physics.reactions`. |
+| `kit.physics.selection(startDark, bark, generations)` | Fraction of dark moths after selection. |
 
 ## Components
 
@@ -141,6 +149,45 @@ Fractions, equivalence, comparison.
 **`kit.rightTriangle(stage, { x, y, pxPerUnit, a, b, unit, showValues })`**
 Right triangle with labelled legs, hypotenuse and angle. `update({ a, b })`, `show({ a, b, c, angle })`, `values()`.
 Pythagorean theorem, trigonometry.
+
+**`kit.motionTrack(stage, { x, y, w, xMax, x0, v0, a, showValues, onSample(t, x, v) })`**
+Car on a marked road with constant acceleration. `update({ x0, v0, a })`, `show({ v, t })`, `play({ duration }) → promise`,
+`reset()`, `values(t)`. Kinematics, motion graphs (pair with `kit.plot`).
+
+**`kit.atwood(stage, { x, y, pxPerM, m1, m2, showValues })`**
+Two masses over a pulley beside a height ruler. `update({ m1, m2 })`, `show({ m1, m2 })`, `play() → promise`, `values()`.
+Newton's second law, tension.
+
+**`kit.calorimeter(stage, { x, y, w, h, mWater, tWater, mBlock, cBlock, tBlock, metal, showValues })`**
+Metal block dropped into water with a thermometer. `update({...})`, `show({ thermometer })`, `drop() → promise`,
+`values()`. Specific heat, thermal equilibrium.
+
+**`kit.doubleSlit(stage, { x, y, w, h, wavelength, d, L, showValues })`**
+Two slits and the fringe pattern on a screen with a mm scale. `update({ wavelength, d, L })`, `show({ spacing })`,
+`values()`. Interference. Uses `kit.lightColor(nm)`.
+
+**`kit.decayGrid(stage, { x, y, size, count, halfLife, t, unit, showValues })`**
+Grid of nuclei that decay with time. `update({ t, halfLife })`, `values()`. Half-life, exponential decay.
+
+**`kit.particleStates(stage, { x, y, w, h, T, melt, boil, substance, showValues })`**
+Particles as solid, liquid or gas depending on temperature. `update({ T, melt, boil, substance })`,
+`show({ state, T })`, `values()`. States of matter, particle model.
+
+**`kit.equationBalance(stage, { x, y, w, reaction, coefficients, showCounts })`**
+Chemical equation with coefficients, molecules and atom counts per side. `update({ coefficients, reaction })`,
+`showCounts(bool)`, `values()`. Balancing equations, conservation of mass.
+
+**`kit.naturalSelection(stage, { x, y, w, h, bark, startDark, generations, count, showValues })`**
+Dark and light moths on bark of adjustable darkness over generations. `update({ bark, startDark, generations })`,
+`values()`. Natural selection, camouflage.
+
+**`kit.coordinatePlane(stage, { x, y, size, range, m, b, showLine, showEquation, showSlope, points })`**
+Grid with the line y = mx + b, slope triangle, equation and points. `update({ m, b, points })`,
+`show({ line, equation, slope })`, `values()`. Linear functions.
+
+**`kit.circleFigure(stage, { x, y, pxPerUnit, r, angle, unit, showValues })`**
+Circle with radius, optional sector, circumference and area. `update({ r, angle })`,
+`show({ r, angle, circumference, area })`, `values()`. Circles, π, sectors.
 
 ## Adding a component
 

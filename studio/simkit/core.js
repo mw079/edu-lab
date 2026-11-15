@@ -409,6 +409,79 @@
       const name = Math.abs(a - main) <= 6 ? names[((main / 90) % 4) * 2] : names[Math.floor(a / 90) * 2 + 1];
       return { name, lit: (1 - Math.cos((a * Math.PI) / 180)) / 2, day: (a / 360) * 29.5 };
     },
+    /** Straight-line motion with constant acceleration: { x (m), v (m/s) } at time t. */
+    motion(x0, v0, a, t) {
+      return { x: x0 + v0 * t + 0.5 * a * t * t, v: v0 + a * t };
+    },
+    /**
+     * Atwood machine: masses m1 (left) and m2 (right) on a string over a light pulley.
+     * Returns { a (m/s², size), tension (N), heavier: "m1" | "m2" | "none" }.
+     */
+    atwood(m1, m2, g) {
+      const G = g || 9.8;
+      return { a: (Math.abs(m1 - m2) * G) / (m1 + m2), tension: (2 * m1 * m2 * G) / (m1 + m2), heavier: m1 > m2 ? "m1" : m2 > m1 ? "m2" : "none" };
+    },
+    /** Radioactive decay: { fraction (still undecayed, 0–1), remaining (whole nuclei of n0) } after time t. */
+    decay(n0, t, halfLife) {
+      const fraction = Math.pow(0.5, t / halfLife);
+      return { fraction, remaining: Math.round(n0 * fraction) };
+    },
+    /** Double slit: distance between bright fringes in mm, for wavelength in nm, slit separation in mm, screen distance in m. */
+    fringeSpacing(wavelengthNm, dMm, Lm) {
+      return (wavelengthNm * 1e-6 * Lm * 1000) / dMm;
+    },
+    /**
+     * Two things exchange heat until they share one temperature (no heat lost). Masses in g, specific heats
+     * in J/(g·°C), temperatures in °C. Returns { final (°C), heat (J moved from the hotter to the colder) }.
+     */
+    mixTemp(m1, c1, T1, m2, c2, T2) {
+      const final = (m1 * c1 * T1 + m2 * c2 * T2) / (m1 * c1 + m2 * c2);
+      return { final, heat: Math.abs(m1 * c1 * (final - T1)) };
+    },
+    /** State of matter at temperature T: "solid", "liquid" or "gas". */
+    stateOf(T, melt, boil) {
+      return T < melt ? "solid" : T < boil ? "liquid" : "gas";
+    },
+    /** Reactions for simkit.physics.balance: species on each side as [formula, { element: atoms }]. */
+    reactions: {
+      water: { left: [["H₂", { H: 2 }], ["O₂", { O: 2 }]], right: [["H₂O", { H: 2, O: 1 }]] },
+      ammonia: { left: [["N₂", { N: 2 }], ["H₂", { H: 2 }]], right: [["NH₃", { N: 1, H: 3 }]] },
+      methane: { left: [["CH₄", { C: 1, H: 4 }], ["O₂", { O: 2 }]], right: [["CO₂", { C: 1, O: 2 }], ["H₂O", { H: 2, O: 1 }]] },
+      rust: { left: [["Fe", { Fe: 1 }], ["O₂", { O: 2 }]], right: [["Fe₂O₃", { Fe: 2, O: 3 }]] },
+      magnesium: { left: [["Mg", { Mg: 1 }], ["O₂", { O: 2 }]], right: [["MgO", { Mg: 1, O: 1 }]] },
+    },
+    /**
+     * Count the atoms on both sides of a reaction for the given coefficients (in the order the species are
+     * written, left side first). Returns { left: { element: n }, right: { … }, balanced }.
+     */
+    balance(reaction, coefficients) {
+      const r = kit.physics.reactions[reaction] || kit.physics.reactions.water;
+      let i = 0;
+      const count = (side) => {
+        const total = {};
+        for (const [, atoms] of side) {
+          const k = Math.max(0, Math.round(coefficients[i++] || 0));
+          for (const el in atoms) total[el] = (total[el] || 0) + k * atoms[el];
+        }
+        return total;
+      };
+      const left = count(r.left);
+      const right = count(r.right);
+      const balanced = Object.keys(left).every((el) => left[el] > 0 && left[el] === right[el]);
+      return { left, right, balanced };
+    },
+    /**
+     * Natural selection of dark and light moths on bark of darkness `bark` (0 light … 1 dark).
+     * Each generation birds eat more of the moths that stand out. Returns the fraction of dark moths (0–1)
+     * after `generations`, starting from startDark.
+     */
+    selection(startDark, bark, generations) {
+      const sDark = 0.1 + 0.8 * bark;
+      const sLight = 0.9 - 0.8 * bark;
+      let p = startDark;
+      for (let i = 0; i < Math.round(generations); i++) p = (p * sDark) / (p * sDark + (1 - p) * sLight);
+      return p;
+    },
     /** Pendulum small-angle period in seconds. */
     pendulumPeriod(L, g) {
       return 2 * Math.PI * Math.sqrt(L / (g || 9.8));

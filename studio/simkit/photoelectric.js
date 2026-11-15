@@ -11,6 +11,8 @@
     return `hsl(${Math.round(hue)}, 85%, 55%)`;
   }
 
+  kit.lightColor = lightColor;
+
   /**
    * opts: { x=200, y=150, w=600, h=280 (the tube), wavelength=400 (nm), intensity=50 (%), work=2.3 (eV, work
    *         function of the metal), metal="sodium", showValues=true (wavelength label) }
