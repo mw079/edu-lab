@@ -8,7 +8,7 @@ import { simkitSource } from "../server/lesson.ts";
 const LAYOUT_CHECK = readFileSync("server/layout-check.js", "utf8");
 
 // Every catalogue snippet is shown to the model as a pattern to copy, so each must run without errors.
-test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs its actions", { timeout: 60_000 }, async () => {
+test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs its actions", { timeout: 120_000 }, async () => {
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
     for (const { id } of catalog()) {
@@ -75,11 +75,11 @@ test("the circuit switches between series and parallel when a step changes its l
 });
 
 // Components with direct interaction: grabbing (or clicking) the object must call the linked control.
-test("draggable and clickable components call their links", { timeout: 60_000 }, async () => {
+test("draggable and clickable components call their links", { timeout: 120_000 }, async () => {
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
     const ids = ["pendulum", "numberLine", "lever", "lens", "scatterPlot", "binaryBits",
-      "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor"];
+      "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor", "incline", "refraction", "wave", "orbit"];
     for (const id of ids) {
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)![1];

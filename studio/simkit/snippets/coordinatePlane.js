@@ -3,7 +3,8 @@
 // → { update({ m, b, points: { [id]: { x, y } } }), show({ line, equation, slope }), values() }
 // Derived values are plain arithmetic: y = s.m * x + s.b, x-intercept = -s.b / s.m,
 // slope between two points = (y2 − y1) / (x2 − x1).
-// Always visible: the grid with numbered axes, so the y-intercept and the slope can be read from the line.
+// Always visible: the grid with numbered axes, so the y-intercept, the slope and where the line crosses the x-axis
+// can all be read from the line. A question step must ask for something that needs a calculation instead.
 // The written equation is hidden with show({ equation: false }), the rise/run triangle with show({ slope: false }),
 // the line itself with show({ line: false }) (for steps about plotting points).
 // The equation is written to the right of the grid: leave 200 px free there. Keep |m| ≤ 5 and |b| ≤ range.

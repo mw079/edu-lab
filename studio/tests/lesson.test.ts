@@ -59,10 +59,18 @@ test("unknown hide/lock references are caught", () => {
 });
 
 test("question level needs an answer that passes", () => {
-  const ask = 'ask: { label: "2a?" }, check: (s, d, x) => x === 2, solution: { answer: 2 }';
+  const ask = 'ask: { label: "2a?" }, hide: ["double"], check: (s, d, x) => x === 2, solution: { answer: 2 }';
   assert.equal(validateLesson(loadLesson(tiny(ask))).ok, true);
-  const wrong = 'ask: { label: "2a?" }, check: (s, d, x) => x === 2, solution: { answer: 3 }';
+  const wrong = 'ask: { label: "2a?" }, hide: ["double"], check: (s, d, x) => x === 2, solution: { answer: 3 }';
   assert.equal(validateLesson(loadLesson(tiny(wrong))).ok, false);
+});
+
+test("a question step whose answer is already on a visible readout is caught", () => {
+  const visible = 'ask: { label: "2a?" }, check: (s, d, x) => x === 2, solution: { answer: 2 }';
+  assert.ok(validateLesson(loadLesson(tiny(visible))).errors.some((e) => /already reads the answer/.test(e.message)));
+  // A readout in another unit that happens to show the same number is not the answer.
+  const otherUnit = 'ask: { label: "2a?", unit: "N" }, check: (s, d, x) => x === 2, solution: { answer: 2 }';
+  assert.equal(validateLesson(loadLesson(tiny(otherUnit))).ok, true);
 });
 
 test("lesson code that never calls defineLesson is rejected", () => {

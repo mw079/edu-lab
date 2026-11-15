@@ -299,6 +299,10 @@ link in steps where the control is locked (so question steps cannot be solved by
 | `charges` | `drag: { r }` | drags either charge sideways |
 | `coordinatePlane` | `drag: { b, m }` | drags the y-intercept and a point on the line |
 | `protractor` | `drag: { angle }` | turns the red ray by its end |
+| `incline` | `drag: { angle }` | lifts the top corner of the slope |
+| `refraction` | `drag: { angle }` | swings the incoming ray by its end |
+| `wave` | `drag: { amplitude }` | moves the amplitude line up and down |
+| `orbit` | `drag: { a }` | pulls the planet in or out |
 
 In a component: `kit.drag(stage, element, link, (point) => link(valueAt(point)))` (the point is in stage
 coordinates), `kit.click(element, link, fn)`, and `kit.grip(...)` to draw the dashed ring that marks a grabbable

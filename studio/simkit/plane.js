@@ -56,7 +56,10 @@
           const y2 = Y(o.b + o.m * run);
           kit.el("path", { d: `M ${X(0)} ${y1} L ${x2} ${y1} L ${x2} ${y2}`, fill: "none", stroke: kit.colors.orange, "stroke-width": 3, "stroke-dasharray": "6 5" }, dynamic);
           kit.el("text", { x: (X(0) + x2) / 2, y: y1 + (o.m > 0 ? 20 : -10), "text-anchor": "middle", class: "simkit-tick", fill: kit.colors.orange, style: "font-weight: 600", text: `run ${run}` }, dynamic);
-          kit.el("text", { x: x2 + 8, y: (y1 + y2) / 2 + 4, class: "simkit-tick", fill: kit.colors.orange, style: "font-weight: 600", text: `rise ${num(o.m * run)}` }, dynamic);
+          // Beside the middle of the rise, moved off the x-axis when the axis runs through that spot.
+          const mid = (y1 + y2) / 2;
+          const riseY = Math.abs(mid - Y(0)) < 16 ? Y(0) + (y2 > y1 ? 22 : -22) : mid;
+          kit.el("text", { x: x2 + 8, y: riseY + 4, class: "simkit-tick", fill: kit.colors.orange, style: "font-weight: 600", text: `rise ${num(o.m * run)}` }, dynamic);
         }
       }
       // Direct interaction: rings on the y-intercept (b) and on the line at x = h (slope).

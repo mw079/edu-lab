@@ -30,6 +30,8 @@
           const cell = kit.el("rect", { x: o.x + k * part, y, width: part, height: o.barHeight, fill: k < n ? b.color : "#fff", "fill-opacity": k < n ? 0.85 : 1, stroke: kit.colors.ink, "stroke-width": 2 }, g);
           kit.click(cell, link, () => link(k + 1 === n ? k : k + 1));
         }
+        // The same dashed purple outline that marks draggable objects, around a bar whose parts can be clicked.
+        if (kit.linked(link)) kit.el("rect", { x: o.x - 6, y: y - 6, width: o.w + 12, height: o.barHeight + 12, rx: 8, fill: "none", stroke: kit.colors.purple, "stroke-opacity": 0.5, "stroke-width": 2, "stroke-dasharray": "4 5", "pointer-events": "none", class: "simkit-grip" }, g);
         if (b.label) kit.el("text", { x: o.x - 18, y: y + o.barHeight / 2 + 6, "text-anchor": "end", class: "simkit-label", fill: b.color, text: b.label }, g);
         // The fraction, written as a stack: numerator, line, denominator.
         const fx = o.x + o.w + 44;

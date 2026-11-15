@@ -7,10 +7,12 @@
 // their values unless showValues(false); use that, or showForces(false), in a step that asks for a force.
 // showComponents: true adds a dashed arrow "W∥" for the part of the weight along the slope (= parallel);
 // use it when a step is about that component.
-// Occupies x … x+base+40, y−base·tan(angle)−90 … y+10.
+// Direct interaction: with drag: { angle: app.link("angle") } the student lifts the top corner of the slope
+// (the slider follows). Pass it only when the lesson has an angle slider.
+// Occupies x … x+base+60, y−base·tan(angle)−90 … y+10.
 // Example state: { angle: 30, m: 2, mu: 0.2 }   actions: [{ id: "slide", label: "Let go" }]
-function (stage, kit) {
-  const ramp = kit.incline(stage, { x: 160, y: 480, base: 560, showComponents: true });
+function (stage, kit, app) {
+  const ramp = kit.incline(stage, { x: 160, y: 480, base: 560, showComponents: true, drag: { angle: app.link("angle") } });
   return {
     update(s, d, info) {
       ramp.update({ angle: s.angle, mass: s.m, mu: s.mu });

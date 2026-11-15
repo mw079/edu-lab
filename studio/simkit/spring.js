@@ -59,6 +59,8 @@
       if (kit.linked(pull) && !anim) kit.grip(block, left + size / 2, floorY - size / 2, size / 2 + 14);
       dragger.refresh();
       kit.el("rect", { x: left, y: floorY - size, width: size, height: size, rx: 10, fill: kit.colors.purple }, block);
+      // A pointer on the ruler under the spring's end, so the stretch is read there and not at the block's centre.
+      kit.el("path", { d: `M${left} ${floorY + 10} l-7 -12 h14 z M${left} ${floorY + 10} v16`, fill: kit.colors.purple, stroke: kit.colors.purple, "stroke-width": 3, "stroke-linejoin": "round" }, block);
       kit.el("text", { x: left + size / 2, y: floorY - size / 2 + 7, "text-anchor": "middle", class: "simkit-cart-label", text: `${kit.fmt(o.mass, o.mass < 1 ? 2 : 1)} kg` }, block);
 
       forceG.textContent = "";

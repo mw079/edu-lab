@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=120, y=70, w=520, h=420, n1=1 (upper material), n2=1.5 (lower material), angle=30 (deg from the
-   *         normal, 0–89), label1="air", label2="glass", showRefracted=true (the ray and angle in material 2) }
+   *         normal, 0–89), label1="air", label2="glass", showRefracted=true (the ray and angle in material 2),
+   *         drag: { angle: app.link("key") } (the student swings the incoming ray) }
    * The ray comes from the upper left, hits the boundary in the middle and continues into the lower material;
    * above the critical angle it is totally reflected instead.
    * Returns { update({ n1, n2, angle, label1, label2 }), showRefracted(bool), values() }
@@ -26,6 +27,10 @@
     const name1 = kit.el("text", { x: o.x + o.w - 14, y: o.y + 28, "text-anchor": "end", class: "simkit-label", fill: kit.colors.ink }, g);
     const name2 = kit.el("text", { x: o.x + o.w - 14, y: o.y + o.h - 16, "text-anchor": "end", class: "simkit-label", fill: kit.colors.ink }, g);
     const rays = kit.el("g", null, g);
+    const handle = kit.el("g", null, g);
+    const swing = o.drag && o.drag.angle;
+    // The ray comes from the upper left: the angle is measured from the normal, and never passes the boundary.
+    const dragger = kit.drag(stage, handle, swing, (p) => swing(p.y >= cy ? 89 : kit.clamp((Math.atan2(cx - p.x, cy - p.y) * 180) / Math.PI, 0, 89)));
     const a1 = kit.el("text", { class: "simkit-label", fill: kit.colors.orange }, g);
     const a2 = kit.el("text", { class: "simkit-label", fill: kit.colors.red }, g);
 
@@ -52,6 +57,9 @@
       const iy = cy - Math.cos(t1) * len;
       kit.arrowShape(rays, ix, iy, cx - Math.sin(t1) * len * 0.45, cy - Math.cos(t1) * len * 0.45, { color: kit.colors.orange, width: 4, head: 14 });
       kit.el("line", { x1: ix, y1: iy, x2: cx, y2: cy, stroke: kit.colors.orange, "stroke-width": 4 }, rays);
+      handle.textContent = "";
+      if (kit.linked(swing)) kit.grip(handle, ix, iy, 22);
+      dragger.refresh();
       kit.el("path", { d: arcPath(-o.angle, 0, 46), fill: "none", stroke: kit.colors.orange, "stroke-width": 2 }, rays);
       // Angle labels sit beside their ray, on the side away from the normal.
       kit.set(a1, { x: cx - Math.sin(t1) * len * 0.7 - Math.cos(t1) * 16, y: cy - Math.cos(t1) * len * 0.7 + Math.sin(t1) * 16 + 5, "text-anchor": "end", text: `θ₁ = ${kit.fmt(o.angle, 0)}°` });

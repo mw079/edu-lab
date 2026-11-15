@@ -7,7 +7,8 @@
    * opts: { x=140, y=470 (lower-left corner, where the angle is), base=560 (px), angle=30 (deg, up to 45),
    *         mass=2 (kg), mu=0 (friction coefficient), g=9.8, lengthM=2 (slope length the block can slide, m),
    *         showForces=true, showValues=true (numbers on the force arrows),
-   *         showComponents=false (dashed arrow for the part of the weight along the slope, "W∥") }
+   *         showComponents=false (dashed arrow for the part of the weight along the slope, "W∥"),
+   *         drag: { angle: app.link("key") } (the student lifts the top of the slope) }
    * The slope rises to the right; the block starts near the top and slides down to the left.
    * Returns { update({ angle, mass, mu, g }), showForces(bool), showValues(bool),
    *   slide() -> Promise (animated with the real acceleration; stays put if friction holds it), reset(), stop(), values() }
@@ -21,6 +22,9 @@
     const angleLabel = kit.el("text", { class: "simkit-label", fill: kit.colors.ink }, g);
     const block = kit.el("g", null, g);
     const forces = kit.el("g", null, g);
+    const handle = kit.el("g", null, g);
+    const tilt = o.drag && o.drag.angle;
+    const dragger = kit.drag(stage, handle, tilt, (p) => tilt(kit.clamp((Math.atan2(o.y - p.y, o.base) * 180) / Math.PI, 0, 45)));
     let anim = null;
     let pos = 0; // metres slid down from the start
 
@@ -32,6 +36,9 @@
       const top = { x: o.x + o.base, y: o.y - h };
       kit.set(wedge, { points: `${o.x},${o.y} ${top.x},${o.y} ${top.x},${top.y}` });
       kit.set(arc, { d: `M ${o.x + 70} ${o.y} A 70 70 0 0 0 ${o.x + 70 * Math.cos(t)} ${o.y - 70 * Math.sin(t)}` });
+      handle.textContent = "";
+      if (kit.linked(tilt) && !anim) kit.grip(handle, top.x + 30, top.y, 22); // beside the corner, clear of the friction label
+      dragger.refresh();
       kit.set(angleLabel, { x: o.x + 84, y: o.y - 12 - 20 * Math.sin(t), text: `${kit.fmt(o.angle, 0)}°` });
 
       // Block: its base centre sits on the slope; start is 78% of the way up.

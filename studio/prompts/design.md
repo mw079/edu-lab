@@ -57,6 +57,7 @@ Math.abs(d.p - 12) < 1e-6, and typed answers with a looser one: Math.abs(answer 
 - Every level's "setup" lists every state key (nothing is inherited from "state").
 - At most 5 readouts in total; every level has "show" with at most 3 of them; every "hide" key is also in "show".
 - Every readout key exists in state or derived and is a finite number.
+- In a question step no visible readout in the answer's unit may already read the answer: list it in "hide".
 
 ## Teaching rules
 
@@ -65,7 +66,8 @@ Math.abs(d.p - 12) < 1e-6, and typed answers with a looser one: Math.abs(answer 
   (a 4 kg mass, night time, a parallel circuit, a 2 m string) must be set to that value in "setup". In a
   question step the student cannot change anything, so the picture must already be exactly that situation.
   In a goal step, start from a clearly different value of what the student will change, and set everything
-  else as the goal describes.
+  else as the goal describes. If the goal names a number to reach ("make the force 0.9 N"), the start must
+  not already show that number, unless the task is to keep it the same.
 - The answer of a question step must be a readout that the step lists in "hide"; then the picture hides
   it too (number, bracket, ray or graph).
 - Never ask the student to find a value the picture always shows (see "Always visible" in the component

@@ -130,10 +130,13 @@ let replyCount = 0;
 // How long the model may think per step. Unlimited thinking used the whole budget without answering.
 const EFFORT: Record<LogStage, "low" | "medium"> = { plan: "low", design: "medium", build: "medium", review: "low" };
 
-async function ask(d: Draft, stage: LogStage, what: string, messages: Message[]): Promise<string> {
+// The review's fix is a small edit to a working scene and is optional: little thinking, and give up after 45 s.
+const REVIEW_FIX = { reasoningEffort: "low", timeoutMs: 45_000, retries: 0 } as const;
+
+async function ask(d: Draft, stage: LogStage, what: string, messages: Message[], opts: { reasoningEffort?: "low" | "medium"; timeoutMs?: number; retries?: number } = {}): Promise<string> {
   d.activity = what;
   saveDraft(d);
-  let r = await chat(messages, { maxTokens: 24000, temperature: 0.3, reasoningEffort: EFFORT[stage] });
+  let r = await chat(messages, { maxTokens: 24000, temperature: 0.3, reasoningEffort: EFFORT[stage], ...opts });
   if (!r.text.trim()) {
     // Thought until the token limit without answering: ask again with less thinking.
     d.log.push({ at: new Date().toISOString(), stage, what: `${what}: empty reply, retrying with less thinking`, ms: r.ms, tokens: r.usage.completion_tokens });
@@ -346,8 +349,8 @@ async function reviewAndFix(d: Draft, design: Design, messages: Message[], accep
       role: "user",
       content: `A reviewer looked at screenshots of the drawing at the start of each step and found:\n${problemList(issues.map((i) => `${i.step ? `step ${i.step}: ` : ""}${i.problem}${i.fix ? ` (suggested: ${i.fix})` : ""}`))}\n\nFix the problems that are real; keep everything else as it is. Reply with the complete function in one js code block.`,
     });
-    const text = await ask(d, "build", "Fixing what the visual review found", messages);
     try {
+      const text = await ask(d, "build", "Fixing what the visual review found", messages, REVIEW_FIX);
       const a = await tryScene(d, design, text, join(dirOf(d.id), "screenshots-review"));
       if (!a.report.ok || a.report.layout.length > accepted.report.layout.length) {
         d.review.note = "The fix was not kept: it broke the lesson or added layout problems.";
@@ -360,7 +363,9 @@ async function reviewAndFix(d: Draft, design: Design, messages: Message[], accep
         } else d.review.note = `The fix was not kept: the review still found ${after.length} problem(s).`;
       }
     } catch (e) {
-      d.review.note = `The fix was not kept: ${(e as Error).message}`;
+      const slow = (e as Error).name === "TimeoutError";
+      d.review.note = slow ? "No fix was made: the model took longer than 45 s, so the lesson stays as built." : `The fix was not kept: ${(e as Error).message}`;
+      if (slow) d.log.push({ at: new Date().toISOString(), stage: "review", what: "Review fix skipped after 45 s" });
     }
   }
   return accepted;

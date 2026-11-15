@@ -1,7 +1,7 @@
 # Demo script (about 4 minutes)
 
 Before you start: `npm run build && npm start`, open http://127.0.0.1:8787, and have one lesson already
-generated in case the live one is slow. A new lesson takes about 90 seconds to build.
+generated in case the live one is slow. A new lesson takes about 90 seconds to build (70–100 s in the last check).
 
 ## 1. What it is (20 s)
 
@@ -20,8 +20,23 @@ Open **The Pendulum's Period**.
 - Step 3: a question step. Point out that the controls are locked and the answer is hidden ("?"), so it
   cannot be read off or found by dragging.
 - Open **Key ideas** to show the formula sheet.
+- Press **Set it up for me** on any step (after the hints): the picture moves to the solution instead of
+  jumping, and solving a step is the one animated moment. Dragging and sliders follow the pointer exactly.
 
 > "No AI runs here. The lesson is one offline HTML file."
+
+### Showcase lessons
+
+Six lessons that show the range; the first four can be dragged directly.
+
+| Lesson | Audience | Show |
+|---|---|---|
+| The Pendulum's Period | High school | drag the bob; graph of the swing |
+| Snell's Law at Glass | High school | swing the incoming ray by its end; the refracted ray follows |
+| Hooke's Law with a Spring | High school | pull the block; the pointer on the ruler reads the stretch |
+| Slope and Y-Intercept Explorer | Middle school | drag the y-intercept and a point on the line |
+| Ohm's Law with Series Resistors | High school | moving charges and a live graph (sliders) |
+| Atoms in Motion | Undergraduate | built from a pasted textbook section (sliders) |
 
 ## 3. Make a new lesson, as a teacher (90 s)
 
@@ -49,7 +64,7 @@ and how many visual problems the review step finds and fixes.
 
 ## 5. What is not done (20 s)
 
-- Only six of the 57 components can be dragged or clicked so far; the rest use sliders.
+- 20 of the 57 components can be dragged or clicked so far; the rest use sliders.
 - The review step still reports some problems that are not real, so its findings are suggestions and never
   block a lesson.
 - Topics outside the library (for example cell biology or plate tectonics) get a weak fit; the plan step says

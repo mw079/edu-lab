@@ -91,6 +91,7 @@ type ValidationReport = { ok: boolean; errors: Issue[]; warnings: Issue[] };
  * - required fields, control definitions and references
  * - every level starts unsolved and its solution (using only unlocked controls, within range) solves it
  * - hidden readouts exist, model values are finite
+ * - the start does not already show a question step's answer in a visible readout
  */
 export function validateLesson(config: LessonConfig): ValidationReport {
   const errors: Issue[] = [];
@@ -198,6 +199,17 @@ export function validateLesson(config: LessonConfig): ValidationReport {
         .slice(0, 14)
         .map(([k, v]) => `${k} = ${typeof v === "number" ? +v.toFixed(4) : v}`)
         .join(", ");
+      // A question step must not show its answer: a visible readout in the answer's unit that already reads it.
+      // (Goal steps are not checked this way: "change T but keep the pressure at 125 kPa" starts at its target on purpose.)
+      if (lv.ask && typeof answer === "number") {
+        const at = (r: { digits?: number }, v: number) => v.toFixed(r.digits ?? 2);
+        const same = (config.readouts || []).find((r) => {
+          const v = d0[r.key];
+          if (typeof v !== "number" || !(lv.show || []).includes(r.key) || (lv.hide || []).includes(r.key) || (r.unit || "") !== (lv.ask!.unit || "")) return false;
+          return at(r, v) === at(r, answer) || Math.abs(v - answer) <= 0.01 * Math.abs(answer);
+        });
+        if (same) err(`The readout "${same.label}" is visible and already reads the answer (${at(same, answer)}). List "${same.key}" in "hide", or do not show it in this step`, L);
+      }
       if (!lv.check(end, dEnd, answer)) err(`Applying the solution does not pass check(). With the solution applied: ${shown}${answer !== undefined ? `, answer = ${String(answer)}` : ""}. Change the goal/check or the solution so they agree with these values`, L);
     } catch (e) {
       err(`check() threw on the solution: ${(e as Error).message}`, L);

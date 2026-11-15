@@ -5,7 +5,8 @@ five-step interactive simulation, checks it automatically and lets the teacher r
 Google's "Harnessing Generative UI for Education: Tailored Learning Interactives" (arXiv 2609.20738).
 
 Status: **M0–M4 done** (57-component library, lesson template, two worked examples, automatic checks, generator
-with teacher review, visual review and evaluation set). In progress: direct interaction (M5).
+with teacher review, visual review and evaluation set) and **M5** (20 of the 57 components can be dragged or
+clicked directly; the rest use sliders).
 
 ## How a lesson is generated
 
@@ -14,9 +15,9 @@ The model only fills in small, checked pieces; templates and examples do the res
 | Step | Model gets | Model writes | Checked by | Teacher |
 |---|---|---|---|---|
 | 1. Plan | request, audience, pasted source text, one-line catalogue (`simkit/catalog.json`) | title, idea, objectives, 1–2 components | known component ids | edits/approves objectives |
-| 2. Steps | plan + chosen components' API + `examples/momentum/design.json` | `design.json`: data, short JS expressions, LaTeX text, 5 levels | `checkDesign` (`server/design.ts`): expressions and LaTeX parse; each level states its whole starting situation, starts unsolved, and its solution solves it with unlocked, in-range controls; readout limits | approves or asks for changes |
+| 2. Steps | plan + chosen components' API + `examples/momentum/design.json` | `design.json`: data, short JS expressions, LaTeX text, 5 levels | `checkDesign` (`server/design.ts`): expressions and LaTeX parse; each level states its whole starting situation, starts unsolved, and its solution solves it with unlocked, in-range controls; a question step's answer is not already on a visible readout; readout limits | approves or asks for changes |
 | 3. Simulation | design summary + chosen components' snippets (`simkit/snippets/`) + example scene | one `scene` function (≈15–40 lines), which also links draggable objects to their sliders (`app.link`) | every level played and solved in headless Chrome; layout check (`server/layout-check.js`) | opens the lesson |
-| 4. Visual review | a screenshot of the simulation at the start of each step + the step goals and hidden values (`prompts/review.md`) | up to 5 problems a student would notice | — (suggestions: one fix round, kept only if the lesson still works, has no more layout problems and a second review finds fewer problems) | — |
+| 4. Visual review | a screenshot of the simulation at the start of each step + the step goals and hidden values (`prompts/review.md`) | up to 5 problems a student would notice | — (suggestions: one fix round, kept only if the lesson still works, has no more layout problems and a second review finds fewer problems; the fix call is limited to 45 s and little thinking, otherwise the lesson stays as built) | — |
 
 Each step gets up to two fix rounds with the check results sent back to the model. `assembleLesson`
 turns `design.json` + `scene.js` into `lesson.js`; the model never writes the UI or the level logic.
@@ -101,7 +102,7 @@ then open. A teacher can delete their own lessons (moved to `data/trash/`, not e
 | M2 | Pipeline plan → steps → simulation with check-and-fix rounds; teacher app; redesign; LaTeX; pasted source text | done |
 | M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on 10 requests | done |
 | M4 | More components (toward 50–100 objects) and example lessons | 57 components across physics, chemistry, biology, earth science, astronomy, maths, computer science and data; second example lesson (pendulum) |
-| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 16 components: pendulum, number line, lever, lens, scatter plot, spring, carts, projectile, right triangle, bar chart, charges, coordinate plane, protractor (drag); binary bits, fraction bars, logic gate (click) |
+| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 20 components: pendulum, number line, lever, lens, scatter plot, spring, carts, projectile, right triangle, bar chart, charges, coordinate plane, protractor, incline, refraction, wave, orbit (drag); binary bits, fraction bars, logic gate (click) |
 
 ### Evaluation (`eval/requests.json`)
 
@@ -111,6 +112,10 @@ the first try, the rest needed one or more fix rounds. The visual review reporte
 after its fix round 22 remained, spread over 20 lessons. These remaining findings have not been judged by
 hand: in earlier samples about 80% of findings were real, and several in this run are known false alarms
 (e.g. a floating block reported as "half submerged" when the picture is correct).
+
+**Spot check after the design work, 3 requests (Coulomb's law, linear functions, refraction), 2026-11-15:**
+3/3 built, average 84 s, no layout warnings; each scene linked its draggable objects. Before the review fix
+was limited to 45 s and little thinking, one such fix call alone took 117 s (a 212 s lesson); it now takes 2–3 s.
 
 **First 10 requests, before and after the first round of fixes:**
 

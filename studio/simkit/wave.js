@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=100, y=250 (left end of the rest line), w=800, pxPerM=100, amplitude=0.5 (m, up to 1.2),
-   *         wavelength=2 (m), frequency=1 (Hz), showValues=true }
+   *         wavelength=2 (m), frequency=1 (Hz), showValues=true,
+   *         drag: { amplitude: app.link("key") } (the student moves the dashed amplitude line up and down) }
    * The wave always moves to the right at speed = frequency × wavelength (real time).
    * Returns { update({ amplitude, wavelength, frequency }), show({ wavelength, amplitude }), showValues(bool), values() }
    * values() -> { speed (m/s), period (s) }
@@ -28,6 +29,10 @@
     const bracket = kit.el("path", { fill: "none", stroke: kit.colors.purple, "stroke-width": 3 }, g);
     const lamLabel = kit.el("text", { "text-anchor": "middle", class: "simkit-label", fill: kit.colors.purple }, g);
     const bead = kit.el("circle", { cx: o.x + o.w / 2, r: 9, fill: kit.colors.red, stroke: "#fff", "stroke-width": 2 }, g);
+    const handle = kit.el("g", null, g);
+    const lift = o.drag && o.drag.amplitude;
+    const dragger = kit.drag(stage, handle, lift, (p) => lift(kit.clamp((o.y - p.y) / o.pxPerM, 0, 1.2)));
+    let gripY = null;
     let time = 0;
 
     function draw() {
@@ -41,6 +46,14 @@
       kit.set(path, { d });
       kit.set(bead, { cy: Y(metres / 2).toFixed(1) });
       kit.set(ampLine, { y1: o.y - A, y2: o.y - A, opacity: shown.amplitude && A > 0 ? 1 : 0 });
+      // The handle is only redrawn when it moves: the wave itself is redrawn every frame.
+      const at = kit.linked(lift) ? o.y - A : null;
+      if (at !== gripY) {
+        gripY = at;
+        handle.textContent = "";
+        if (at != null) kit.grip(handle, o.x + o.w - 26, at, 22);
+        dragger.refresh();
+      }
       kit.set(ampLabel, { y: o.y - A - 12, text: shown.amplitude ? `amplitude ${kit.fmt(o.amplitude, 2)} m` : "" });
       // The bracket follows one trough-to-trough stretch of the wave.
       const first = ((((phase - Math.PI / 2) / k) % lam) + lam) % lam; // first trough at or after x = 0
