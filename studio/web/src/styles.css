@@ -19,13 +19,18 @@ h2 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px
 .chip:hover { border-color: #cfcec9; }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 36px 24px; }
-.lesson-card { display: block; color: inherit; text-decoration: none; }
+.lesson-card a { display: block; color: inherit; text-decoration: none; }
 .thumb { aspect-ratio: 1000 / 560; border-radius: 14px; overflow: hidden; background: var(--fill); box-shadow: var(--shadow); }
 .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.3s, transform 0.3s; }
 .thumb img.loaded { opacity: 1; }
 .lesson-card:hover .thumb img { transform: scale(1.03); }
 .lesson-card h3 { margin: 12px 0 2px; font-size: 15.5px; font-weight: 600; line-height: 1.35; }
-.lesson-card p { margin: 0; font-size: 14px; color: var(--muted); }
+.lesson-card p { margin: 0; font-size: 14px; color: var(--muted); display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+/* Delete stays out of the way until the card is pointed at or reached with the keyboard. */
+.lesson-card .delete { opacity: 0; font-size: 13px; }
+.lesson-card:hover .delete, .lesson-card .delete:focus-visible { opacity: 1; }
+@media (hover: none) { .lesson-card .delete { opacity: 1; } }
+.drafts .status { margin-left: auto; }
 .drafts { list-style: none; padding: 0; margin: 0 0 32px; display: grid; gap: 8px; }
 .drafts li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; background: var(--surface); border-radius: 12px; box-shadow: var(--shadow); }
 .drafts a { color: var(--ink); font-weight: 600; text-decoration: none; }

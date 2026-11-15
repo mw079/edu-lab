@@ -4,7 +4,7 @@ simkit library and updates it when the state changes.
 
 ## What to write
 
-function (stage, kit) {
+function (stage, kit, app) {
   // build the picture once with kit components (stage is 1000 wide × 560 high, y grows downwards)
   return {
     update(s, d, info) { … },   // called after every change. s = state, d = state + derived values,
@@ -25,6 +25,10 @@ Rules:
   scale from which it can be read. Hide or clear those parts while the value is hidden.
 - Do not write the title, instructions or the readouts as text on the stage: the app already shows them.
   Label objects with one or two words and put a value next to an object only when it helps to see it there.
+- Direct interaction: some components let the student drag or click an object (see "Direct interaction" in
+  their notes). When the design has a slider control for that value, pass the link: e.g.
+  drag: { angle: app.link("angle") }. app.link("key") takes the control's exact key; the app keeps the slider in
+  step and blocks dragging in steps where that control is locked, so always add the link when one fits.
 - No timers, no fetch, no document access, no global variables. Plain JavaScript.
 - Layout: give each component its own area of the 1000 × 560 stage; labels must not overlap each other
   or sit on top of other objects. The checks measure this.

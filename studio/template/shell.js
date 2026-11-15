@@ -96,7 +96,29 @@
     );
 
     const stage = window.simkit.stage(stageHost, config.stage || {});
-    const view = config.scene(stage, window.simkit) || {};
+    // Direct interaction: a scene links an object on the picture to a control with app.link("key"), and the
+    // component calls the link when the student drags or clicks that object. A link obeys the same rules as
+    // the control's slider: its range and step, and it does nothing while the control is locked in a step.
+    let started = false;
+    const app = {
+      link(key) {
+        const control = controls.find((c) => c.key === key);
+        const setter = (value) => {
+          if (!setter.enabled()) return;
+          if (control.type === "select") return control.options.some((o) => o.value === value) && set(key, value);
+          if (typeof value !== "number" || !Number.isFinite(value)) return;
+          const step = control.step || 1;
+          const decimals = (String(step).split(".")[1] || "").length;
+          const snapped = control.min + Math.round((Math.min(control.max, Math.max(control.min, value)) - control.min) / step) * step;
+          const next = Number(Math.min(control.max, snapped).toFixed(decimals));
+          if (next !== state[key]) set(key, next);
+        };
+        setter.key = key;
+        setter.enabled = () => started && Boolean(control) && !locked(key) && !busy;
+        return setter;
+      },
+    };
+    const view = config.scene(stage, window.simkit, app) || {};
 
     // ---------- Controls (built once, shown per step) ----------
     const rows = {};
@@ -350,6 +372,7 @@
       isSolvedNow: (answer) => !!levels[current].check(state, derived, answer),
     });
 
+    started = true;
     goTo(0);
     test.ready = true;
   }

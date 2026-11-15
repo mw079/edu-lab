@@ -5,14 +5,14 @@
 
   /**
    * opts: { x=110, y=90 (top-left of the track area), w=480, h=330, hMax=5 (m at the top of the track),
-   *         h0=4 (m, release height), mass=1 (kg), at=0 (0 = release point, 0.5 = bottom, 1 = far side),
+   *         h0=4 (m, release height), mass=1 (kg), eMax=100 (J at the top of the bars), at=0 (0 = release point, 0.5 = bottom, 1 = far side),
    *         showValues=true }
    * Returns { update({ h0, mass, at }), show({ speed, bars }), showValues(bool), play({ swings }) -> Promise,
    *   stop(), reset(), values() }
    * values() -> { h (m), pe, ke, total (J), v (m/s) }   (see simkit.physics.energyAt)
    */
   kit.energyTrack = function (stage, opts) {
-    const o = Object.assign({ x: 110, y: 90, w: 480, h: 330, hMax: 5, h0: 4, mass: 1, at: 0, showValues: true }, opts);
+    const o = Object.assign({ x: 110, y: 90, w: 480, h: 330, hMax: 5, h0: 4, mass: 1, at: 0, eMax: 100, showValues: true }, opts);
     const g = stage.layer({ class: "simkit-energy" });
     const shown = { speed: o.showValues, bars: true };
     const cx = o.x + o.w / 2;
@@ -65,7 +65,7 @@
       kit.set(ball, { cx: (cx + p.dx - (14 * slope) / len).toFixed(1), cy: (ground - p.h * pxPerM - 14 / len).toFixed(1) });
       kit.set(level, { y1: ground - p.h0 * pxPerM, y2: ground - p.h0 * pxPerM });
       kit.set(speedLabel, { x: cx, y: o.y - 14, text: shown.speed ? `height ${kit.fmt(p.h, 2)} m · speed ${kit.fmt(v.v, 1)} m/s` : `height ${kit.fmt(p.h, 2)} m` });
-      const full = o.mass * 9.8 * o.hMax;
+      const full = o.eMax; // one fixed scale, so equal joules always look equal
       [v.pe, v.ke, v.total].forEach((E, i) => {
         const hide = !shown.bars || (i === 1 && !shown.speed);
         const hpx = hide ? 0 : (kit.clamp(E / full, 0, 1) * barH);

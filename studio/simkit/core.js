@@ -163,6 +163,59 @@
     return stage;
   };
 
+  /**
+   * Let the student drag an element. `link` is what the lesson's app.link("key") returned (or a list of them);
+   * with no link, or while the link is disabled (its control is locked), nothing happens.
+   * move(point) is called with the pointer in stage coordinates while dragging; it should call the link(s)
+   * with the new value. Works when the element is redrawn during the drag. Returns { refresh() } to update
+   * the cursor after the lock state may have changed.
+   */
+  kit.drag = function (stage, el, link, move) {
+    const links = [].concat(link || []).filter((l) => typeof l === "function");
+    const enabled = () => links.some((l) => !l.enabled || l.enabled());
+    const refresh = () => {
+      el.style.cursor = links.length && enabled() ? "grab" : "";
+    };
+    if (!links.length) return { refresh };
+    el.style.touchAction = "none";
+    const point = (e) => {
+      const m = stage.svg.getScreenCTM();
+      return { x: (e.clientX - m.e) / m.a, y: (e.clientY - m.f) / m.d };
+    };
+    el.addEventListener("pointerdown", (e) => {
+      if (!enabled()) return;
+      e.preventDefault();
+      const onMove = (ev) => enabled() && move(point(ev));
+      const end = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", end);
+        window.removeEventListener("pointercancel", end);
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", end);
+      window.addEventListener("pointercancel", end);
+      move(point(e));
+    });
+    refresh();
+    return { refresh };
+  };
+
+  /** Let the student click an element; fn runs only while `link` (from app.link) is enabled. */
+  kit.click = function (el, link, fn) {
+    if (typeof link !== "function") return;
+    const enabled = () => !link.enabled || link.enabled();
+    el.style.cursor = enabled() ? "pointer" : "";
+    el.addEventListener("click", () => enabled() && fn());
+  };
+
+  /** True when a link from app.link exists and its control is unlocked right now. */
+  kit.linked = (link) => typeof link === "function" && (!link.enabled || link.enabled());
+
+  /** A soft ring behind something the student can grab. */
+  kit.grip = function (parent, x, y, r) {
+    return kit.el("circle", { cx: x, cy: y, r, fill: kit.colors.purple, "fill-opacity": 0.16, stroke: kit.colors.purple, "stroke-opacity": 0.5, "stroke-width": 2, "stroke-dasharray": "4 5", class: "simkit-grip" }, parent);
+  };
+
   /** Draw an arrow head marker-free (so colors always match). Returns a <g>. */
   kit.arrowShape = function (parent, x1, y1, x2, y2, opts) {
     const o = Object.assign({ color: kit.colors.ink, width: 6, head: 16 }, opts);
@@ -552,6 +605,105 @@
       if (!v.length) return { mean: 0, median: 0, min: 0, max: 0, range: 0 };
       const mid = Math.floor(v.length / 2);
       return { mean: v.reduce((sum, n) => sum + n, 0) / v.length, median: v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2, min: v[0], max: v[v.length - 1], range: v[v.length - 1] - v[0] };
+    },
+    /** Whole number 0–255 as a list of bits, highest place first: bits(5, 4) -> [0, 1, 0, 1]. */
+    bits(value, count) {
+      const n = count || 8;
+      const v = Math.max(0, Math.min(Math.pow(2, n) - 1, Math.round(value)));
+      return Array.from({ length: n }, (_, i) => (v >> (n - 1 - i)) & 1);
+    },
+    /** Output (0 or 1) of a logic gate: "AND", "OR", "XOR", "NAND", "NOR" or "NOT" (uses only a). */
+    gate(type, a, b) {
+      const A = a ? 1 : 0;
+      const B = b ? 1 : 0;
+      const out = { AND: A & B, OR: A | B, XOR: A ^ B, NAND: 1 - (A & B), NOR: 1 - (A | B), NOT: 1 - A }[String(type).toUpperCase()];
+      return out == null ? 0 : out;
+    },
+    /**
+     * Bubble sort of `values` after `steps` comparisons.
+     * Returns { array, comparisons, swaps, done, next: [i, j] (the pair compared next, null when done), total
+     * (comparisons the whole sort needs) }.
+     */
+    bubbleSort(values, steps) {
+      const run = (limit) => {
+        const a = values.slice();
+        let comparisons = 0;
+        let swaps = 0;
+        for (let end = a.length - 1; end > 0; end--) {
+          let swapped = false;
+          for (let i = 0; i < end; i++) {
+            if (comparisons >= limit) return { array: a, comparisons, swaps, done: false, next: [i, i + 1] };
+            comparisons++;
+            if (a[i] > a[i + 1]) {
+              [a[i], a[i + 1]] = [a[i + 1], a[i]];
+              swaps++;
+              swapped = true;
+            }
+          }
+          if (!swapped) break;
+        }
+        return { array: a, comparisons, swaps, done: true, next: null };
+      };
+      const full = run(Infinity);
+      return Object.assign(run(Math.max(0, Math.round(steps || 0))), { total: full.comparisons });
+    },
+    /**
+     * Binary search for `target` in sorted `values` after `steps` checks.
+     * Returns { low, high (indices still possible), mid (index checked next, null when finished), found (index
+     * or null), checks (made so far), needed (checks the whole search takes) }.
+     */
+    binarySearch(values, target, steps) {
+      const run = (limit) => {
+        let low = 0;
+        let high = values.length - 1;
+        let checks = 0;
+        while (low <= high) {
+          const mid = Math.floor((low + high) / 2);
+          if (checks >= limit) return { low, high, mid, found: null, checks };
+          checks++;
+          if (values[mid] === target) return { low: mid, high: mid, mid: null, found: mid, checks };
+          if (values[mid] < target) low = mid + 1;
+          else high = mid - 1;
+        }
+        return { low, high, mid: null, found: null, checks };
+      };
+      return Object.assign(run(Math.max(0, Math.round(steps || 0))), { needed: run(Infinity).checks });
+    },
+    /**
+     * Air temperature near the ground (°C) for a cloud cover of 0–100 %. By day clouds block sunlight (cooler);
+     * at night they hold the ground's heat in (warmer). day: 30 − 0.10 × cloud, night: 8 + 0.08 × cloud.
+     */
+    cloudTemperature(cloudPct, isDay) {
+      const c = Math.max(0, Math.min(100, cloudPct));
+      return isDay ? 30 - 0.1 * c : 8 + 0.08 * c;
+    },
+    /** Wind from a high (hPa) to a low `distanceKm` apart: speed in km/h = 500 × pressure difference ÷ distance. */
+    windSpeed(high, low, distanceKm) {
+      return (500 * Math.max(0, high - low)) / Math.max(distanceKm, 1);
+    },
+    /**
+     * Earth's average surface temperature (°C) for a CO2 level (ppm) and the fraction of sunlight reflected
+     * (albedo, 0.3 today): 14 at 280 ppm, +3 for each doubling of CO2, −1 for each 0.01 more albedo.
+     */
+    greenhouse(co2, albedo) {
+      return 14 + 3 * Math.log2(Math.max(co2, 1) / 280) - 100 * ((albedo == null ? 0.3 : albedo) - 0.3);
+    },
+    /** Straight-line fit of points [[x, y], …]: { slope, intercept, r (correlation, −1 to 1) }. */
+    correlation(points) {
+      const n = points.length;
+      if (n < 2) return { slope: 0, intercept: n ? points[0][1] : 0, r: 0 };
+      const mx = points.reduce((sum, p) => sum + p[0], 0) / n;
+      const my = points.reduce((sum, p) => sum + p[1], 0) / n;
+      let sxx = 0;
+      let syy = 0;
+      let sxy = 0;
+      for (const [x, y] of points) {
+        sxx += (x - mx) * (x - mx);
+        syy += (y - my) * (y - my);
+        sxy += (x - mx) * (y - my);
+      }
+      const slope = sxx ? sxy / sxx : 0;
+      return { slope, intercept: my - slope * mx, r: sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0 };
     },
     /** Pendulum small-angle period in seconds. */
     pendulumPeriod(L, g) {

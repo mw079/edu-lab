@@ -151,3 +151,35 @@ test("seasons, quadratic and statistics helpers", () => {
   assert.deepEqual(JSON.parse(JSON.stringify(P.stats([2, 3, 3, 5, 9]))), { mean: 4.4, median: 3, min: 2, max: 9, range: 7 });
   assert.equal(P.stats([1, 2, 3, 4]).median, 2.5);
 });
+
+test("computer science helpers", () => {
+  assert.deepEqual(JSON.parse(JSON.stringify(P.bits(5, 4))), [0, 1, 0, 1]);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.bits(255))), [1, 1, 1, 1, 1, 1, 1, 1]);
+  assert.deepEqual(["AND", "OR", "XOR", "NAND", "NOR"].map((t) => [P.gate(t, 0, 0), P.gate(t, 0, 1), P.gate(t, 1, 1)].join("")), ["001", "011", "010", "110", "100"]);
+  assert.deepEqual([P.gate("NOT", 0), P.gate("not", 1)], [1, 0]);
+  const list = [5, 2, 8, 1, 9, 3];
+  const start = P.bubbleSort(list, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify([start.array, start.next, start.done])), [list, [0, 1], false]);
+  const four = P.bubbleSort(list, 4);
+  assert.deepEqual(JSON.parse(JSON.stringify([four.array, four.swaps, four.next])), [[2, 5, 1, 8, 9, 3], 2, [4, 5]]);
+  const end = P.bubbleSort(list, 99);
+  assert.deepEqual(JSON.parse(JSON.stringify([end.array, end.done, end.comparisons === end.total])), [[1, 2, 3, 5, 8, 9], true, true]);
+  const sorted = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+  assert.deepEqual(JSON.parse(JSON.stringify(P.binarySearch(sorted, 23, 1))), { low: 5, high: 9, mid: 7, found: null, checks: 1, needed: 3 });
+  assert.equal(P.binarySearch(sorted, 23, 9).found, 5);
+  assert.equal(P.binarySearch(sorted, 24, 9).found, null);
+});
+
+test("weather, climate and correlation helpers", () => {
+  assert.deepEqual([P.cloudTemperature(0, 1), P.cloudTemperature(100, 1), P.cloudTemperature(0, 0), P.cloudTemperature(100, 0)], [30, 20, 8, 16]);
+  assert.equal(P.windSpeed(1020, 1000, 500), 20);
+  assert.equal(P.windSpeed(1000, 1000, 500), 0);
+  near(P.greenhouse(280, 0.3), 14);
+  near(P.greenhouse(560, 0.3), 17);
+  near(P.greenhouse(280, 0.31), 13);
+  const line = P.correlation([[1, 3], [2, 5], [3, 7]]);
+  near(line.slope, 2);
+  near(line.intercept, 1);
+  near(line.r, 1);
+  near(P.correlation([[1, 3], [2, 2], [3, 1]]).r, -1);
+});

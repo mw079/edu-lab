@@ -6,7 +6,8 @@
   /**
    * opts: { x=100, y=300, w=800, min=-10, max=10, step (tick spacing, default 1 or 2 or 5 to fit),
    *         markers: [{ id, value, color, label }] (1–3), distance: [idA, idB] (optional: bracket with the
-   *         distance between two markers), showValues=true (each marker's number), showDistance=true }
+   *         distance between two markers), showValues=true (each marker's number), showDistance=true,
+   *         drag: { [markerId]: app.link("key") } (the student can drag that marker along the line) }
    * Returns { update({ markers: { [id]: { value } } }), showValues(bool), showDistance(bool), values() }
    * values() -> { [id]: value, distance }
    */
@@ -38,7 +39,10 @@
         placed.push(x);
         const top = o.y - 44 - level * 48;
         kit.el("line", { x1: x, y1: o.y, x2: x, y2: top + 14, stroke: m.color, "stroke-width": 3 }, dynamic);
-        kit.el("circle", { cx: x, cy: top, r: 14, fill: m.color }, dynamic);
+        const link = o.drag && o.drag[m.id];
+        if (kit.linked(link)) kit.grip(dynamic, x, top, 23);
+        const dot = kit.el("circle", { cx: x, cy: top, r: 14, fill: m.color }, dynamic);
+        kit.drag(stage, dot, link, (p) => link(o.min + ((p.x - o.x) / o.w) * (o.max - o.min)));
         const text = [m.label, o.showValues ? kit.fmt(m.value, step % 1 ? 1 : 0) : ""].filter(Boolean).join(": ");
         kit.el("text", { x, y: top - 22, "text-anchor": "middle", class: "simkit-label", fill: m.color, text }, dynamic);
       });

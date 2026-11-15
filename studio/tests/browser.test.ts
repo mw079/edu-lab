@@ -81,3 +81,50 @@ test("shell behaviour: steps, wrong answers, hidden controls and readouts, hints
     await browser.close();
   }
 });
+
+test("direct interaction: dragging the pendulum's bob moves its slider, and is blocked when the control is locked", { timeout: 60_000 }, async () => {
+  const src = lessonSourceFromDir("examples/pendulum");
+  const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
+  try {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+    await page.setContent(buildLessonHtml(src, loadLesson(src).title));
+    // Screen position of a point on the stage, and of the bob (the circle with the dark outline).
+    const toScreen = (x: number, y: number) =>
+      page.evaluate(`(() => { const m = document.querySelector(".stage svg").getScreenCTM(); return { x: ${x} * m.a + m.e, y: ${y} * m.d + m.f }; })()`) as Promise<{ x: number; y: number }>;
+    const bob = async () => {
+      const box = (await page.locator('.simkit-pendulum circle[stroke="#2b2f2c"]').boundingBox())!;
+      return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    };
+    const dragBobTo = async (angleDeg: number) => {
+      const from = await bob();
+      const a = (angleDeg * Math.PI) / 180;
+      const to = await toScreen(280 + 170 * Math.sin(a), 70 + 170 * Math.cos(a)); // pivot (280, 70), 1 m = 170 px
+      await page.mouse.move(from.x, from.y);
+      await page.mouse.down();
+      await page.mouse.move((from.x + to.x) / 2, (from.y + to.y) / 2);
+      await page.mouse.move(to.x, to.y);
+      await page.mouse.up();
+    };
+    const angle = () => page.inputValue("#ctl-angle");
+
+    // Step 1 asks for 20°: dragging the bob there sets the slider (snapped to its 5° steps) and solves the step.
+    assert.equal(await angle(), "5");
+    await dragBobTo(21);
+    assert.equal(await angle(), "20");
+    await page.click("#check-btn");
+    assert.equal(await page.evaluate(`window.__lesson.solved(0)`), true);
+
+    // Dragging far outside the slider's range stops at its end.
+    await dragBobTo(80);
+    assert.equal(await angle(), "30");
+
+    // Step 4 locks the angle: the bob cannot be dragged.
+    await page.evaluate(`window.__lesson.goTo(3)`);
+    assert.equal(await angle(), "15");
+    await dragBobTo(-25);
+    assert.equal(await angle(), "15");
+    assert.deepEqual(await page.evaluate(`window.__lesson.errors`), []);
+  } finally {
+    await browser.close();
+  }
+});

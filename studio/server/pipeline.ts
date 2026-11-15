@@ -3,7 +3,7 @@
 //   2. design – plan -> design.json: data + expressions, 5 levels      (logic validated; teacher approves)
 //   3. scene  – design -> scene function using the chosen components   (played in headless Chrome)
 // Drafts live in data/lessons/<id>/ (draft.json, design.json, scene.js, lesson.js, llm/ replies, screenshots/).
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { ROOT } from "./env.ts";
@@ -78,6 +78,19 @@ export function newDraft(request: string, audience: string, sourceText?: string)
 // ---------- Running a stage ----------
 
 const running = new Set<string>();
+
+/**
+ * Remove a draft or finished lesson from the app. The folder is moved to data/trash/ rather than erased, so a
+ * lesson deleted by mistake can be put back by hand.
+ */
+export function deleteDraft(id: string): "ok" | "missing" | "busy" {
+  if (!getDraft(id)) return "missing";
+  if (running.has(id)) return "busy";
+  const trash = join(ROOT, "data", "trash");
+  mkdirSync(trash, { recursive: true });
+  renameSync(dirOf(id), join(trash, `${id}-${Date.now()}`));
+  return "ok";
+}
 
 /** Run one stage in the background; the draft records progress and errors. Returns false if busy. */
 export function runStage(d: Draft, stage: Stage, opts: { objectives?: string[]; note?: string } = {}): boolean {

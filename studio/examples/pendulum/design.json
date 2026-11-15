@@ -1,0 +1,256 @@
+{
+  "title": "The Pendulum's Period",
+  "subtitle": "What decides how long one swing of a pendulum takes.",
+  "audience": "High school",
+  "objectives": [
+    "Set up a pendulum by its length and release angle.",
+    "Predict how the period changes with length.",
+    "Explain why the release angle and the mass do not change the period."
+  ],
+  "components": [
+    "pendulum",
+    "plot"
+  ],
+  "state": {
+    "L": 1,
+    "angle": 10,
+    "m": 1
+  },
+  "controls": [
+    {
+      "key": "angle",
+      "label": "Release angle",
+      "unit": "°",
+      "min": -30,
+      "max": 30,
+      "step": 5
+    },
+    {
+      "key": "L",
+      "label": "String length",
+      "unit": "m",
+      "min": 0.4,
+      "max": 2.2,
+      "step": 0.1
+    },
+    {
+      "key": "m",
+      "label": "Mass of the bob",
+      "unit": "kg",
+      "min": 1,
+      "max": 4,
+      "step": 1
+    }
+  ],
+  "derived": [
+    {
+      "key": "T",
+      "expr": "simkit.physics.pendulumPeriod(s.L)"
+    }
+  ],
+  "readouts": [
+    {
+      "key": "T",
+      "label": "Period",
+      "unit": "s",
+      "digits": 2
+    }
+  ],
+  "actions": [
+    {
+      "id": "play",
+      "label": "Release"
+    }
+  ],
+  "formulas": [
+    {
+      "expr": "T = 2\\pi\\sqrt{\\dfrac{L}{g}}",
+      "meaning": "Period of a pendulum of length $L$ (small swings), with $g = 9.8\\,\\text{m/s}^2$."
+    },
+    {
+      "expr": "T \\propto \\sqrt{L}",
+      "meaning": "Four times the length gives twice the period."
+    }
+  ],
+  "debrief": "Only the length (and gravity) sets the period. A wider swing or a heavier bob takes the same time.",
+  "levels": [
+    {
+      "title": "Pull the bob back",
+      "goal": "Drag the bob to the right until the release angle is 20°, then check.",
+      "setup": {
+        "angle": 5,
+        "L": 1,
+        "m": 1
+      },
+      "lock": [
+        "L",
+        "m",
+        "play"
+      ],
+      "show": [],
+      "hints": [
+        "Grab the purple bob in the picture and pull it sideways. The slider does the same thing.",
+        "The angle label next to the string shows the current value."
+      ],
+      "check": "s.angle === 20",
+      "feedback": [
+        {
+          "when": "s.angle === -20",
+          "say": "That is 20° to the left. Pull the bob to the right."
+        },
+        {
+          "when": "true",
+          "say": "The release angle is now {angle}°."
+        }
+      ],
+      "solution": {
+        "angle": 20
+      },
+      "solutionText": "Pull the bob to the right until the label reads $\\theta = 20°$.",
+      "explain": "The release angle is measured from the vertical line through the pivot."
+    },
+    {
+      "title": "A slower swing",
+      "goal": "Change the string length so that one full swing takes 2.5 s (to within 0.05 s).",
+      "setup": {
+        "angle": 15,
+        "L": 1,
+        "m": 1
+      },
+      "lock": [
+        "m"
+      ],
+      "show": [
+        "T"
+      ],
+      "hints": [
+        "A longer string swings more slowly.",
+        "Use $T = 2\\pi\\sqrt{L/g}$: you need $L = g\\,(T/2\\pi)^2$ with $T = 2.5\\,\\text{s}$."
+      ],
+      "check": "Math.abs(d.T - 2.5) <= 0.05",
+      "feedback": [
+        {
+          "when": "d.T < 2.5",
+          "say": "The period is {T} s: too quick. Make the string longer."
+        },
+        {
+          "when": "true",
+          "say": "The period is {T} s: too slow. Shorten the string."
+        }
+      ],
+      "solution": {
+        "L": 1.6
+      },
+      "solutionText": "$L = 9.8 \\times (2.5 / 2\\pi)^2 \\approx 1.55\\,\\text{m}$, so a length of 1.5 m or 1.6 m is close enough.",
+      "explain": "The period grows with the square root of the length."
+    },
+    {
+      "title": "Does the angle matter?",
+      "goal": "A 1 m pendulum released from 10° has a period of 2.01 s. What is its period when it is released from 20°? Try it out.",
+      "setup": {
+        "angle": 20,
+        "L": 1,
+        "m": 1
+      },
+      "lock": [
+        "L",
+        "m"
+      ],
+      "show": [
+        "T"
+      ],
+      "hide": [
+        "T"
+      ],
+      "ask": {
+        "label": "Period",
+        "unit": "s"
+      },
+      "hints": [
+        "Release it from 10° and from 20° and compare where the graph crosses zero.",
+        "Look at the formula: the angle does not appear in it."
+      ],
+      "check": "Math.abs(answer - 2.01) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 4.02) <= 0.1",
+          "say": "Twice the angle does not mean twice the time: the bob also moves faster."
+        }
+      ],
+      "solution": {
+        "answer": 2.01
+      },
+      "solutionText": "The period stays $2.01\\,\\text{s}$: for small swings it does not depend on the angle.",
+      "explain": "A wider swing covers more distance but at a higher speed, and the two effects cancel."
+    },
+    {
+      "title": "Does the mass matter?",
+      "goal": "A 2 m pendulum with a 1 kg bob has a period of 2.84 s. The bob is replaced by a 4 kg bob. What is the period now?",
+      "setup": {
+        "angle": 15,
+        "L": 2,
+        "m": 4
+      },
+      "lock": [
+        "angle",
+        "L",
+        "m"
+      ],
+      "show": [
+        "T"
+      ],
+      "hide": [
+        "T"
+      ],
+      "ask": {
+        "label": "Period",
+        "unit": "s"
+      },
+      "hints": [
+        "Which quantities appear in $T = 2\\pi\\sqrt{L/g}$?",
+        "The mass is not one of them."
+      ],
+      "check": "Math.abs(answer - 2.84) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 5.68) <= 0.1 || Math.abs(answer - 1.42) <= 0.05",
+          "say": "The mass does not appear in the formula for the period."
+        }
+      ],
+      "solution": {
+        "answer": 2.84
+      },
+      "solutionText": "Still $2.84\\,\\text{s}$: the period does not depend on the mass.",
+      "explain": "A heavier bob is pulled harder by gravity but is also harder to move, so it swings in the same time."
+    },
+    {
+      "title": "Build a clock",
+      "goal": "Old clocks use a pendulum that takes exactly 2.0 s for a full swing. Set up this pendulum (to within 0.03 s).",
+      "setup": {
+        "angle": 10,
+        "L": 2,
+        "m": 2
+      },
+      "lock": [],
+      "show": [
+        "T"
+      ],
+      "hints": [
+        "Only one of the three controls changes the period.",
+        "Solve $2.0 = 2\\pi\\sqrt{L/9.8}$ for $L$."
+      ],
+      "check": "Math.abs(d.T - 2) <= 0.03",
+      "feedback": [
+        {
+          "when": "true",
+          "say": "The period is {T} s. Only the length changes it."
+        }
+      ],
+      "solution": {
+        "L": 1
+      },
+      "solutionText": "$L = 9.8 \\times (2.0 / 2\\pi)^2 \\approx 0.99\\,\\text{m}$: a 1.0 m string.",
+      "explain": "A pendulum about one metre long swings one way each second, which is why it was used in clocks."
+    }
+  ]
+}

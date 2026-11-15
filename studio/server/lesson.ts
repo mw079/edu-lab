@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js", "orbit.js", "beaker.js", "reaction.js", "atom.js", "plant.js", "numberline.js", "lens.js", "wave.js", "lever.js", "punnett.js", "photoelectric.js", "fraction.js", "triangle.js", "charges.js", "moon.js", "buoyancy.js", "motion.js", "atwood.js", "decay.js", "slit.js", "calorimeter.js", "states.js", "balance.js", "selection.js", "plane.js", "circle.js", "standing.js", "energy.js", "titration.js", "pyramid.js", "osmosis.js", "seasons.js", "dotplot.js", "protractor.js", "spinner.js"];
+const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js", "orbit.js", "beaker.js", "reaction.js", "atom.js", "plant.js", "numberline.js", "lens.js", "wave.js", "lever.js", "punnett.js", "photoelectric.js", "fraction.js", "triangle.js", "charges.js", "moon.js", "buoyancy.js", "motion.js", "atwood.js", "decay.js", "slit.js", "calorimeter.js", "states.js", "balance.js", "selection.js", "plane.js", "circle.js", "standing.js", "energy.js", "titration.js", "pyramid.js", "osmosis.js", "seasons.js", "dotplot.js", "protractor.js", "spinner.js", "binary.js", "gate.js", "sort.js", "search.js", "weather.js", "greenhouse.js", "charts.js"];
 
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 

@@ -24,7 +24,10 @@ test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs it
           const scene = new Function(`return (${code})`)();
           const s = new Function(`return (${stateSrc})`)();
           const kit = (window as any).simkit;
-          const view = scene(kit.stage(document.querySelector(".stage"), { width: 1000, height: 560 }), kit);
+          // A stand-in for the lesson page's app: every link is enabled and accepts any value.
+          // (Built from a string: the test runner's compiler would otherwise add helpers the page does not have.)
+          const app = new Function("return { link: function (key) { var f = function () {}; f.key = key; f.enabled = function () { return true; }; return f; } }")();
+          const view = scene(kit.stage(document.querySelector(".stage"), { width: 1000, height: 560 }), kit, app);
           view.update(s, s, { level: 0, solved: false, hidden: new Set() });
           if (view.reset) view.reset(s);
           const layout = (0, eval)(layoutSrc);
@@ -66,6 +69,44 @@ test("the circuit switches between series and parallel when a step changes its l
     })()`)) as { series: unknown; parallel: unknown };
     assert.deepEqual(r.series, { current: 1, vertical: 0 }); // 12 V / 12 Ω, parts drawn along the top wire
     assert.deepEqual(r.parallel, { current: 4, vertical: 2 }); // 12 V / 3 Ω, parts drawn as vertical branches
+  } finally {
+    await browser.close();
+  }
+});
+
+// Components with direct interaction: grabbing (or clicking) the object must call the linked control.
+test("draggable and clickable components call their links", { timeout: 60_000 }, async () => {
+  const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
+  try {
+    for (const id of ["pendulum", "numberLine", "lever", "lens", "scatterPlot", "binaryBits"]) {
+      const src = snippet(id);
+      const state = src.match(/Example state: (\{[^}]*\})/)![1];
+      const code = src.split("\n").filter((l) => !l.startsWith("//")).join("\n");
+      const page = await browser.newPage({ viewport: { width: 1000, height: 560 } });
+      await page.setContent(`<body style="margin:0"><div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
+      // The stand-in app records every value a link receives; update() is called again as the real app would.
+      await page.evaluate(`(() => {
+        const kit = window.simkit;
+        const s = ${state};
+        window.__calls = [];
+        const app = { link: function (key) { var f = function (v) { window.__calls.push([key, v]); }; f.key = key; f.enabled = function () { return true; }; return f; } };
+        const view = (${code})(kit.stage(document.querySelector(".stage"), { width: 1000, height: 560 }), kit, app);
+        view.update(s, s, { level: 0, solved: false, hidden: new Set() });
+      })()`);
+      const handle = page.locator(`svg [style*="cursor: grab"], svg [style*="cursor: pointer"]`).first();
+      const box = await handle.boundingBox();
+      assert.ok(box, `${id}: has something to grab`);
+      const x = box!.x + box!.width / 2;
+      const y = box!.y + box!.height / 2;
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(x + 40, y + 10);
+      await page.mouse.up();
+      const calls = (await page.evaluate(`window.__calls`)) as [string, unknown][];
+      assert.ok(calls.length > 0, `${id}: the link was called`);
+      assert.ok(calls.every(([, v]) => typeof v === "number" && Number.isFinite(v)), `${id}: links get numbers (${JSON.stringify(calls.slice(0, 3))})`);
+      await page.close();
+    }
   } finally {
     await browser.close();
   }

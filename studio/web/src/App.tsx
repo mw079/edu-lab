@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { richHtml } from "../../server/math";
 
-type LessonSummary = { id: string; title: string; audience: string };
+type LessonSummary = { id: string; title: string; audience: string; own: boolean };
 type DraftSummary = { id: string; request: string; status: string; title?: string };
 type Level = { title: string; goal: string; ask?: { label: string; unit?: string }; hints?: string[]; solutionText?: string; explain?: string };
 type Draft = {
@@ -18,8 +18,8 @@ type Draft = {
   log: { stage: string; what: string; ms?: number }[];
 };
 
-async function api<T>(path: string, body?: unknown): Promise<T> {
-  const res = await fetch(path, body === undefined ? undefined : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+async function api<T>(path: string, body?: unknown, method?: string): Promise<T> {
+  const res = await fetch(path, body === undefined ? (method ? { method } : undefined) : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data as T;
@@ -61,6 +61,16 @@ function Home() {
     api<DraftSummary[]>("/api/drafts").then((d) => setDrafts(d.filter((x) => x.status !== "ready"))).catch(() => {});
   }, []);
   const shown = lessons?.filter((l) => filter === "All" || l.audience === filter);
+  const remove = async (id: string, title: string) => {
+    if (!confirm(`Delete "${title}"? Students will no longer be able to open it.`)) return;
+    try {
+      await api(`/api/drafts/${id}`, undefined, "DELETE");
+      setLessons((list) => list && list.filter((l) => l.id !== id));
+      setDrafts((list) => list.filter((d) => d.id !== id));
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  };
   return (
     <>
       <div className="home-head">
@@ -71,13 +81,14 @@ function Home() {
           ))}
         </div>
       </div>
-      {error && <p className="error">Could not load lessons: {error}</p>}
+      {error && <p className="error">{error}</p>}
       {drafts.length > 0 && (
         <ul className="drafts">
           {drafts.map((d) => (
             <li key={d.id}>
               <a href={`#/draft/${d.id}`}>{d.title || d.request}</a>
               <span className={`status ${d.status}`}>{statusLabel(d.status)}</span>
+              {d.status !== "working" && <button className="link quiet" onClick={() => remove(d.id, d.title || d.request)}>Delete</button>}
             </li>
           ))}
         </ul>
@@ -85,13 +96,18 @@ function Home() {
       {!lessons && !error && <p className="muted">Loading…</p>}
       <section className="grid">
         {shown?.map((l) => (
-          <a key={l.id} className="lesson-card" href={`#/lesson/${l.id}`}>
-            <div className="thumb">
-              <img src={`/lessons/${l.id}/thumb.png`} alt="" loading="lazy" onLoad={(e) => e.currentTarget.classList.add("loaded")} />
-            </div>
-            <h3>{l.title}</h3>
-            <p>{l.audience}</p>
-          </a>
+          <div key={l.id} className="lesson-card">
+            <a href={`#/lesson/${l.id}`}>
+              <div className="thumb">
+                <img src={`/lessons/${l.id}/thumb.png`} alt="" loading="lazy" onLoad={(e) => e.currentTarget.classList.add("loaded")} />
+              </div>
+              <h3>{l.title}</h3>
+            </a>
+            <p>
+              {l.audience}
+              {l.own && <button className="link quiet delete" onClick={() => remove(l.id, l.title)}>Delete</button>}
+            </p>
+          </div>
         ))}
       </section>
       {shown?.length === 0 && <p className="muted">No {filter.toLowerCase()} lessons yet.</p>}

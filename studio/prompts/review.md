@@ -18,3 +18,5 @@ about. Most drawings have no problems; then return an empty list.
 Reply with one JSON object and nothing else:
 {"issues": [{"step": 1, "problem": "what is wrong and where", "fix": "a concrete change to the drawing"}]}
 At most 5 issues; if one problem appears on several steps, report it once.
+
+A dashed purple ring around an object means the student can drag it; that is intended and not a problem.

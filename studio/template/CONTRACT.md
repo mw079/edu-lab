@@ -35,7 +35,8 @@ defineLesson({
 
   stage: { width: 1000, height: 560 },        // SVG coordinate system for the scene
 
-  scene(stage, kit) {                         // build the picture once from simkit components
+  scene(stage, kit, app) {                    // build the picture once from simkit components;
+                                              // app.link("controlKey") lets a component set a control (drag/click)
     const track = kit.cartTrack(stage, { … });
     return {
       update(s, d, info) { … },               // called after every change; info = { level, hidden:Set, solved }

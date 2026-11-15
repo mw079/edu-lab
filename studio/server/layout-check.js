@@ -31,7 +31,11 @@
   const config = (window.__lesson && window.__lesson.config) || {};
   const norm = (x) => String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const labels = (config.readouts || []).map((r) => norm(r.label)).filter((l) => l.length > 3);
+  // Only the scene's own text is judged here: a component's labels (a legend entry, a bar's name) are part of
+  // its design and may happen to start with the same word as a readout.
+  const fromComponent = (a) => /simkit-(?!vector)/.test((a.layer && a.layer.getAttribute("class")) || "");
   for (const a of texts) {
+    if (fromComponent(a)) continue;
     const t = norm(a.t.textContent);
     if (config.title && t === norm(config.title)) issues.add(`Remove the title text "${a.label}" from the stage; the app shows the title.`);
     else if (labels.some((l) => t.startsWith(l))) issues.add(`Remove "${a.label}" from the stage; that value is already shown under the simulation.`);

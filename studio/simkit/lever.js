@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=500, y=360 (top of the pivot), pxPerM=150, m1=4 (kg, left), d1=1 (m from the pivot), m2=2 (right),
-   *         d2=2, showValues=true (masses on the loads) }
+   *         d2=2, showValues=true (masses on the loads),
+   *         drag: { d1: app.link("key"), d2: app.link("key") } (the student can slide a load along the beam) }
    * Distances up to 2 m fit on the beam. Returns { update({ m1, d1, m2, d2 }), show({ m1, m2 }), showValues(bool), values() }
    * values() -> { torque1, torque2, net, balanced }   (see simkit.physics.lever)
    */
@@ -22,9 +23,11 @@
     const sol = () => kit.physics.lever(o.m1, o.d1, o.m2, o.d2);
     const target = () => kit.clamp(sol().net * 0.6, -13, 13);
 
+    const turn = () => kit.set(beam, { transform: `rotate(${(-tilt).toFixed(2)} ${o.x} ${o.y})` });
+
     function draw() {
       beam.textContent = "";
-      kit.set(beam, { transform: `rotate(${(-tilt).toFixed(2)} ${o.x} ${o.y})` });
+      turn();
       kit.el("rect", { x: o.x - reach, y: o.y - 14, width: 2 * reach, height: 14, rx: 4, fill: "#d9b382", stroke: "#a9824f", "stroke-width": 2 }, beam);
       // Ruler on the beam: a mark every half metre, numbered every metre.
       for (let i = -4; i <= 4; i++) {
@@ -33,11 +36,15 @@
         kit.el("line", { x1: x, y1: o.y - 14, x2: x, y2: o.y - (i % 2 ? 8 : 2), stroke: "#7a5a2e", "stroke-width": 2 }, beam);
         if (i % 2 === 0) kit.el("text", { x, y: o.y + 18, "text-anchor": "middle", class: "simkit-tick", text: `${Math.abs(i / 2)} m` }, beam);
       }
-      [[o.m1, -o.d1, kit.colors.red, shown.m1], [o.m2, o.d2, kit.colors.blue, shown.m2]].forEach(([m, d, color, visible]) => {
+      [[o.m1, -o.d1, kit.colors.red, shown.m1, "d1"], [o.m2, o.d2, kit.colors.blue, shown.m2, "d2"]].forEach(([m, d, color, visible, key]) => {
         if (!(m > 0)) return;
         const size = 34 + 9 * Math.sqrt(kit.clamp(m, 0.1, 20));
         const cx = o.x + kit.clamp(d, -2, 2) * o.pxPerM;
-        kit.el("rect", { x: cx - size / 2, y: o.y - 14 - size, width: size, height: size, rx: 6, fill: color }, beam);
+        const link = o.drag && o.drag[key];
+        if (kit.linked(link)) kit.grip(beam, cx, o.y - 14 - size / 2, size / 2 + 12);
+        const box = kit.el("rect", { x: cx - size / 2, y: o.y - 14 - size, width: size, height: size, rx: 6, fill: color }, beam);
+        // Dragging a load slides it along the beam (its distance from the pivot).
+        kit.drag(stage, box, link, (p) => link(Math.abs(p.x - o.x) / o.pxPerM));
         kit.el("text", { x: cx, y: o.y - 14 - size - 10, "text-anchor": "middle", class: "simkit-label", fill: color, text: visible ? `${kit.fmt(m, m % 1 ? 1 : 0)} kg` : "? kg" }, beam);
       });
     }
@@ -46,7 +53,7 @@
       const t = target();
       if (Math.abs(t - tilt) < 0.01) return;
       tilt += (t - tilt) * Math.min(1, dt * 6);
-      draw();
+      turn(); // only the tilt changes per frame; rebuilding the loads would pull them from under a dragging finger
     });
     tilt = target();
     draw();

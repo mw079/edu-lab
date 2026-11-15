@@ -16,6 +16,7 @@ Physical inputs are SI unless stated.
 | `kit.colors` | Palette: `ink muted line paper red blue green yellow orange purple steel` (+ `redDark`, `blueDark`, `greenDark`). |
 | `kit.fmt(n, digits)`, `kit.clamp`, `kit.lerp`, `kit.ticks` | Helpers. |
 | `kit.arrow(stage, { x, y, dx, dy, color, label, labelSide })` | Labelled vector → `{ update(opts), show(bool) }`. |
+| `kit.drag(stage, el, link, move)`, `kit.click(el, link, fn)`, `kit.linked(link)`, `kit.grip(parent, x, y, r)` | Direct interaction (see below). |
 | `kit.physics.collide1D(m1, v1, m2, v2, e)` | Final velocities; `e = 1` elastic, `0` sticky. |
 | `kit.physics.circuit(layout, V, [R…])` | `{ totalR, current, parts: [{ R, I, V, P }] }` for `"series"`/`"parallel"`. |
 | `kit.physics.gasPressure(n, T, V)` | kPa, with n mol, T kelvin, V litres. |
@@ -51,6 +52,14 @@ Physical inputs are SI unless stated.
 | `kit.physics.daylight(month, latitude, tilt)` | `{ daylight, noonSun, season }`. |
 | `kit.physics.quadratic(a, b, c)` | `{ vertex, roots, discriminant }`. |
 | `kit.physics.stats(values)` | `{ mean, median, min, max, range }`. |
+| `kit.physics.bits(value, count)` | Bits of a whole number, highest place first. |
+| `kit.physics.gate(type, a, b)` | 0 or 1 for AND, OR, XOR, NAND, NOR, NOT. |
+| `kit.physics.bubbleSort(values, steps)` | `{ array, comparisons, swaps, done, next, total }` after `steps` comparisons. |
+| `kit.physics.binarySearch(values, target, steps)` | `{ low, high, mid, found, checks, needed }`. |
+| `kit.physics.cloudTemperature(cloudPct, isDay)` | °C near the ground. |
+| `kit.physics.windSpeed(high, low, distanceKm)` | km/h from a pressure difference. |
+| `kit.physics.greenhouse(co2, albedo)` | Earth's average temperature in °C. |
+| `kit.physics.correlation(points)` | `{ slope, intercept, r }`. |
 
 ## Components
 
@@ -233,6 +242,57 @@ Angle between two rays on a protractor. `update({ angle })`, `show({ value, type
 **`kit.spinner(stage, { x, y, r, groups: [{ id, label, color, count }], showValues })`**
 Wheel of equal slices with a tally. `update({ groups })`, `spin({ times }) → promise`, `reset()`, `values()`.
 Probability (results are random).
+
+**`kit.binaryBits(stage, { x, y, bits, value, showValue, showPlaces })`**
+Row of bits with place values and the decimal number. `update({ value })` or `update({ bits: [...] })`,
+`show({ value, places })`, `values()`. Binary numbers.
+
+**`kit.logicGate(stage, { x, y, type, a, b, showOutput, showTable })`**
+One gate with inputs, output lamp and truth table. `update({ type, a, b })`, `show({ output, table })`, `values()`.
+Boolean logic.
+
+**`kit.sortBars(stage, { x, y, w, h, values, steps, showValues })`**
+Bars part-way through a bubble sort. `update({ steps, values })`, `values()`. Sorting algorithms.
+
+**`kit.binarySearch(stage, { x, y, values, target, steps, showValues })`**
+Sorted row searched by halving. `update({ target, steps, values })`, `values()`. Searching algorithms.
+
+**`kit.cloudSky(stage, { x, y, w, h, cloud, day, showValues })`**
+Sky with cloud cover by day or night and a thermometer. `update({ cloud, day })`, `show({ temperature })`, `values()`.
+Weather, energy from the Sun.
+
+**`kit.windMap(stage, { x, y, w, high, low, distance, showValues })`**
+High and low pressure with drifting wind arrows. `update({ high, low, distance })`, `show({ speed })`, `values()`.
+Wind, air pressure. (Same file as `cloudSky`: `weather.js`.)
+
+**`kit.greenhouse(stage, { x, y, w, h, co2, albedo, showValues })`**
+Sunlight in, heat out, heat turned back by CO₂. `update({ co2, albedo })`, `show({ temperature })`, `values()`.
+Greenhouse effect, climate.
+
+**`kit.barChart(stage, { x, y, w, h, bars: [{ id, label, value, color }], max, yLabel, showValues })`**,
+**`kit.pieChart(stage, { x, y, r, slices: [...], showValues })`**,
+**`kit.scatterPlot(stage, { x, y, w, h, xRange, yRange, xLabel, yLabel, points, extra, showLine, showR })`**
+Data charts (`charts.js`). `update({ bars | slices | extra })`, `show({...})`, `values()`. Data visualization.
+
+## Direct interaction
+
+A scene receives `app` as its third argument. `app.link("controlKey")` returns a setter for that control; a
+component that is given one lets the student drag or click the object, and calls the setter with the new value.
+The lesson page snaps the value to the control's range and step, keeps the slider in step, and disables the
+link in steps where the control is locked (so question steps cannot be solved by dragging).
+
+| Component | Option | What the student does |
+|---|---|---|
+| `pendulum` | `drag: { angle }` | drags the bob |
+| `numberLine` | `drag: { [markerId] }` | drags a marker |
+| `lever` | `drag: { d1, d2 }` | slides a load along the beam |
+| `lens` | `drag: { dObj }` | drags the object along the axis |
+| `scatterPlot` | `drag: { x, y }` | drags the red point |
+| `binaryBits` | `click: { bits: [...] }` or `{ value }` | clicks a bit to flip it |
+
+In a component: `kit.drag(stage, element, link, (point) => link(valueAt(point)))` (the point is in stage
+coordinates), `kit.click(element, link, fn)`, and `kit.grip(...)` to draw the dashed ring that marks a grabbable
+object while `kit.linked(link)` is true. Every linked value keeps its slider, for keyboards and small screens.
 
 ## Adding a component
 

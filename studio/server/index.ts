@@ -6,7 +6,7 @@ import { ROOT, config } from "./env.ts";
 import { buildLessonHtml, loadLesson } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
 import { thumbnail } from "./thumbnail.ts";
-import { DATA, getDraft, listDrafts, newDraft, recoverInterrupted, runStage, type Stage } from "./pipeline.ts";
+import { DATA, deleteDraft, getDraft, listDrafts, newDraft, recoverInterrupted, runStage, type Stage } from "./pipeline.ts";
 
 const app = express();
 app.use(express.json({ limit: "400kb" }));
@@ -24,11 +24,11 @@ function listLessons() {
     .filter((id) => ID.test(id) && isExample(id))
     .map((id) => {
       const d = JSON.parse(readFileSync(join(EXAMPLES, id, "design.json"), "utf8"));
-      return { id, title: d.title as string, audience: audienceLevel(d.audience) };
+      return { id, title: d.title as string, audience: audienceLevel(d.audience), own: false };
     });
   const generated = listDrafts()
     .filter((d) => d.status === "ready" && d.design && !d.eval)
-    .map((d) => ({ id: d.id, title: d.design!.title, audience: audienceLevel(d.audience) }));
+    .map((d) => ({ id: d.id, title: d.design!.title, audience: audienceLevel(d.audience), own: true }));
   return [...generated, ...examples];
 }
 
@@ -53,6 +53,14 @@ app.get("/api/drafts", (_req, res) => {
 app.get("/api/drafts/:id", (req, res) => {
   const d = getDraft(req.params.id);
   return d ? res.json(d) : res.status(404).json({ error: "Draft not found" });
+});
+
+// Deletes a lesson the teacher created, finished or not. The built-in examples cannot be deleted.
+app.delete("/api/drafts/:id", (req, res) => {
+  const result = deleteDraft(req.params.id);
+  if (result === "missing") return res.status(404).json({ error: "Lesson not found" });
+  if (result === "busy") return res.status(409).json({ error: "This lesson is still being built. Try again when it has finished." });
+  res.json({ ok: true });
 });
 
 app.post("/api/drafts", (req, res) => {

@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=500, y=280 (lens centre, on the axis), pxPerCm=4, f=20 (cm; negative = diverging lens),
-   *         dObj=50 (cm in front of the lens), hObj=15 (cm), showImage=true (image and the rays behind the lens) }
+   *         dObj=50 (cm in front of the lens), hObj=15 (cm), showImage=true (image and the rays behind the lens),
+   *         drag: { dObj: app.link("key") } (the student can drag the object along the axis) }
    * Returns { update({ f, dObj, hObj }), showImage(bool), values() }
    * values() -> { dImg, m, real, upright, hImg }   (cm; see simkit.physics.lens)
    */
@@ -45,7 +46,12 @@
       // Object arrow.
       const xo = o.x - o.dObj * px;
       const yo = o.y - o.hObj * px;
-      kit.arrowShape(dynamic, xo, o.y, xo, yo, { color: kit.colors.green, width: 6, head: 14 });
+      const dragObj = o.drag && o.drag.dObj;
+      if (kit.linked(dragObj)) kit.grip(dynamic, xo, (o.y + yo) / 2, Math.abs(o.y - yo) / 2 + 14);
+      const objArrow = kit.arrowShape(dynamic, xo, o.y, xo, yo, { color: kit.colors.green, width: 6, head: 14 });
+      // A wide invisible strip makes the thin arrow easy to grab; dragging moves the object along the axis.
+      kit.el("rect", { x: xo - 22, y: Math.min(o.y, yo) - 10, width: 44, height: Math.abs(o.y - yo) + 20, fill: "#000", "fill-opacity": 0 }, objArrow);
+      kit.drag(stage, objArrow, dragObj, (p) => dragObj((o.x - p.x) / px));
       kit.el("text", { x: xo, y: yo - 12, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.greenDark, text: "object" }, labels);
       // Rays from the top of the object to the lens.
       const ray = (x1, y1, x2, y2, dashed) => kit.el("line", { x1, y1, x2, y2, stroke: kit.colors.orange, "stroke-width": 2.5, "stroke-dasharray": dashed ? "7 6" : null, opacity: dashed ? 0.7 : 1 }, dynamic);

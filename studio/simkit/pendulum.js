@@ -5,7 +5,8 @@
 
   /**
    * opts: { x=500, y=70 (pivot), pxPerM=170, L=1.5 (m), angle=20 (deg from vertical, + to the right),
-   *         mass=1 (kg, bob size only), g=9.8, showValues=true (length and angle labels), onSample(t, angleDeg) }
+   *         mass=1 (kg, bob size only), g=9.8, showValues=true (length and angle labels), onSample(t, angleDeg),
+   *         drag: { angle: app.link("key") } (the student can drag the bob to set the angle) }
    * Returns { update({ L, angle, mass, g }), showValues(bool), play({ duration }) -> Promise, stop(), period() }
    * Swings as simple harmonic motion (small-angle), so it matches T = 2π√(L/g).
    */
@@ -20,7 +21,11 @@
     const vertical = kit.el("line", { x1: o.x, y1: o.y, x2: o.x, stroke: kit.colors.muted, "stroke-dasharray": "6 6" }, g);
     const arc = kit.el("path", { fill: "none", stroke: kit.colors.orange, "stroke-width": 2 }, g);
     const string = kit.el("line", { x1: o.x, y1: o.y, stroke: kit.colors.ink, "stroke-width": 3 }, g);
+    const dragAngle = o.drag && o.drag.angle;
+    const grip = kit.grip(g, 0, 0, 0);
     const bob = kit.el("circle", { fill: kit.colors.purple, stroke: kit.colors.ink, "stroke-width": 2 }, g);
+    // Dragging the bob sets the release angle.
+    const dragging = kit.drag(stage, bob, dragAngle, (p) => dragAngle((Math.atan2(p.x - o.x, Math.max(1, p.y - o.y)) * 180) / Math.PI));
     kit.el("circle", { cx: o.x, cy: o.y, r: 5, fill: kit.colors.ink }, g);
     const angleLabel = kit.el("text", { class: "simkit-label", fill: kit.colors.orange }, g);
     const lengthLabel = kit.el("text", { class: "simkit-label", fill: kit.colors.ink }, g);
@@ -34,6 +39,8 @@
       kit.set(vertical, { y2: o.y + len + r + 14 });
       kit.set(string, { x2: bx, y2: by });
       kit.set(bob, { cx: bx, cy: by, r });
+      kit.set(grip, { cx: bx, cy: by, r: r + 10, display: kit.linked(dragAngle) && !anim ? null : "none" });
+      dragging.refresh();
       // Angle arc and label near the pivot; the length label beside the string on the far side.
       const ar = 56;
       const side = angle >= 0 ? 1 : -1;
@@ -41,7 +48,8 @@
       // Labels stay where the release position puts them: the angle outside the string, the length on the
       // other side of the vertical line.
       const rest = { o: o.angle >= 0 ? 1 : -1, a: (o.angle * Math.PI) / 180 };
-      kit.set(angleLabel, { x: o.x + Math.sin(rest.a) * 84 + rest.o * 16, y: o.y + Math.cos(rest.a) * 84 + 5, "text-anchor": rest.o > 0 ? "start" : "end", text: o.showValues ? `θ = ${kit.fmt(Math.abs(o.angle), 0)}°` : "" });
+      const lr = Math.min(84, Math.max(40, len - r - 30)); // on a short string the label moves up, clear of the bob
+      kit.set(angleLabel, { x: o.x + Math.sin(rest.a) * lr + rest.o * 16, y: o.y + Math.cos(rest.a) * lr + 5, "text-anchor": rest.o > 0 ? "start" : "end", text: o.showValues ? `θ = ${kit.fmt(Math.abs(o.angle), 0)}°` : "" });
       kit.set(lengthLabel, { x: o.x - rest.o * 18, y: o.y + len / 2 + 5, "text-anchor": rest.o > 0 ? "end" : "start", text: o.showValues ? `L = ${kit.fmt(o.L, 2)} m` : "" });
     }
 

@@ -240,6 +240,56 @@
     "request": "Probability with a spinner: predicted chance compared with what happens"
   },
   {
+    "id": "binary",
+    "audience": "Middle school",
+    "request": "Binary numbers: how computers count with only 0 and 1"
+  },
+  {
+    "id": "logic-gates",
+    "audience": "High school",
+    "request": "Logic gates: AND, OR and NOT and their truth tables"
+  },
+  {
+    "id": "sorting",
+    "audience": "High school",
+    "request": "How bubble sort puts a list of numbers in order"
+  },
+  {
+    "id": "binary-search",
+    "audience": "High school",
+    "request": "Binary search: finding a number in a sorted list quickly"
+  },
+  {
+    "id": "clouds",
+    "audience": "Middle school",
+    "request": "How cloud cover affects the temperature during the day and at night"
+  },
+  {
+    "id": "wind",
+    "audience": "Middle school",
+    "request": "Why wind blows: high and low air pressure"
+  },
+  {
+    "id": "greenhouse",
+    "audience": "High school",
+    "request": "The greenhouse effect: how carbon dioxide changes Earth's temperature"
+  },
+  {
+    "id": "bar-charts",
+    "audience": "Middle school",
+    "request": "Reading and comparing data in a bar chart"
+  },
+  {
+    "id": "pie-charts",
+    "audience": "Middle school",
+    "request": "Pie charts and percentages"
+  },
+  {
+    "id": "scatter",
+    "audience": "High school",
+    "request": "Scatter plots, the line of best fit and correlation"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",
