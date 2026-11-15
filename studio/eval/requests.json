@@ -190,6 +190,56 @@
     "request": "Circumference and area of a circle"
   },
   {
+    "id": "energy",
+    "audience": "High school",
+    "request": "Conservation of energy: potential and kinetic energy of a ball rolling down into a valley"
+  },
+  {
+    "id": "standing-waves",
+    "audience": "High school",
+    "request": "Standing waves and harmonics on a guitar string"
+  },
+  {
+    "id": "titration",
+    "audience": "High school",
+    "request": "Acid–base titration: finding the equivalence point"
+  },
+  {
+    "id": "food-chain",
+    "audience": "Middle school",
+    "request": "Energy flow in a food chain and the 10 percent rule"
+  },
+  {
+    "id": "osmosis",
+    "audience": "High school",
+    "request": "Osmosis: what happens to a cell in solutions of different concentration"
+  },
+  {
+    "id": "seasons",
+    "audience": "Middle school",
+    "request": "Why we have seasons"
+  },
+  {
+    "id": "quadratics",
+    "audience": "High school",
+    "request": "Quadratic functions: the vertex and the roots of a parabola"
+  },
+  {
+    "id": "mean-median",
+    "audience": "Middle school",
+    "request": "Mean and median, and how an outlier changes them"
+  },
+  {
+    "id": "angles",
+    "audience": "Middle school",
+    "request": "Measuring angles: acute, right and obtuse angles"
+  },
+  {
+    "id": "probability",
+    "audience": "Middle school",
+    "request": "Probability with a spinner: predicted chance compared with what happens"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",

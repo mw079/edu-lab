@@ -482,6 +482,77 @@
       for (let i = 0; i < Math.round(generations); i++) p = (p * sDark) / (p * sDark + (1 - p) * sLight);
       return p;
     },
+    /** Standing wave number n on a string of length L (m) with wave speed v (m/s): { wavelength (m), frequency (Hz) }. */
+    harmonic(n, L, v) {
+      return { wavelength: (2 * L) / n, frequency: (n * v) / (2 * L) };
+    },
+    /**
+     * Object of mass m (kg) released from rest at height h0 (m), now at height h, with no friction.
+     * Returns { pe, ke, total (J), v (m/s) }.
+     */
+    energyAt(m, h0, h, g) {
+      const G = g || 9.8;
+      const total = m * G * h0;
+      const pe = m * G * Math.min(h, h0);
+      return { pe, ke: total - pe, total, v: Math.sqrt(2 * G * Math.max(0, h0 - h)) };
+    },
+    /**
+     * Strong acid (cAcid mol/L, vAcid mL) titrated with vBase mL of a strong base (cBase mol/L).
+     * Returns { pH, equivalence (mL of base that exactly neutralises the acid) }.
+     */
+    titration(cAcid, vAcid, cBase, vBase) {
+      const acid = cAcid * vAcid;
+      const base = cBase * vBase;
+      const total = vAcid + vBase;
+      const excess = (acid - base) / total; // mol/L of H+ (positive) or OH- (negative)
+      const pH = Math.abs(excess) < 1e-9 ? 7 : excess > 0 ? -Math.log10(excess) : 14 + Math.log10(-excess);
+      return { pH: Math.min(14, Math.max(0, pH)), equivalence: acid / cBase };
+    },
+    /** Energy (same unit as base) that reaches feeding level `level` (1 = producers) when efficiencyPct passes on each step. */
+    trophic(base, efficiencyPct, level) {
+      return base * Math.pow(efficiencyPct / 100, level - 1);
+    },
+    /**
+     * Cell with solute concentration `inside` in a solution of concentration `outside` (same unit).
+     * Returns { water: "in" | "out" | "none" (net movement of water), solution: "hypotonic" | "isotonic" |
+     * "hypertonic" (the solution compared with the cell), size (final cell volume relative to the start) }.
+     */
+    osmosis(inside, outside) {
+      const diff = inside - outside;
+      const same = Math.abs(diff) < 1e-9;
+      return { water: same ? "none" : diff > 0 ? "in" : "out", solution: same ? "isotonic" : diff > 0 ? "hypotonic" : "hypertonic", size: Math.min(2, Math.max(0.4, inside / Math.max(outside, 1e-9))) };
+    },
+    /**
+     * Sunlight through the year. month 1–12 (6 = the June solstice, 12 = the December solstice), latitude in
+     * degrees (negative = south), tilt of the Earth's axis in degrees (23.5).
+     * Returns { daylight (hours), noonSun (degrees above the horizon at midday), season }.
+     */
+    daylight(month, latitude, tilt) {
+      const t = tilt == null ? 23.5 : tilt;
+      const lat = latitude == null ? 45 : latitude;
+      const rad = Math.PI / 180;
+      const decl = t * Math.cos((2 * Math.PI * (month - 6)) / 12);
+      const x = -Math.tan(lat * rad) * Math.tan(decl * rad);
+      const daylight = x <= -1 ? 24 : x >= 1 ? 0 : (24 / Math.PI) * Math.acos(x);
+      const m = ((Math.round(month) - 1 + 12) % 12) + 1;
+      const north = ["winter", "winter", "spring", "spring", "spring", "summer", "summer", "summer", "autumn", "autumn", "autumn", "winter"][m - 1];
+      const flip = { winter: "summer", summer: "winter", spring: "autumn", autumn: "spring" };
+      return { daylight, noonSun: Math.min(90, 90 - Math.abs(lat - decl)), season: lat >= 0 ? north : flip[north] };
+    },
+    /** y = ax² + bx + c: { vertex: { x, y }, roots: [] | [x] | [x1, x2] (smaller first), discriminant }. */
+    quadratic(a, b, c) {
+      const discriminant = b * b - 4 * a * c;
+      const vx = -b / (2 * a);
+      const roots = discriminant < -1e-9 ? [] : Math.abs(discriminant) <= 1e-9 ? [vx] : [(-b - Math.sqrt(discriminant)) / (2 * a), (-b + Math.sqrt(discriminant)) / (2 * a)].sort((p, q) => p - q);
+      return { vertex: { x: vx, y: c - (b * b) / (4 * a) }, roots, discriminant };
+    },
+    /** Summary of a list of numbers: { mean, median, min, max, range }. */
+    stats(values) {
+      const v = values.filter((n) => typeof n === "number" && Number.isFinite(n)).sort((p, q) => p - q);
+      if (!v.length) return { mean: 0, median: 0, min: 0, max: 0, range: 0 };
+      const mid = Math.floor(v.length / 2);
+      return { mean: v.reduce((sum, n) => sum + n, 0) / v.length, median: v.length % 2 ? v[mid] : (v[mid - 1] + v[mid]) / 2, min: v[0], max: v[v.length - 1], range: v[v.length - 1] - v[0] };
+    },
     /** Pendulum small-angle period in seconds. */
     pendulumPeriod(L, g) {
       return 2 * Math.PI * Math.sqrt(L / (g || 9.8));

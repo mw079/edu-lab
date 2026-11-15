@@ -122,3 +122,32 @@ test("equation balancing and natural selection helpers", () => {
   assert.ok(P.selection(0.1, 0.8, 3) > 0.7);
   assert.ok(P.selection(0.9, 0.1, 5) < 0.1);
 });
+
+test("standing wave, energy, titration and ecology helpers", () => {
+  assert.deepEqual(JSON.parse(JSON.stringify(P.harmonic(2, 2, 40))), { wavelength: 2, frequency: 20 });
+  near(P.energyAt(1, 4, 0).v, 8.854, 0.001);
+  near(P.energyAt(2, 5, 3).ke, 39.2);
+  near(P.energyAt(2, 5, 3).pe + P.energyAt(2, 5, 3).ke, P.energyAt(2, 5, 3).total);
+  near(P.titration(0.1, 25, 0.1, 0).pH, 1);
+  assert.deepEqual([P.titration(0.1, 25, 0.1, 25).pH, P.titration(0.1, 25, 0.1, 25).equivalence], [7, 25]);
+  near(P.titration(0.1, 25, 0.1, 30).pH, 11.96);
+  near(P.trophic(10000, 10, 3), 100);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.osmosis(0.3, 0.6))), { water: "out", solution: "hypertonic", size: 0.5 });
+  assert.deepEqual([P.osmosis(0.3, 0.3).water, P.osmosis(0.6, 0.2).solution], ["none", "hypotonic"]);
+});
+
+test("seasons, quadratic and statistics helpers", () => {
+  near(P.daylight(3, 45).daylight, 12);
+  near(P.daylight(6, 45).daylight, 15.43, 0.05);
+  near(P.daylight(6, 0).daylight, 12);
+  near(P.daylight(6, 45, 0).daylight, 12);
+  assert.deepEqual([P.daylight(6, 45).season, P.daylight(6, -30).season, P.daylight(10, 45).season], ["summer", "winter", "autumn"]);
+  assert.equal(P.daylight(12, 80).daylight, 0); // polar night
+  near(P.daylight(6, 45).noonSun, 68.5);
+  const q = P.quadratic(1, -2, -3);
+  assert.deepEqual(JSON.parse(JSON.stringify(q)), { vertex: { x: 1, y: -4 }, roots: [-1, 3], discriminant: 16 });
+  assert.equal(P.quadratic(1, 0, 4).roots.length, 0);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.quadratic(1, -4, 4).roots)), [2]);
+  assert.deepEqual(JSON.parse(JSON.stringify(P.stats([2, 3, 3, 5, 9]))), { mean: 4.4, median: 3, min: 2, max: 9, range: 7 });
+  assert.equal(P.stats([1, 2, 3, 4]).median, 2.5);
+});

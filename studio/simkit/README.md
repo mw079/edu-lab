@@ -43,6 +43,14 @@ Physical inputs are SI unless stated.
 | `kit.physics.stateOf(T, melt, boil)` | `"solid"`, `"liquid"` or `"gas"`. |
 | `kit.physics.balance(reaction, coefficients)` | `{ left, right, balanced }` atom counts; reactions in `kit.physics.reactions`. |
 | `kit.physics.selection(startDark, bark, generations)` | Fraction of dark moths after selection. |
+| `kit.physics.harmonic(n, L, v)` | `{ wavelength, frequency }` of a standing wave. |
+| `kit.physics.energyAt(m, h0, h)` | `{ pe, ke, total, v }` for a frictionless fall from rest at `h0`. |
+| `kit.physics.titration(cAcid, vAcid, cBase, vBase)` | `{ pH, equivalence }`, strong acid with strong base. |
+| `kit.physics.trophic(base, efficiencyPct, level)` | Energy at a feeding level. |
+| `kit.physics.osmosis(inside, outside)` | `{ water, solution, size }`. |
+| `kit.physics.daylight(month, latitude, tilt)` | `{ daylight, noonSun, season }`. |
+| `kit.physics.quadratic(a, b, c)` | `{ vertex, roots, discriminant }`. |
+| `kit.physics.stats(values)` | `{ mean, median, min, max, range }`. |
 
 ## Components
 
@@ -188,6 +196,43 @@ Grid with the line y = mx + b, slope triangle, equation and points. `update({ m,
 **`kit.circleFigure(stage, { x, y, pxPerUnit, r, angle, unit, showValues })`**
 Circle with radius, optional sector, circumference and area. `update({ r, angle })`,
 `show({ r, angle, circumference, area })`, `values()`. Circles, π, sectors.
+
+**`kit.energyTrack(stage, { x, y, w, h, hMax, h0, mass, at, showValues })`**
+Ball in a frictionless valley with PE, KE and total bars. `update({ h0, mass, at })`, `show({ speed, bars })`,
+`play({ swings }) → promise`, `values()`. Conservation of energy.
+
+**`kit.standingWave(stage, { x, y, w, L, n, speed, showValues })`**
+String vibrating in harmonic `n` with nodes and half-wavelength marked. `update({ n, L, speed })`,
+`show({ wavelength })`, `values()`. Standing waves, harmonics.
+
+**`kit.titration(stage, { x, y, cAcid, vAcid, cBase, vBase, showValues })`**
+Burette over a flask with indicator. `update({ cAcid, vAcid, cBase, vBase })`, `show({ pH })`, `values()`.
+Neutralisation, equivalence point (pair with `kit.plot` for the curve).
+
+**`kit.energyPyramid(stage, { x, y, w, h, levels, base, efficiency, unit, showValues })`**
+Feeding levels with their energy. `update({ base, efficiency })`, `hideEnergy(level)`, `values()`. Energy flow.
+
+**`kit.osmosisCell(stage, { x, y, w, h, inside, outside, showValues, showArrows })`**
+Cell that swells or shrinks in a solution, with water arrows. `update({ inside, outside })`,
+`show({ arrows, values })`, `values()`. Osmosis.
+
+**`kit.seasons(stage, { x, y, a, b, month, latitude, tilt, showValues })`**
+Tilted Earth on its orbit with season and day length. `update({ month, latitude, tilt })`,
+`show({ season, daylight })`, `values()`. Seasons, Earth's tilt.
+
+**`kit.parabola(stage, { x, y, size, range, a, b, c, showVertex, showRoots, showEquation })`**
+Grid with y = ax² + bx + c, vertex and roots. `update({ a, b, c })`, `show({ vertex, roots, equation })`, `values()`.
+Quadratic functions. Shares its grid with `kit.coordinatePlane`.
+
+**`kit.dotPlot(stage, { x, y, w, min, max, values, showMean, showMedian })`**
+Numbers as stacked dots with mean and median. `update({ values })`, `show({ mean, median })`, `values()`. Statistics.
+
+**`kit.protractor(stage, { x, y, r, angle, showValue, showType, showScale })`**
+Angle between two rays on a protractor. `update({ angle })`, `show({ value, type, scale })`, `values()`. Angles.
+
+**`kit.spinner(stage, { x, y, r, groups: [{ id, label, color, count }], showValues })`**
+Wheel of equal slices with a tally. `update({ groups })`, `spin({ times }) → promise`, `reset()`, `values()`.
+Probability (results are random).
 
 ## Adding a component
 
