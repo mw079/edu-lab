@@ -6,7 +6,8 @@
   /**
    * opts: { x=380, y=280 (centre), protons=6, neutrons=6, electrons=6, showName=true (element name, symbol,
    *         mass number and charge at the right), showCounts=true (p and n in the nucleus) }
-   * Returns { update({ protons, neutrons, electrons }), showName(bool), showCounts(bool), values() }
+   * Returns { update({ protons, neutrons, electrons }), show({ protons, neutrons, name }), showName(bool),
+   *   showCounts(bool), values() }   A hidden count reads "? p⁺" or "? n".
    * values() -> { symbol, name, shells, massNumber, charge }
    */
   kit.atom = function (stage, opts) {
@@ -18,6 +19,7 @@
     const info = [0, 1, 2].map((i) => kit.el("text", { x: o.x + 250, y: o.y - 30 + i * 30, class: i === 0 ? "simkit-label" : "simkit-tick", fill: kit.colors.ink }, g));
     kit.set(info[0], { style: "font-size: 26px" });
 
+    const shown = { protons: o.showCounts, neutrons: o.showCounts };
     const sol = () => {
       const el = kit.physics.element(o.protons, o.electrons);
       return { symbol: el.symbol, name: el.name, shells: el.shells, massNumber: o.protons + o.neutrons, charge: o.protons - o.electrons };
@@ -34,8 +36,8 @@
           kit.el("circle", { cx: o.x + r * Math.cos(a), cy: o.y + r * Math.sin(a), r: 8, fill: kit.colors.blue, stroke: "#fff", "stroke-width": 2 }, shellsG);
         }
       });
-      kit.set(nucleus[0], { text: o.showCounts ? `${o.protons} p⁺` : "" });
-      kit.set(nucleus[1], { text: o.showCounts ? `${o.neutrons} n` : "" });
+      kit.set(nucleus[0], { text: `${shown.protons ? o.protons : "?"} p⁺` });
+      kit.set(nucleus[1], { text: `${shown.neutrons ? o.neutrons : "?"} n` });
       const sign = v.charge === 0 ? "" : `${Math.abs(v.charge) > 1 ? Math.abs(v.charge) : ""}${v.charge > 0 ? "+" : "−"}`;
       kit.set(info[0], { text: o.showName ? `${v.symbol}${sign ? " " + sign : ""}` : "" });
       kit.set(info[1], { text: o.showName ? `${v.name}-${v.massNumber}` : "" });
@@ -54,7 +56,14 @@
         draw();
       },
       showCounts(visible) {
-        o.showCounts = visible;
+        shown.protons = shown.neutrons = visible;
+        draw();
+      },
+      /** Show or hide single things, e.g. show({ neutrons: false, name: false }) when a step asks for the neutrons. */
+      show(which) {
+        if (which.protons != null) shown.protons = which.protons;
+        if (which.neutrons != null) shown.neutrons = which.neutrons;
+        if (which.name != null) o.showName = which.name;
         draw();
       },
       values: sol,

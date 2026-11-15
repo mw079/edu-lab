@@ -35,7 +35,7 @@
       particles = [];
       const add = (kind) => {
         const a = Math.random() * Math.PI * 2;
-        const p = { kind, x: R + Math.random() * (o.w - 2 * R), y: R + Math.random() * (o.h - 2 * R), dx: Math.cos(a), dy: Math.sin(a) };
+        const p = { kind, x: R + 4 + Math.random() * (o.w - 2 * R - 8), y: R + 4 + Math.random() * (o.h - 2 * R - 8), dx: Math.cos(a), dy: Math.sin(a) };
         p.el = kit.el("circle", { r: R, fill: kind === "A" ? kit.colors.red : kit.colors.blue }, dotsG);
         particles.push(p);
       };
@@ -54,7 +54,7 @@
     stage.onFrame((dt) => {
       const speed = 90 * Math.sqrt(o.T / 300);
       for (const p of particles) {
-        const r = p.kind === "AB" ? 11 : R;
+        const r = (p.kind === "AB" ? 11 : R) + 4; // stay clear of the wall's thickness
         p.x += p.dx * speed * dt;
         p.y += p.dy * speed * dt;
         if (p.x < r) (p.x = r), (p.dx = Math.abs(p.dx));

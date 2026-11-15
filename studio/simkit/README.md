@@ -83,7 +83,8 @@ Moving A and B particles that react to AB while `run()` plays; live counts. `upd
 `run({ duration }) → promise`, `reset()`, `products()`. Collision theory, reaction rates (the picture is random).
 
 **`kit.atom(stage, { x, y, protons, neutrons, electrons, showName, showCounts })`**
-Shell model for elements 1–20 with name, mass number and charge. `update({ protons, neutrons, electrons })`.
+Shell model for elements 1–20 with name, mass number and charge. `update({ protons, neutrons, electrons })`,
+`show({ protons, neutrons, name })` to hide single values.
 Atomic structure, ions, isotopes.
 
 **`kit.waterPlant(stage, { x, y, w, h, light, co2, temp, showValues })`**
