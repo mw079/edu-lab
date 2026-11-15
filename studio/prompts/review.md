@@ -12,11 +12,16 @@ Report only clear problems a student would notice in the pictures:
   (listed below as "hidden")
 - the picture does not show what the step is about
 
+Each step is marked with what happens in it. Where it says "the student will change …", the picture is
+only the starting point: do not report that the target is not reached yet or that the described end state is
+not shown. Where it says "the student types an answer", the picture must show exactly the situation the
+task describes.
+
+A dashed purple ring around an object means the student can drag it; that is intended.
+
 Do not report: colours, style preferences, the background grid, empty space, or anything you are not sure
 about. Most drawings have no problems; then return an empty list.
 
 Reply with one JSON object and nothing else:
 {"issues": [{"step": 1, "problem": "what is wrong and where", "fix": "a concrete change to the drawing"}]}
 At most 5 issues; if one problem appears on several steps, report it once.
-
-A dashed purple ring around an object means the student can drag it; that is intended and not a problem.

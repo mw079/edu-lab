@@ -157,7 +157,8 @@
         "mA": 2,
         "vA": 2,
         "mB": 2,
-        "vB": -2
+        "vB": -2,
+        "type": "elastic"
       },
       "lock": [
         "mB",
@@ -197,7 +198,8 @@
         "mA": 2,
         "vA": 2,
         "mB": 2,
-        "vB": 2
+        "vB": 2,
+        "type": "elastic"
       },
       "lock": [
         "mB",

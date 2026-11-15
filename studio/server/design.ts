@@ -161,13 +161,27 @@ export function lessonSourceFromDir(dir: string): string {
 }
 
 /** Structural + logic checks of a design, using an empty scene. */
+/**
+ * Every step states its whole starting situation. A value left out of "setup" would silently come from the
+ * lesson's defaults, which is how a step ends up showing a picture that does not match its task.
+ */
+export function checkSetups(design: Design): Issue[] {
+  const keys = Object.keys(design.state || {});
+  const issues: Issue[] = [];
+  for (const [i, lv] of (design.levels || []).entries()) {
+    const missing = keys.filter((k) => !(lv.setup && k in lv.setup));
+    if (missing.length) issues.push({ level: i + 1, message: `setup must give every state key so the step starts in exactly the situation its goal describes; missing: ${missing.join(", ")}` });
+  }
+  return issues;
+}
+
 export function checkDesign(design: Design): { errors: Issue[]; warnings: Issue[] } {
   const errors: Issue[] = [];
   if (!Array.isArray(design.levels) || design.levels.length !== 5) errors.push({ message: `levels must be an array of exactly 5 levels (found ${design.levels?.length ?? 0})` });
   if (!design.state || typeof design.state !== "object") errors.push({ message: "state must be an object" });
   if (!Array.isArray(design.controls)) errors.push({ message: "controls must be an array" });
   if (errors.length) return { errors, warnings: [] };
-  errors.push(...checkExpressions(design), ...checkMath(design));
+  errors.push(...checkExpressions(design), ...checkMath(design), ...checkSetups(design));
   if (errors.length) return { errors, warnings: [] };
   try {
     const report = validateLesson(loadLesson(assembleLesson(design, EMPTY_SCENE)));

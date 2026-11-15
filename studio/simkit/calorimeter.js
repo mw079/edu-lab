@@ -18,10 +18,10 @@
     let anim = null;
     let progress = 0; // 0 = block above the water, 1 = mixed
     const sol = () => kit.physics.mixTemp(o.mWater, 4.18, o.tWater, o.mBlock, o.cBlock, o.tBlock);
-    const surface = o.y + 60;
+    const fullLevel = o.y + 40; // highest water level (500 g or more)
     // Insulated cup: thick wall, water inside.
     kit.el("rect", { x: o.x - 14, y: o.y, width: o.w + 28, height: o.h + 14, rx: 14, fill: "#e6e2d8", stroke: kit.colors.steel, "stroke-width": 3 }, g);
-    const water = kit.el("rect", { x: o.x, y: surface, width: o.w, height: o.y + o.h - surface, rx: 6 }, g);
+    const water = kit.el("rect", { x: o.x, width: o.w, rx: 6 }, g);
     const waterLabel = kit.el("text", { x: o.x + o.w / 2, y: o.y + o.h + 44, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.blueDark }, g);
     const dynamic = kit.el("g", null, g);
     // Thermometer at the right of the cup with a 0–100 °C scale.
@@ -44,7 +44,9 @@
       const T = o.tWater + (v.final - o.tWater) * progress;
       // Water colour: blue when cold, turning red as it warms.
       const w = kit.clamp(T, 0, 100) / 100;
-      kit.set(water, { fill: `rgb(${Math.round(143 + 97 * w)}, ${Math.round(195 - 45 * w)}, ${Math.round(240 - 97 * w)})`, "fill-opacity": 0.8 });
+      // More water stands higher in the cup.
+      const surface = o.y + o.h - kit.clamp(o.mWater / 500, 0.35, 1) * (o.y + o.h - fullLevel);
+      kit.set(water, { y: surface, height: o.y + o.h - surface, fill: `rgb(${Math.round(143 + 97 * w)}, ${Math.round(195 - 45 * w)}, ${Math.round(240 - 97 * w)})`, "fill-opacity": 0.8 });
       kit.set(waterLabel, { text: o.showValues ? `water: ${kit.fmt(o.mWater, 0)} g` : "water" });
       const size = kit.clamp(30 + 4 * Math.sqrt(o.mBlock), 40, 110);
       const cx = o.x + o.w / 2;

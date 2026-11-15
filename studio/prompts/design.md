@@ -25,7 +25,7 @@ Level:
 {
   "title": "2–4 words",
   "goal": "One concrete instruction or question, including any numbers the student needs.",
-  "setup": { "key": value },          // state at the start of this step (overrides "state")
+  "setup": { "key": value },          // the step's complete starting situation: EVERY state key, with the values the goal describes
   "lock": ["key or action id"],       // hidden in this step (locked actions appear once solved); lock everything the step does not need
   "show": ["readout key"],            // the 0–3 readouts this step needs; the others are not shown
   "hide": ["readout key"],            // of those, shown as "?" until solved (hide the answer of a question step)
@@ -54,14 +54,18 @@ Math.abs(d.p - 12) < 1e-6, and typed answers with a looser one: Math.abs(answer 
 - A goal step's solution changes only controls that are NOT locked in that step, within min/max and on
   the slider step (min + k × step). A question step has "ask" and "solution": { "answer": number }.
 - lock/show/hide/setup only use existing control keys, action ids, readout keys and state keys.
+- Every level's "setup" lists every state key (nothing is inherited from "state").
 - At most 5 readouts in total; every level has "show" with at most 3 of them; every "hide" key is also in "show".
 - Every readout key exists in state or derived and is a finite number.
 
 ## Teaching rules
 
 - Step 1 is concrete and easy: one or two sliders, everything else locked.
-- A question step's setup must put the simulation in exactly the situation the goal describes (same
-  numbers), because the student cannot change it.
+- Write each "setup" by reading your own goal sentence: every number, object and condition it mentions
+  (a 4 kg mass, night time, a parallel circuit, a 2 m string) must be set to that value in "setup". In a
+  question step the student cannot change anything, so the picture must already be exactly that situation.
+  In a goal step, start from a clearly different value of what the student will change, and set everything
+  else as the goal describes.
 - The answer of a question step must be a readout that the step lists in "hide"; then the picture hides
   it too (number, bracket, ray or graph).
 - Never ask the student to find a value the picture always shows (see "Always visible" in the component

@@ -14,8 +14,8 @@ The model only fills in small, checked pieces; templates and examples do the res
 | Step | Model gets | Model writes | Checked by | Teacher |
 |---|---|---|---|---|
 | 1. Plan | request, audience, pasted source text, one-line catalogue (`simkit/catalog.json`) | title, idea, objectives, 1–2 components | known component ids | edits/approves objectives |
-| 2. Steps | plan + chosen components' API + `examples/momentum/design.json` | `design.json`: data, short JS expressions, LaTeX text, 5 levels | `checkDesign` (`server/design.ts`): expressions and LaTeX parse; each level starts unsolved and its solution solves it with unlocked, in-range controls; readout limits | approves or asks for changes |
-| 3. Simulation | design summary + chosen components' snippets (`simkit/snippets/`) + example scene | one `scene` function (≈15–40 lines) | every level played and solved in headless Chrome; layout check (`server/layout-check.js`) | opens the lesson |
+| 2. Steps | plan + chosen components' API + `examples/momentum/design.json` | `design.json`: data, short JS expressions, LaTeX text, 5 levels | `checkDesign` (`server/design.ts`): expressions and LaTeX parse; each level states its whole starting situation, starts unsolved, and its solution solves it with unlocked, in-range controls; readout limits | approves or asks for changes |
+| 3. Simulation | design summary + chosen components' snippets (`simkit/snippets/`) + example scene | one `scene` function (≈15–40 lines), which also links draggable objects to their sliders (`app.link`) | every level played and solved in headless Chrome; layout check (`server/layout-check.js`) | opens the lesson |
 | 4. Visual review | a screenshot of the simulation at the start of each step + the step goals and hidden values (`prompts/review.md`) | up to 5 problems a student would notice | — (suggestions: one fix round, kept only if the lesson still works, has no more layout problems and a second review finds fewer problems) | — |
 
 Each step gets up to two fix rounds with the check results sent back to the model. `assembleLesson`
@@ -62,7 +62,7 @@ npm run typecheck
 |---|---|
 | `simkit/` | SVG science components (`README.md`), the catalogue the planner picks from (`catalog.json`) and a usage example per component (`snippets/`) |
 | `template/` | Fixed student UI (`shell.js`, `shell.css`, `lesson.html`), design tokens shared with the teacher app (`tokens.css`), lesson format (`CONTRACT.md`) |
-| `examples/` | Reference lesson(s) as `design.json` + `scene.js`, shown to the generator |
+| `examples/` | Reference lessons as `design.json` + `scene.js`: `momentum` is shown to the generator, `pendulum` shows direct interaction |
 | `prompts/` | Prompts for plan, steps and simulation |
 | `server/` | Express API (`index.ts`), pipeline (`pipeline.ts`), design checks and assembly (`design.ts`), lesson build and logic validation (`lesson.ts`), math (`math.ts`), Chrome check (`browser-check.ts`, `layout-check.js`), card pictures (`thumbnail.ts`), Fireworks client (`llm.ts`) |
 | `web/` | React teacher app |
@@ -75,12 +75,14 @@ math) KaTeX's stylesheet and fonts. No AI runs while students use a lesson.
 **Student UI.** The simulation on the left (kept at its own proportions), one task card on the right:
 goal → controls this step needs → Check → hints ending in a worked solution. At most 3 readouts per step,
 a "Key ideas" formula sheet in the header, a clear green "✓ Correct!" box, Check stays available after
-solving. The page fits the window. Five steps, then free exploration.
+solving. The page fits the window. Five steps, then free exploration. Where a component supports it,
+students drag or click the object itself (a dashed ring marks it); the slider stays in step and remains as
+the keyboard and small-screen route (see "Direct interaction" in `simkit/README.md`).
 
 **Teacher app.** Overview of picture cards (the simulation at step 1, `server/thumbnail.ts`, cached in
 `data/thumbs/`) with title and audience (Middle school, High school, Undergraduate) and an audience
 filter. Lessons open in the same tab with "← All lessons". New lessons go through plan → steps review and
-then open. No UI library: plain CSS on shared tokens, because each lesson must stay one offline file.
+then open. A teacher can delete their own lessons (moved to `data/trash/`, not erased). No UI library: plain CSS on shared tokens, because each lesson must stay one offline file.
 
 ## Plan
 
@@ -93,7 +95,16 @@ then open. No UI library: plain CSS on shared tokens, because each lesson must s
 | M4 | More components (toward 50–100 objects) and example lessons | 57 components across physics, chemistry, biology, earth science, astronomy, maths, computer science and data; second example lesson (pendulum) |
 | M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | started: pendulum, number line, lever, lens, scatter plot (drag) and binary bits (click) |
 
-### Evaluation (10 requests, `eval/requests.json`)
+### Evaluation (`eval/requests.json`)
+
+**Full run, 59 requests (one per topic the library covers, plus one from pasted text), 2026-11-15:**
+59/59 lessons built. Average 106 s per lesson (median 90 s, slowest 423 s); 21 of 59 passed every check on
+the first try, the rest needed one or more fix rounds. The visual review reported 25 problems in total;
+after its fix round 22 remained, spread over 20 lessons. These remaining findings have not been judged by
+hand: in earlier samples about 80% of findings were real, and several in this run are known false alarms
+(e.g. a floating block reported as "half submerged" when the picture is correct).
+
+**First 10 requests, before and after the first round of fixes:**
 
 | Run | Ready | Avg. time | Review findings | Lessons with findings left |
 |---|---|---|---|---|

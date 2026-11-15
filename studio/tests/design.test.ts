@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { assembleLesson, checkDesign, checkMath, EMPTY_SCENE, type Design } from "../server/design.ts";
+import { assembleLesson, checkDesign, checkMath, checkSetups, EMPTY_SCENE, type Design } from "../server/design.ts";
 import { repairLatex } from "../server/math.ts";
 import { loadLesson } from "../server/lesson.ts";
 
@@ -55,4 +55,16 @@ test("LaTeX in text is rendered, broken LaTeX and math in feedback are reported"
 
 test("JSON escape damage inside math is repaired (\\f from \\frac, tab from \\times)", () => {
   assert.equal(repairLatex("\frac{1}{2} \times 3"), "\\frac{1}{2} \\times 3");
+});
+
+test("every level's setup must state the whole starting situation", () => {
+  const design = JSON.parse(readFileSync("examples/momentum/design.json", "utf8"));
+  assert.deepEqual(checkSetups(design), []);
+  delete design.levels[2].setup.type;
+  delete design.levels[2].setup.vB;
+  const issues = checkSetups(design);
+  assert.equal(issues.length, 1);
+  assert.equal(issues[0].level, 3);
+  assert.match(issues[0].message, /missing: vB, type/);
+  assert.ok(checkDesign(design).errors.length > 0);
 });
