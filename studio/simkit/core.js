@@ -286,6 +286,56 @@
       const tir = sin2 > 1;
       return { theta2: tir ? null : (Math.asin(sin2) * 180) / Math.PI, tir, critical };
     },
+    /**
+     * Planet on an ellipse with semi-major axis a (AU) and eccentricity e around a star of M solar masses.
+     * Returns { period (years), rPeri, rAp (AU), vPeri, vAp (km/s) }. Kepler's third law: T² = a³ / M.
+     */
+    orbit(a, e, M) {
+      const m = M || 1;
+      const ecc = e || 0;
+      const speed = (r) => 29.78 * Math.sqrt(m * (2 / r - 1 / a));
+      const rPeri = a * (1 - ecc);
+      const rAp = a * (1 + ecc);
+      return { period: Math.sqrt((a * a * a) / m), rPeri, rAp, vPeri: speed(rPeri), vAp: speed(rAp) };
+    },
+    /** Concentration in mol/L of `moles` of solute in `volumeML` millilitres of solution. */
+    molarity(moles, volumeML) {
+      return moles / (Math.max(volumeML, 1e-9) / 1000);
+    },
+    /**
+     * Relative rate of A + B -> AB: proportional to both concentrations and to exp(-Ea / RT).
+     * 1 at cA = cB = 1, T = 300 K. EaKJ is the activation energy in kJ/mol (default 50).
+     */
+    reactionRate(cA, cB, T, EaKJ) {
+      const Ea = (EaKJ == null ? 50 : EaKJ) * 1000;
+      return cA * cB * Math.exp((-Ea / 8.314) * (1 / T - 1 / 300));
+    },
+    /**
+     * Photosynthesis rate of a water plant in oxygen bubbles per minute, with limiting factors.
+     * light 0–100 (% lamp brightness), co2 0–0.2 (% CO2), temp in °C (best at 30, stops at 10 and 50).
+     * Returns { rate, limiting: "light" | "co2" | "temperature" }.
+     */
+    photosynthesis(light, co2, temp) {
+      const byLight = 0.4 * light;
+      const byCo2 = 400 * co2;
+      const t = temp == null ? 30 : temp;
+      const tempFactor = Math.max(0, 1 - ((t - 30) / 20) ** 2);
+      const rate = Math.min(byLight, byCo2) * tempFactor;
+      return { rate, limiting: tempFactor < 0.5 ? "temperature" : byLight <= byCo2 ? "light" : "co2" };
+    },
+    /** Element 1–20: { symbol, name, shells: electrons per shell for `electrons` (default: neutral atom) }. */
+    element(protons, electrons) {
+      const table = "H Hydrogen,He Helium,Li Lithium,Be Beryllium,B Boron,C Carbon,N Nitrogen,O Oxygen,F Fluorine,Ne Neon,Na Sodium,Mg Magnesium,Al Aluminium,Si Silicon,P Phosphorus,S Sulfur,Cl Chlorine,Ar Argon,K Potassium,Ca Calcium".split(",");
+      const [symbol, name] = (table[protons - 1] || "? Unknown").split(" ");
+      const shells = [];
+      let left = electrons == null ? protons : electrons;
+      for (const cap of [2, 8, 8, 18]) {
+        if (left <= 0) break;
+        shells.push(Math.min(cap, left));
+        left -= cap;
+      }
+      return { symbol, name, shells };
+    },
     /** Pendulum small-angle period in seconds. */
     pendulumPeriod(L, g) {
       return 2 * Math.PI * Math.sqrt(L / (g || 9.8));

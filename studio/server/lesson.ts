@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js"];
+const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js", "orbit.js", "beaker.js", "reaction.js", "atom.js", "plant.js", "numberline.js"];
 
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 
@@ -191,7 +191,14 @@ export function validateLesson(config: LessonConfig): ValidationReport {
     }
     const end = { ...start, ...sol };
     try {
-      if (!lv.check(end, derive(end), answer)) err("Applying the solution does not pass check()", L);
+      // Say what the solution actually produces, so the numbers in the goal, check or solution can be corrected.
+      const dEnd = derive(end);
+      const shown = Object.entries(dEnd)
+        .filter(([, v]) => typeof v === "number" || typeof v === "boolean" || typeof v === "string")
+        .slice(0, 14)
+        .map(([k, v]) => `${k} = ${typeof v === "number" ? +v.toFixed(4) : v}`)
+        .join(", ");
+      if (!lv.check(end, dEnd, answer)) err(`Applying the solution does not pass check(). With the solution applied: ${shown}${answer !== undefined ? `, answer = ${String(answer)}` : ""}. Change the goal/check or the solution so they agree with these values`, L);
     } catch (e) {
       err(`check() threw on the solution: ${(e as Error).message}`, L);
     }

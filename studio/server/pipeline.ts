@@ -16,6 +16,7 @@ import { cleanText, sourceBlock, type Source } from "./source.ts";
 
 export const DATA = join(ROOT, "data", "lessons");
 const MAX_FIX_ROUNDS = 2;
+const MAX_DESIGN_FIX_ROUNDS = 3; // the steps involve arithmetic the model often needs a second look at
 const MAX_REVIEW_ROUNDS = 1; // visual review findings are suggestions: one fix attempt, never blocking
 
 export type ReviewIssue = { step?: number; problem: string; fix?: string };
@@ -201,6 +202,10 @@ async function design(d: Draft, opts: { objectives?: string[]; note?: string }) 
       candidate.components = components;
       candidate.objectives = d.plan.objectives;
       candidate.audience ||= d.plan.audience;
+      // A hidden readout must be among the shown ones; repair that instead of sending it back.
+      for (const lv of candidate.levels || []) {
+        if (lv.hide?.length && Array.isArray(lv.show)) lv.show = [...new Set([...lv.hide, ...lv.show])].slice(0, 3);
+      }
       d.activity = "Checking the levels";
       const { errors, warnings } = checkDesign(candidate);
       last = errors;
@@ -214,7 +219,7 @@ async function design(d: Draft, opts: { objectives?: string[]; note?: string }) 
       d.status = "designed";
       return;
     }
-    if (round >= MAX_FIX_ROUNDS) throw new Error(`The levels still have problems after ${round + 1} attempts:\n${issueList(last)}`);
+    if (round >= MAX_DESIGN_FIX_ROUNDS) throw new Error(`The levels still have problems after ${round + 1} attempts:\n${issueList(last)}`);
     messages.push({ role: "assistant", content: text }, { role: "user", content: `The automatic checks found these problems:\n${issueList(last)}\n\nFix them and reply with the complete corrected JSON object only.` });
   }
 }

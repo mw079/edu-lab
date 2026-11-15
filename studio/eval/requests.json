@@ -60,6 +60,36 @@
     "request": "Forces on a block on an inclined plane with friction"
   },
   {
+    "id": "kepler",
+    "audience": "High school",
+    "request": "Kepler's laws: how a planet's distance from its star sets its orbital period and speed"
+  },
+  {
+    "id": "dilution",
+    "audience": "High school",
+    "request": "Concentration and dilution of a solution: molarity and c1V1 = c2V2"
+  },
+  {
+    "id": "collision-theory",
+    "audience": "High school",
+    "request": "Collision theory: how concentration and temperature change the rate of a reaction"
+  },
+  {
+    "id": "atoms",
+    "audience": "Middle school",
+    "request": "Structure of the atom: protons, neutrons, electrons, and how ions and isotopes differ"
+  },
+  {
+    "id": "photosynthesis",
+    "audience": "Middle school",
+    "request": "Photosynthesis: how light intensity and carbon dioxide limit the rate"
+  },
+  {
+    "id": "integers",
+    "audience": "Middle school",
+    "request": "Integers on the number line: negative numbers and the distance between two numbers"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",

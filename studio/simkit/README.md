@@ -23,6 +23,11 @@ Physical inputs are SI unless stated.
 | `kit.physics.projectile(v0, angleDeg, h0, g)` | `{ vx, vy, time, range, maxHeight }`. |
 | `kit.physics.incline(m, angleDeg, mu, g)` | `{ weight, normal, parallel, friction, net, a }`; `a = 0` when friction holds the block. |
 | `kit.physics.snell(n1, n2, angleDeg)` | `{ theta2, tir, critical }` in degrees. |
+| `kit.physics.orbit(a, e, M)` | `{ period (years), rPeri, rAp (AU), vPeri, vAp (km/s) }`. |
+| `kit.physics.molarity(moles, volumeML)` | mol/L. |
+| `kit.physics.reactionRate(cA, cB, T, EaKJ)` | Relative rate, 1 at cA = cB = 1 and 300 K. |
+| `kit.physics.photosynthesis(light, co2, temp)` | `{ rate (bubbles/min), limiting }`. |
+| `kit.physics.element(protons, electrons)` | `{ symbol, name, shells }` for elements 1–20. |
 
 ## Components
 
@@ -64,6 +69,30 @@ Block on a ramp with weight, normal and friction arrows (and optionally the alon
 **`kit.refraction(stage, { x, y, w, h, n1, n2, angle, label1, label2, showRefracted })`**
 Light ray crossing between two materials; total internal reflection above the critical angle.
 `update({ n1, n2, angle, label1, label2 })`, `showRefracted(bool)`, `values()`. Snell's law, optics.
+
+**`kit.orbit(stage, { x, y, pxPerAU, a, e, M, showValues, onSample })`**
+Planet on an ellipse around a star; faster near the star. `update({ a, e, M })`, `play() → promise`, `values()`.
+Kepler's laws, gravity.
+
+**`kit.beaker(stage, { x, y, w, h, volume, vMax, moles, cMax, color, pH, label, showValues })`**
+Beaker whose colour and particle density follow the concentration, or the indicator colour of a pH.
+`update({ volume, moles, pH, label })`, `concentration()`. Molarity, dilution, acids and bases.
+
+**`kit.reactionBox(stage, { x, y, w, h, nA, nB, T, Ea, labelA, labelB })`**
+Moving A and B particles that react to AB while `run()` plays; live counts. `update({ nA, nB, T, Ea })`,
+`run({ duration }) → promise`, `reset()`, `products()`. Collision theory, reaction rates (the picture is random).
+
+**`kit.atom(stage, { x, y, protons, neutrons, electrons, showName, showCounts })`**
+Shell model for elements 1–20 with name, mass number and charge. `update({ protons, neutrons, electrons })`.
+Atomic structure, ions, isotopes.
+
+**`kit.waterPlant(stage, { x, y, w, h, light, co2, temp, showValues })`**
+Pondweed under a lamp; the bubble stream follows the photosynthesis rate. `update({ light, co2, temp })`, `values()`.
+Photosynthesis, limiting factors.
+
+**`kit.numberLine(stage, { x, y, w, min, max, step, markers, distance, showValues, showDistance })`**
+Number line with up to three markers and a distance bracket. `update({ markers: { id: { value } } })`, `values()`.
+Integers, distance, absolute value.
 
 ## Adding a component
 

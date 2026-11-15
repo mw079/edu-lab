@@ -60,6 +60,10 @@ Math.abs(d.p - 12) < 1e-6, and typed answers with a looser one: Math.abs(answer 
 ## Teaching rules
 
 - Step 1 is concrete and easy: one or two sliders, everything else locked.
+- A question step's setup must put the simulation in exactly the situation the goal describes (same
+  numbers), because the student cannot change it.
+- The answer of a question step must be a readout that the step lists in "hide"; then the picture hides
+  it too (number, bracket, ray or graph).
 - Never ask the student to find a value the picture always shows (see "Always visible" in the component
   notes, e.g. a cart's mass), and make the goal match what the picture can show (e.g. a horizontal spring,
   the circuit layout set in "setup").
