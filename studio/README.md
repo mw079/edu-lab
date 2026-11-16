@@ -8,6 +8,10 @@ Status: **M0–M4 done** (57-component library, lesson template, two worked exam
 with teacher review, visual review and evaluation set) and **M5** (20 of the 57 components can be dragged or
 clicked directly; the rest use sliders).
 
+![A generated lesson: the simulation on the left, one task card on the right](../docs/img/lesson.png)
+
+Six example lessons are exported as static pages in [`../docs/`](../docs/index.html) (`npm run export`).
+
 ## How a lesson is generated
 
 The model only fills in small, checked pieces; templates and examples do the rest.
@@ -40,7 +44,7 @@ npm start              # http://127.0.0.1:8787
 npm run dev            # server + Vite with hot reload (http://localhost:5173)
 ```
 
-`.env` (not committed):
+`.env` (not committed; copy `.env.example`):
 
 ```dotenv
 FIREWORKS_API_KEY=...
@@ -53,6 +57,7 @@ Command line:
 npm run generate -- "Ohm's law with series resistors" --audience "High school"   # whole pipeline, no review
 npm run regenerate -- <lesson-id> [--from design|build]   # redo named lessons only; backs up to data/backups/
 npm run eval [-- --only id1,id2]   # eval/requests.json through the whole pipeline → data/eval/<run>/summary.md
+npm run export         # the lessons in showcase.json as static pages → ../docs (free, no model calls)
 npm test               # validator, design checks, math, snippets, browser tests
 npm run typecheck
 ```
@@ -68,7 +73,8 @@ npm run typecheck
 | `prompts/` | Prompts for plan, steps and simulation |
 | `server/` | Express API (`index.ts`), pipeline (`pipeline.ts`), design checks and assembly (`design.ts`), lesson build and logic validation (`lesson.ts`), math (`math.ts`), Chrome check (`browser-check.ts`, `layout-check.js`), card pictures (`thumbnail.ts`), Fireworks client (`llm.ts`) |
 | `web/` | React teacher app |
-| `scripts/` | `generate`, `regenerate`, `eval` |
+| `scripts/` | `generate`, `regenerate`, `eval`, `export` |
+| `showcase.json` | The lessons `export` publishes to `../docs/` |
 | `eval/` | Evaluation requests (`requests.json`) |
 
 A lesson is one HTML file: `server/lesson.ts` inlines the shell, simkit, the lesson and (when it has

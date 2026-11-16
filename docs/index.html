@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edu Lab: example lessons</title>
+<style>
+/* Design tokens shared by the lessons (inlined into every lesson file) and the teacher app.
+ * Neutral surfaces, one accent, near-black primary buttons, green only for success.
+ * Hierarchy comes from type weight and spacing; borders and shadows stay subtle. */
+:root {
+  --bg: #f5f5f3;
+  --surface: #ffffff;
+  --paper: #fcfbf9;
+  --ink: #1d2025;
+  --ink-2: #3c4048;
+  --muted: #6b7079;
+  --line: #e6e5e1;
+  --fill: #efeeea;
+  --accent: #4353d9;
+  --accent-soft: #eceefc;
+  --ok: #157a46;
+  --ok-soft: #eaf7ef;
+  --ok-line: #bfe3cd;
+  --no: #b42318;
+  --no-soft: #fef3f2;
+  --no-line: #f8d0cb;
+  --warn: #93600a;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(20, 22, 26, 0.04), 0 4px 16px rgba(20, 22, 26, 0.05);
+  --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Motion (DESIGN.md §2): strong ease-out for responses, ease-in-out for movement; never ease-in. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --dur-press: 120ms;
+  --dur-fast: 160ms;
+  --dur-base: 220ms;
+  --dur-moment: 360ms;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.45; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Browser surfaces carry the design too: selection, caret, native controls, scrollbars. */
+::selection { background: var(--accent-soft); color: var(--ink); }
+html { accent-color: var(--accent); caret-color: var(--accent); scrollbar-color: #cfcec9 transparent; scrollbar-width: thin; }
+[hidden] { display: none !important; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: var(--radius-sm); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600; font-size: 14.5px; text-decoration: none; transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
+/* Press feedback on everything pressable; hover only where a real pointer can hover. */
+.btn:active:not(:disabled), .segmented button:active, .pill:active, .step:active:not(:disabled), .chip:active { transform: scale(0.97); }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled) { border-color: #cfcec9; }
+  .btn.primary:hover:not(:disabled) { background: #34383f; }
+  .link:hover { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+}
+.btn.primary { background: var(--ink); border-color: var(--ink); color: #fff; }
+.link { border: 0; background: none; padding: 0; color: var(--accent); font-weight: 600; text-decoration: none; }
+.link.quiet { color: var(--muted); font-weight: 500; }
+.muted { color: var(--muted); }
+
+/* Option buttons (lesson select controls, teacher audience picker) */
+.segmented { display: flex; gap: 2px; padding: 3px; border-radius: var(--radius-sm); background: var(--fill); }
+.segmented button { flex: 1; border: 0; background: none; padding: 7px 10px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); transition: background-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
+.segmented button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(20, 22, 26, 0.12); }
+
+/* Entrances: fade and rise a few pixels from an almost-final state (never from scale 0). */
+@keyframes rise { from { opacity: 0; transform: translateY(var(--rise-y, 6px)) scale(var(--rise-s, 1)); } }
+@keyframes fade { from { opacity: 0; } }
+
+/* Reduced motion: movement goes, opacity and colour changes stay (DESIGN.md §3). */
+@media (prefers-reduced-motion: reduce) {
+  * { --rise-y: 0px !important; --rise-s: 1 !important; }
+  .btn:active, .segmented button:active, .pill:active, .step:active, .chip:active { transform: none !important; }
+}
+
+body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
+main { max-width: 1152px; margin: 0 auto; padding: 48px 24px 72px; }
+h1 { margin: 0 0 8px; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.lead { margin: 0 0 40px; max-width: 65ch; font-size: 16px; line-height: 1.55; color: var(--muted); }
+ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 36px 24px; }
+a { display: block; color: inherit; text-decoration: none; }
+.thumb { aspect-ratio: 1000 / 560; border-radius: 14px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow); }
+.thumb img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform 400ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { a:hover .thumb img { transform: scale(1.03); } }
+a:focus-visible { outline: none; }
+a:focus-visible .thumb { outline: 2px solid var(--accent); outline-offset: 3px; }
+h2 { margin: 12px 0 2px; font-size: 15.5px; font-weight: 600; line-height: 1.35; }
+li p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .thumb img { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Edu Lab</h1>
+<p class="lead">Interactive science lessons generated from a teacher's one-sentence request. Each lesson has five steps and then free exploration; where a dashed ring marks an object, it can be dragged. Every page is one self-contained file and no AI runs while it is used.</p>
+<ul>
+<li><a href="lessons/pendulum.html"><div class="thumb"><img src="thumbs/pendulum.png" alt="" width="1000" height="560" loading="lazy"></div><h2>The Pendulum's Period</h2><p>High school · Drag the bob to set the angle.</p></a></li>
+<li><a href="lessons/refraction-of-light-snell-s-law.html"><div class="thumb"><img src="thumbs/refraction-of-light-snell-s-law.png" alt="" width="1000" height="560" loading="lazy"></div><h2>Snell's Law at Glass</h2><p>High school · Swing the incoming ray by its end.</p></a></li>
+<li><a href="lessons/hooke-s-law-how-the-spring-force.html"><div class="thumb"><img src="thumbs/hooke-s-law-how-the-spring-force.png" alt="" width="1000" height="560" loading="lazy"></div><h2>Hooke's Law with a Spring</h2><p>High school · Pull the block along the ruler.</p></a></li>
+<li><a href="lessons/slope-and-y-intercept-of-a-strai.html"><div class="thumb"><img src="thumbs/slope-and-y-intercept-of-a-strai.png" alt="" width="1000" height="560" loading="lazy"></div><h2>Slope and Y-Intercept Explorer</h2><p>Middle school · Drag the y-intercept and a point on the line.</p></a></li>
+<li><a href="lessons/momentum.html"><div class="thumb"><img src="thumbs/momentum.png" alt="" width="1000" height="560" loading="lazy"></div><h2>Momentum and Collisions</h2><p>High school · Set masses and velocities, then run the collision.</p></a></li>
+<li><a href="lessons/ohm-s-law-how-current-depends-on.html"><div class="thumb"><img src="thumbs/ohm-s-law-how-current-depends-on.png" alt="" width="1000" height="560" loading="lazy"></div><h2>Ohm's Law with Series Resistors</h2><p>High school · Change the voltage and watch the charges and the graph.</p></a></li>
+</ul>
+</main>
+</body>
+</html>

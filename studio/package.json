@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "generate": "tsx scripts/generate.ts",
     "regenerate": "tsx scripts/regenerate.ts",
-    "eval": "tsx scripts/eval.ts"
+    "eval": "tsx scripts/eval.ts",
+    "export": "tsx scripts/export.ts"
   },
   "engines": {
     "node": ">=20"

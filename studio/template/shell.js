@@ -83,10 +83,12 @@
     document.addEventListener("click", (e) => !sheet.hidden && !sheet.contains(e.target) && toggleIdeas(false));
     document.addEventListener("keydown", (e) => e.key === "Escape" && toggleIdeas(false));
 
+    // Inside the teacher app the lesson runs in a frame; an exported lesson names its overview page (data-back).
+    const backHref = document.documentElement.dataset.back || (window.parent !== window ? "/#/" : "");
     document.getElementById("app").append(
       h("header", { class: "top" }, [
         h("div", { class: "title" }, [
-          window.parent !== window ? h("a", { class: "back", href: "/#/", target: "_top", text: "← All lessons" }) : null,
+          backHref ? h("a", { class: "back", href: backHref, target: "_top", text: "← All lessons" }) : null,
           h("h1", { text: config.title }),
         ]),
         h("div", { class: "nav" }, [ideasBtn, steps]),
