@@ -7,6 +7,7 @@
 //   → { x, y, facing ("east" | "north" | "west" | "south"), moves (squares moved), crashed (true/false) }
 //   Examples: (3, 2, 0) ends at (7, 1); (2, 3, 1) ends at (4, 4) facing west; (4, 2, 1) drives a square back to (1, 1).
 // Use sliders: repeat 1–6, forward 1–4, turn 0–2 (all step 1). Check goals with d.x and d.y.
+// A step whose goal is not the flag (e.g. "return to the start") should set targetX and targetY to 0: no flag is drawn.
 // Always visible: the grid, the flag, the program and the robot. With show({ path: true }) the finished path and
 // end square are drawn at once; with show({ path: false }) the robot waits at the start (use it in a step that
 // asks where it will end) until the action runs.

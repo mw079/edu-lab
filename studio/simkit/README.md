@@ -339,6 +339,21 @@ link in steps where the control is locked (so question steps cannot be solved by
 | `codonChain` | `click: { picks: [...] }` | clicks a bead to step through amino acids |
 | `robotGrid` | `click: { repeat, forward, turn }` | clicks a program line to change it |
 | `samplingBox` | `click: { count }` | clicks the jar to take another sample |
+| `heartLungs` | `drag: { activity }` | drags the marker along the activity track |
+| `foodWeb` | `drag: { predators }` | drags the top of the predators' bar |
+| `buffer` | `drag: { added }` | drags the point along the graph |
+| `oceanGyre` | `drag: { wind }` | stretches the wind arrow |
+| `feedbackLoop` | `drag: { gain }` | drags the top of the second bar |
+| `earthquake` | `drag: { distance }` | drags the station along the ground |
+| `heatEngine` | `drag: { hot, cold }` | drags the two thermometer markers |
+| `shapeBuilder` | `drag: { w, h, t }` | drags the rectangle's corner and the peak |
+| `axisTrick` | `drag: { start }` | drags the bottom of the axis |
+| `pulley` | `drag: { lift }` | pulls the free end of the rope |
+| `gearTrain` | `drag: { turns }` | turns the driver gear by its dot |
+| `cellRespiration` | `click: { oxygen }` | clicks the oxygen switch |
+| `landUse` | `click: { farm, city }` | clicks a square to change its use |
+| `openSets` | `click: { sets: [...] }` | clicks a card to choose or drop a set |
+| `confidenceIntervals` | `click: { count }` | clicks the button for 5 more samples |
 
 In a component: `kit.drag(stage, element, link, (point) => link(valueAt(point)))` (the point is in stage
 coordinates), `kit.click(element, link, fn)`, and `kit.grip(...)` to draw the dashed ring that marks a grabbable

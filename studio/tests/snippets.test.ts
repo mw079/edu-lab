@@ -81,7 +81,8 @@ test("draggable and clickable components call their links", { timeout: 120_000 }
     const ids = ["pendulum", "numberLine", "lever", "lens", "scatterPlot", "binaryBits",
       "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor", "incline", "refraction", "wave", "orbit",
       "membrane", "dnaStrand", "mitosis", "predatorPrey", "plateBoundary", "waterCycle", "vectorSum", "unitCircle",
-      "phScale", "gravityPair", "solarSystem", "starLife", "tippingPoint", "codonChain", "robotGrid", "cuboidNet", "ratioLine", "samplingBox"];
+      "phScale", "gravityPair", "solarSystem", "starLife", "tippingPoint", "codonChain", "robotGrid", "cuboidNet", "ratioLine", "samplingBox",
+      "cellRespiration", "heartLungs", "foodWeb", "landUse", "buffer", "oceanGyre", "feedbackLoop", "earthquake", "heatEngine", "openSets", "shapeBuilder", "axisTrick", "confidenceIntervals", "pulley", "gearTrain"];
     for (const id of ids) {
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)![1];

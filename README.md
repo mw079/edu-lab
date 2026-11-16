@@ -13,12 +13,12 @@ The same folder can be served with GitHub Pages.
 
 ## How it works, in short
 
-- The model's part is kept small so a small, cheap model is enough: it picks components from a library of 75
+- The model's part is kept small so a small, cheap model is enough: it picks components from a library of 90
   tested SVG science components, writes the five steps as data (about 60 lines of JSON) and a short drawing
   function (about 30 lines). The page, the step logic and the components are fixed code.
 - Every step of every lesson is played and solved in headless Chrome before the teacher sees it; errors and
   layout problems go back to the model for a fix. A vision pass then looks at screenshots of each step.
-- In 38 components the student drags or clicks the object itself; the slider stays in step.
+- In 53 components the student drags or clicks the object itself; the slider stays in step.
 - A lesson takes about 90 seconds to generate.
 
 Inspired by Google's "Harnessing Generative UI for Education: Tailored Learning Interactives"

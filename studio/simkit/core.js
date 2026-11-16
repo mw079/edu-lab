@@ -955,6 +955,156 @@
       return { results, last, mean: results.reduce((a, b) => a + b, 0) / k, standardError: 100 * Math.sqrt((p * (1 - p)) / n), low, high, contains: low <= percent && percent <= high };
     },
     /** Straight-line fit of points [[x, y], …]: { slope, intercept, r (correlation, −1 to 1) }. */
+    // ---- Batch 9 ----
+
+    /** Cell respiration of `glucose` molecules with (1) or without (0) oxygen. ATP per glucose: 2 + 2 + 28 = 32, or 2. */
+    respiration(glucose, oxygen) {
+      const n = Math.max(0, glucose);
+      const air = Number(oxygen) ? 1 : 0;
+      const glycolysis = 2 * n;
+      const krebs = 2 * n * air;
+      const chain = 28 * n * air;
+      return { glycolysis, krebs, chain, atp: glycolysis + krebs + chain, co2: 6 * n * air, oxygenUsed: 6 * n * air, lactate: 2 * n * (1 - air), perGlucose: air ? 32 : 2 };
+    },
+
+    /** Heart and lungs at an activity level 0 (rest) … 10 (sprint). */
+    heart(activity) {
+      const a = Math.max(0, Math.min(10, activity));
+      const heartRate = 70 + 11 * a; // beats per minute
+      const stroke = 70 + 4 * a; // mL per beat
+      return { heartRate, stroke, output: (heartRate * stroke) / 1000, breathing: 12 + 3 * a, timesRest: (heartRate * stroke) / 4900 };
+    },
+
+    /** Ocean gyre driven by the wind (0–10); north = 1 (northern hemisphere) or 0 (southern). Loop of 12 000 km. */
+    gyre(wind, north) {
+      const speed = 8 * Math.max(0, wind); // km per day
+      return { direction: Number(north) ? "clockwise" : "counterclockwise", speed, lapYears: speed ? 12000 / (speed * 365) : null, west: "warm", east: "cold" };
+    },
+
+    /**
+     * Is a family of subsets of {a, b, c} a topology? `sets` are six 0/1 values for {a}, {b}, {c}, {a,b}, {a,c},
+     * {b,c}; the empty set and the whole set are always included.
+     */
+    topology(sets) {
+      const MASKS = [1, 2, 4, 3, 5, 6];
+      const name = (m) => (m === 0 ? "∅" : `{${["a", "b", "c"].filter((_, i) => m & (1 << i)).join(", ")}}`);
+      const open = new Set([0, 7]);
+      MASKS.forEach((m, i) => Number(sets && sets[i]) && open.add(m));
+      const list = [...open].sort((p, q) => p - q);
+      let missing = null;
+      for (const p of list)
+        for (const q of list) {
+          if (q <= p || missing) continue;
+          if (!open.has(p | q)) missing = `${name(p)} ∪ ${name(q)} = ${name(p | q)}`;
+          else if (!open.has(p & q)) missing = `${name(p)} ∩ ${name(q)} = ${name(p & q)}`;
+        }
+      return { count: list.length, open: list.map(name), isTopology: !missing, missing };
+    },
+
+    /** Three-level food chain; `predators` in % of the normal number (0–150). Others in % of normal too. */
+    foodChain(predators) {
+      const p = Math.max(0, Math.min(150, predators));
+      const herbivores = 240 - 1.4 * p;
+      return { predators: p, herbivores, plants: 150 - 0.5 * herbivores };
+    },
+
+    /** A landscape of `cells` squares (default 20): farm and city squares, the rest is forest. */
+    landUse(farm, city, cells) {
+      const n = cells || 20;
+      const c = Math.max(0, Math.min(n, Math.round(city)));
+      const f = Math.max(0, Math.min(n - c, Math.round(farm)));
+      const forest = n - f - c;
+      return { forest, farm: f, city: c, species: Math.round(100 * Math.pow(forest / n, 0.25)), carbon: 200 * forest + 20 * f, food: 100 * f };
+    },
+
+    /**
+     * Buffer of `acid` mmol weak acid HA and `base` mmol of its salt A− in 100 mL, after `added` mmol of strong
+     * acid. pH = pKa + log10(A− ÷ HA) while A− lasts. waterPH: the same strong acid in 100 mL of plain water.
+     */
+    buffer(acid, base, added, pKa) {
+      const pk = pKa == null ? 4.76 : pKa;
+      const x = Math.max(0, added);
+      const ha = acid + Math.min(x, base);
+      const a = base - x;
+      const weak = 0.5 * (pk - Math.log10(Math.max(ha, 1e-9) / 100)); // only the weak acid is left
+      const pH = a > 1e-9 ? (ha > 1e-9 ? pk + Math.log10(a / ha) : 14 - 0.5 * (14 - pk - Math.log10(a / 100))) : x - base > 1e-9 ? Math.min(weak, -Math.log10((x - base) / 100)) : weak;
+      return { pH, acidNow: ha, baseNow: Math.max(0, a), waterPH: x > 0 ? -Math.log10(x / 100) : 7, capacity: base, exhausted: a <= 1e-9 };
+    },
+
+    /** A push (°C) goes round a loop that returns `gain` × the last change each round. */
+    feedback(push, gain, rounds) {
+      const n = Math.max(0, Math.round(rounds));
+      const series = [];
+      let total = 0;
+      let step = push;
+      for (let k = 0; k <= n; k++) {
+        total += step;
+        series.push(total);
+        step *= gain;
+      }
+      return { total, series, last: push * Math.pow(gain, n), limit: Math.abs(gain) < 1 ? push / (1 - gain) : null, kind: gain > 0 ? "reinforcing" : gain < 0 ? "balancing" : "none", runaway: gain >= 1 };
+    },
+
+    /** Earthquake waves at a station `distance` km away: P waves 6 km/s, S waves 3 km/s. Magnitude sets the size. */
+    quake(distance, magnitude) {
+      const d = Math.max(0, distance);
+      const m = magnitude == null ? 5 : magnitude;
+      return { tP: d / 6, tS: d / 3, lag: d / 6, shaking: Math.pow(10, m - 5), energy: Math.pow(10, 1.5 * (m - 5)) };
+    },
+
+    /** A rectangle w × h with a triangle of height t on top (a house shape). */
+    composite(w, h, t) {
+      const slant = Math.hypot(w / 2, t);
+      return { rectangle: w * h, triangle: (w * t) / 2, area: w * h + (w * t) / 2, perimeter: w + 2 * h + 2 * slant, slant };
+    },
+
+    /** The best possible heat engine between `hot` and `cold` (kelvin) taking in `heat` joules. */
+    heatEngine(hot, cold, heat) {
+      const eff = hot > 0 ? Math.max(0, 1 - cold / hot) : 0;
+      return { efficiency: 100 * eff, work: heat * eff, waste: heat * (1 - eff) };
+    },
+
+    /** Two bars a and b on a chart whose axis starts at `start`: how the picture compares with the numbers. */
+    axisTrick(a, b, start) {
+      const s = Math.min(start, Math.min(a, b) - 1e-9);
+      return { looks: (b - s) / (a - s), real: b / a, percentMore: (100 * (b - a)) / a, honest: start === 0 };
+    },
+
+    /** Block and tackle: `ropes` strands hold the load (N); the load is lifted `lift` metres. */
+    pulley(load, ropes, lift) {
+      const n = Math.max(1, Math.round(ropes));
+      const up = lift || 0;
+      return { effort: load / n, advantage: n, pull: up * n, work: load * up };
+    },
+
+    /** A driver gear turns a driven gear (teeth counts); `turns` of the driver. */
+    gears(driver, driven, turns) {
+      const ratio = driven / driver;
+      return { ratio, outTurns: (turns || 0) / ratio, speedTimes: 1 / ratio, forceTimes: ratio, direction: "opposite" };
+    },
+
+    /** `count` samples of `size` from a population with `percent` % red; one interval per sample at `level` % confidence. */
+    intervals(percent, size, level, count) {
+      const Z = { 80: 1.282, 90: 1.645, 95: 1.96, 99: 2.576 };
+      const z = Z[Math.round(level)] || 1.96;
+      const n = Math.max(1, Math.round(size));
+      const k = Math.max(1, Math.round(count));
+      const p = Math.max(0, Math.min(100, percent)) / 100;
+      let seed = 4321 + Math.round(percent) * 11 + n * 97;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+      for (let i = 0; i < 5; i++) rnd();
+      const list = [];
+      for (let i = 0; i < k; i++) {
+        let red = 0;
+        for (let j = 0; j < n; j++) if (rnd() < p) red++;
+        const mid = (100 * red) / n;
+        const half = z * Math.sqrt((mid * (100 - mid)) / n);
+        list.push({ mid, low: Math.max(0, mid - half), high: Math.min(100, mid + half), hit: mid - half <= percent && percent <= mid + half });
+      }
+      const hits = list.filter((i) => i.hit).length;
+      return { list, hits, misses: k - hits, coverage: (100 * hits) / k, z, halfWidth: 100 * z * Math.sqrt((p * (1 - p)) / n) };
+    },
+
     correlation(points) {
       const n = points.length;
       if (n < 2) return { slope: 0, intercept: n ? points[0][1] : 0, r: 0 };

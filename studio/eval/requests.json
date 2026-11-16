@@ -380,6 +380,81 @@
     "request": "Sampling and confidence intervals"
   },
   {
+    "id": "cell-respiration",
+    "audience": "Undergraduate",
+    "request": "Cellular metabolism: ATP from glucose with and without oxygen"
+  },
+  {
+    "id": "human-body",
+    "audience": "Middle school",
+    "request": "Human body basics: how the heart and lungs respond to exercise"
+  },
+  {
+    "id": "trophic-cascade",
+    "audience": "Middle school",
+    "request": "Food chains and trophic cascades"
+  },
+  {
+    "id": "human-impact",
+    "audience": "High school",
+    "request": "Human influence on ecological systems: land use and biodiversity"
+  },
+  {
+    "id": "buffers",
+    "audience": "Undergraduate",
+    "request": "Designing buffers"
+  },
+  {
+    "id": "ocean-gyres",
+    "audience": "High school",
+    "request": "Ocean currents and gyres"
+  },
+  {
+    "id": "climate-feedback",
+    "audience": "High school",
+    "request": "Modeling climate feedback loops"
+  },
+  {
+    "id": "earthquakes",
+    "audience": "Middle school",
+    "request": "Earthquakes: locating one from P and S waves"
+  },
+  {
+    "id": "thermodynamics",
+    "audience": "High school",
+    "request": "Laws of thermodynamics with a heat engine"
+  },
+  {
+    "id": "topology",
+    "audience": "Undergraduate",
+    "request": "Constructing topological spaces on a three-point set"
+  },
+  {
+    "id": "composite-shapes",
+    "audience": "Middle school",
+    "request": "2D shapes: complex shapes from simple ones, area and perimeter"
+  },
+  {
+    "id": "deceptive-charts",
+    "audience": "Middle school",
+    "request": "Data visualization: deceptive bar charts and data literacy"
+  },
+  {
+    "id": "confidence-levels",
+    "audience": "High school",
+    "request": "Confidence intervals: what the confidence level means"
+  },
+  {
+    "id": "pulleys",
+    "audience": "Middle school",
+    "request": "Simple machines: pulleys"
+  },
+  {
+    "id": "gears",
+    "audience": "Middle school",
+    "request": "Building simple robots: gears, speed and turning force"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",

@@ -102,7 +102,7 @@
       for (let r = 0; r <= o.rows; r++) kit.el("line", { x1: o.x, y1: o.y + r * o.cell, x2: o.x + o.cols * o.cell, y2: o.y + r * o.cell, stroke: kit.colors.line, "stroke-width": r % o.rows ? 1 : 2 }, g);
       for (let c = 1; c <= o.cols; c++) kit.el("text", { x: CX(c), y: o.y + o.rows * o.cell + 22, "text-anchor": "middle", class: "simkit-tick", text: String(c) }, g);
       for (let r = 1; r <= o.rows; r++) kit.el("text", { x: o.x - 12, y: CY(r) + 5, "text-anchor": "end", class: "simkit-tick", text: String(r) }, g);
-      if (o.targetX != null && o.targetY != null) {
+      if (o.targetX > 0 && o.targetY > 0) {
         const fx = CX(o.targetX);
         const fy = CY(o.targetY);
         kit.el("rect", { x: fx - o.cell / 2 + 3, y: fy - o.cell / 2 + 3, width: o.cell - 6, height: o.cell - 6, rx: 8, fill: kit.colors.green, "fill-opacity": 0.2, stroke: kit.colors.green, "stroke-width": 2 }, g);
