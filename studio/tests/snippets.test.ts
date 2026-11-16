@@ -79,7 +79,9 @@ test("draggable and clickable components call their links", { timeout: 120_000 }
   const browser = await chromium.launch({ channel: "chrome" }).catch(() => chromium.launch());
   try {
     const ids = ["pendulum", "numberLine", "lever", "lens", "scatterPlot", "binaryBits",
-      "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor", "incline", "refraction", "wave", "orbit"];
+      "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor", "incline", "refraction", "wave", "orbit",
+      "membrane", "dnaStrand", "mitosis", "predatorPrey", "plateBoundary", "waterCycle", "vectorSum", "unitCircle",
+      "phScale", "gravityPair", "solarSystem", "starLife", "tippingPoint", "codonChain", "robotGrid", "cuboidNet", "ratioLine", "samplingBox"];
     for (const id of ids) {
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)![1];

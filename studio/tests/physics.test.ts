@@ -174,6 +174,59 @@ test("weather, climate and correlation helpers", () => {
   assert.deepEqual([P.cloudTemperature(0, 1), P.cloudTemperature(100, 1), P.cloudTemperature(0, 0), P.cloudTemperature(100, 0)], [30, 20, 8, 16]);
   assert.equal(P.windSpeed(1020, 1000, 500), 20);
   assert.equal(P.windSpeed(1000, 1000, 500), 0);
+  // Batch 7: biology, earth, vectors and trigonometry.
+  const dif = P.diffusion(16, 4, 0, 2);
+  assert.deepEqual([dif.left, dif.right, dif.equilibrium], [16, 4, 10]);
+  near(P.diffusion(16, 4, Math.LN2 / 0.2, 2).difference, 6); // the difference halves every ln 2 ÷ (0.1 × pores)
+  near(P.diffusion(16, 4, 1000, 2).left, 10);
+  assert.equal(P.diffusion(16, 4, 30, 0).left, 16); // no channels: nothing moves
+  const lv = P.predatorPrey(100, 25, 0.5, 0.02, 12); // started at the balance point: stays there
+  near(lv.prey, 100);
+  near(lv.predators, 25);
+  assert.deepEqual([lv.preyEq, lv.predEq], [100, 25]);
+  assert.ok(P.predatorPrey(60, 10, 0.5, 0.02, 4).prey > 60);
+  assert.deepEqual([...P.basePairs("ATGC", [2, 1, 4, 3]).matches], [true, true, true, true]);
+  assert.deepEqual([P.basePairs("ATGC", [2, 1, 4, 0]).correct, P.basePairs("ATGC", [2, 1, 4, 0]).complete, P.basePairs("ATGC", []).bonds], [3, false, 10]);
+  assert.deepEqual({ ...P.mitosis(2, 2) }, { name: "metaphase", cells: 1, chromosomes: 4, perCell: 4 });
+  assert.deepEqual(P.mitosis(3, 2).chromosomes, 8);
+  assert.deepEqual({ ...P.mitosis(5, 2) }, { name: "cytokinesis", cells: 2, chromosomes: 8, perCell: 4 });
+  assert.deepEqual({ ...P.plates(4, 20, "ocean-continent") }, { boundary: "convergent", feature: "trench and volcanoes", distance: 800 });
+  assert.deepEqual([P.plates(-2, 10, "ocean-ocean").feature, P.plates(-2, 10, "continent-continent").feature, P.plates(5, 1, "continent-continent").feature, P.plates(0, 9, "ocean-ocean").boundary], ["mid-ocean ridge", "rift valley", "mountain range", "none"]);
+  const hum = P.humidity(10, 20);
+  assert.deepEqual([hum.saturation, hum.relative, hum.condensing], [20, 50, false]);
+  near(hum.dewPoint, 10);
+  assert.equal(P.humidity(20, 20).condensing, true);
+  const vs = P.vectorSum(3, 0, 0, 4);
+  assert.deepEqual([vs.x, vs.y, vs.magnitude], [3, 4, 5]);
+  near(P.vectorSum(1, 0, -2, 0).angle, 180);
+  assert.deepEqual([P.trig(90).sin, P.trig(90).cos, P.trig(90).tan, P.trig(180).cos, P.trig(200).quadrant], [1, 0, null, -1, 3]);
+  near(P.trig(30).sin, 0.5);
+  // Batch 8: topics from the Google paper's list that had no component.
+  assert.deepEqual([P.ph(2, 3).pH, P.ph(2, 9).pH, P.ph(12, 2).pH, P.ph(7, 4).pH, P.ph(3, 0).kind, P.ph(9, 0).kind, P.ph(7, 0).kind], [5, 7, 10, 7, "acid", "base", "neutral"]);
+  near(P.ph(4, 0).timesNeutral, 1000);
+  near(P.gravity(5.97, 0.0735, 3.84).force, 1.99);
+  near(P.gravity(2, 3, 2).force / P.gravity(2, 3, 4).force, 4);
+  assert.deepEqual([P.planet(3).name, P.planet(3).period, P.planet(8).name], ["Earth", 1, "Neptune"]);
+  near(P.planet(5).period, 11.86, 0.05);
+  near(P.planet(4, 3.75).orbits, 2, 0.01);
+  assert.deepEqual([P.star(1, 4).name, P.star(10, 4).name, P.star(25, 4).name, P.star(1, 2).name, P.star(10, 3).name, P.star(1).lifetime], ["white dwarf", "neutron star", "black hole", "red giant", "supernova", 10]);
+  assert.deepEqual([P.tipping(5, 1).ice, P.tipping(7, 1).ice, P.tipping(8, 1).ice, P.tipping(5, 0).ice, P.tipping(2, 0).ice, P.tipping(8, 1).state], [70, 58, 0, 0, 88, "ice-free"]);
+  assert.deepEqual([P.codon("AUG"), P.codon("UAA"), P.codon("GGC"), P.codon("TGG")], ["Met", "Stop", "Gly", "Trp"]);
+  const tr = P.translate("AUGGCUUGGUAA", [3, 1, 0, 0]);
+  assert.deepEqual([[...tr.protein].join(" "), [...tr.choices].join(" "), [...tr.answer].join(""), tr.correct, tr.complete], ["Met Ala Trp Stop", "Ala Gly Met Ser Stop Trp", "3165", 2, false]);
+  assert.equal(P.translate("AUGGCUUGGUAA", [3, 1, 6, 5]).complete, true);
+  const sq = P.robot(4, 2, 1);
+  assert.deepEqual([sq.x, sq.y, sq.facing, sq.moves, sq.crashed], [1, 1, "east", 8, false]);
+  assert.deepEqual([P.robot(3, 2, 0).x, P.robot(2, 3, 1).x, P.robot(2, 3, 1).y, P.robot(2, 3, 1).facing, P.robot(3, 4, 0).crashed, P.robot(3, 4, 0).x], [7, 4, 4, "west", true, 8]);
+  assert.deepEqual({ ...P.cuboid(3, 2, 4) }, { surface: 52, volume: 24, base: 6, front: 12, side: 8 });
+  assert.deepEqual({ ...P.ratio(2, 3, 8) }, { y: 12, unitRate: 1.5, scale: 4 });
+  const sm = P.sampling(40, 20, 30);
+  assert.equal(sm.results.length, 30);
+  assert.deepEqual([...P.sampling(40, 20, 30).results], [...sm.results]); // the same draws every time
+  near(sm.mean, 40, 6);
+  near(sm.standardError, 10.95);
+  assert.ok(sm.low <= sm.last && sm.last <= sm.high);
+  assert.ok(Math.abs(P.sampling(40, 100, 40).mean - 40) < 4);
   near(P.greenhouse(280, 0.3), 14);
   near(P.greenhouse(560, 0.3), 17);
   near(P.greenhouse(280, 0.31), 13);

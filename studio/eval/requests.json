@@ -290,6 +290,96 @@
     "request": "Scatter plots, the line of best fit and correlation"
   },
   {
+    "id": "diffusion",
+    "audience": "Middle school",
+    "request": "Diffusion: how particles move across a cell membrane"
+  },
+  {
+    "id": "dna",
+    "audience": "High school",
+    "request": "DNA base pairing: building the matching strand"
+  },
+  {
+    "id": "mitosis",
+    "audience": "Middle school",
+    "request": "Mitosis: how one cell becomes two"
+  },
+  {
+    "id": "predator-prey",
+    "audience": "High school",
+    "request": "Predator and prey: why rabbit and fox numbers rise and fall"
+  },
+  {
+    "id": "plates",
+    "audience": "Middle school",
+    "request": "Plate tectonics: what happens where two plates meet or move apart"
+  },
+  {
+    "id": "water-cycle",
+    "audience": "Middle school",
+    "request": "The water cycle: why warm air holds more water and when clouds form"
+  },
+  {
+    "id": "vectors",
+    "audience": "High school",
+    "request": "Adding two vectors with components"
+  },
+  {
+    "id": "unit-circle",
+    "audience": "High school",
+    "request": "Sine and cosine on the unit circle"
+  },
+  {
+    "id": "ph-scale",
+    "audience": "Middle school",
+    "request": "The pH scale and household acids and bases"
+  },
+  {
+    "id": "gravitation",
+    "audience": "High school",
+    "request": "Universal gravitation: how mass and distance set the force"
+  },
+  {
+    "id": "solar-system",
+    "audience": "Middle school",
+    "request": "The Solar System: why outer planets have longer years"
+  },
+  {
+    "id": "stellar-evolution",
+    "audience": "Middle school",
+    "request": "Stellar evolution: how a star's mass decides its life and its end"
+  },
+  {
+    "id": "tipping-points",
+    "audience": "High school",
+    "request": "Ecological tipping points and feedback loops"
+  },
+  {
+    "id": "central-dogma",
+    "audience": "High school",
+    "request": "The central dogma: reading mRNA codons to build a protein"
+  },
+  {
+    "id": "loops",
+    "audience": "High school",
+    "request": "Control logic and loops: programming a robot on a grid"
+  },
+  {
+    "id": "nets",
+    "audience": "Middle school",
+    "request": "3D shapes: folding a net into a box, surface area and volume"
+  },
+  {
+    "id": "ratios",
+    "audience": "Middle school",
+    "request": "Ratio and proportions with a recipe"
+  },
+  {
+    "id": "sampling",
+    "audience": "High school",
+    "request": "Sampling and confidence intervals"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",

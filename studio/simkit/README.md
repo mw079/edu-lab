@@ -60,6 +60,24 @@ Physical inputs are SI unless stated.
 | `kit.physics.windSpeed(high, low, distanceKm)` | km/h from a pressure difference. |
 | `kit.physics.greenhouse(co2, albedo)` | Earth's average temperature in °C. |
 | `kit.physics.correlation(points)` | `{ slope, intercept, r }`. |
+| `kit.physics.diffusion(left, right, minutes, pores)` | `{ left, right, difference, rate, equilibrium }`. |
+| `kit.physics.predatorPrey(prey0, pred0, birth, hunt, years)` | `{ prey, predators, preyEq, predEq, series }`. |
+| `kit.physics.basePairs(template, bases)` | `{ matches, correct, complete, bonds }`; bases 0–4 = empty, A, T/U, G, C. |
+| `kit.physics.mitosis(stage, pairs)` | `{ name, cells, chromosomes, perCell }` for stages 0–5. |
+| `kit.physics.plates(speed, millionYears, kind)` | `{ boundary, feature, distance (km) }`. |
+| `kit.physics.humidity(vapour, tempC)` | `{ saturation, relative, dewPoint, condensing }`. |
+| `kit.physics.vectorSum(ax, ay, bx, by)` | `{ x, y, magnitude, angle, magA, magB }`. |
+| `kit.physics.trig(angleDeg)` | `{ sin, cos, tan, quadrant }`. |
+| `kit.physics.ph(pH, dilutions)` | `{ pH, kind, exponent, timesNeutral }`. |
+| `kit.physics.gravity(m1, m2, r)` | `{ force }` in 10²⁰ N, masses in 10²⁴ kg, distance in 10⁸ m. |
+| `kit.physics.planet(index, years)` | `{ name, a, period, speed, orbits }` for planets 1–8. |
+| `kit.physics.star(mass, stage)` | `{ lifetime, temperature, massive, fate, stages, name }`. |
+| `kit.physics.tipping(heating, startIce)` | `{ ice, state, temperature }` with a collapse above 7 and no return until below 3. |
+| `kit.physics.codon(triplet)`, `translate(mrna, picks)` | Amino acid name; `{ codons, protein, choices, answer, matches, correct, complete }`. |
+| `kit.physics.robot(repeat, forward, turn)` | `{ x, y, facing, path, moves, crashed }` on an 8 × 6 grid. |
+| `kit.physics.cuboid(l, w, h)` | `{ surface, volume, base, front, side }`. |
+| `kit.physics.ratio(a, b, x)` | `{ y, unitRate, scale }`. |
+| `kit.physics.sampling(percent, size, count)` | `{ results, last, mean, standardError, low, high, contains }`, repeatable. |
 
 ## Components
 
@@ -303,6 +321,24 @@ link in steps where the control is locked (so question steps cannot be solved by
 | `refraction` | `drag: { angle }` | swings the incoming ray by its end |
 | `wave` | `drag: { amplitude }` | moves the amplitude line up and down |
 | `orbit` | `drag: { a }` | pulls the planet in or out |
+| `vectorSum` | `drag: { ax, ay, bx, by }` | drags the tips of the two arrows |
+| `unitCircle` | `drag: { angle }` | drags the point around the circle |
+| `plateBoundary` | `drag: { speed }` | pushes or pulls the left plate |
+| `waterCycle` | `drag: { temperature }` | drags the top of the thermometer column |
+| `predatorPrey` | `drag: { years }` | drags the time marker along the graph |
+| `membrane` | `click: { left, right }` | adds or removes particles with + and − |
+| `dnaStrand` | `click: { bases: [...] }` | clicks a base to change it |
+| `mitosis` | `click: { stage }` | clicks the cell to move to the next stage |
+| `phScale` | `drag: { pH }` | drags the sample drop along the scale |
+| `gravityPair` | `drag: { r }` | drags either body sideways |
+| `tippingPoint` | `drag: { heating }` | drags the point along the graph |
+| `cuboidNet` | `drag: { fold }` | lifts the lid to fold the net |
+| `ratioLine` | `drag: { amount }` | drags the marker along the upper line |
+| `solarSystem` | `click: { planet }` | clicks a planet to choose it |
+| `starLife` | `click: { stage }` | clicks a stage picture |
+| `codonChain` | `click: { picks: [...] }` | clicks a bead to step through amino acids |
+| `robotGrid` | `click: { repeat, forward, turn }` | clicks a program line to change it |
+| `samplingBox` | `click: { count }` | clicks the jar to take another sample |
 
 In a component: `kit.drag(stage, element, link, (point) => link(valueAt(point)))` (the point is in stage
 coordinates), `kit.click(element, link, fn)`, and `kit.grip(...)` to draw the dashed ring that marks a grabbable

@@ -715,6 +715,245 @@
     greenhouse(co2, albedo) {
       return 14 + 3 * Math.log2(Math.max(co2, 1) / 280) - 100 * ((albedo == null ? 0.3 : albedo) - 0.3);
     },
+    /**
+     * Diffusion through a membrane: `left` and `right` particles at the start, after `minutes` with `pores` open
+     * channels. Each side moves towards the average; the difference halves every ln 2 ÷ (0.1 × pores) minutes.
+     * rate = net particles per minute from left to right.
+     */
+    diffusion(left, right, minutes, pores) {
+      const eq = (left + right) / 2;
+      const k = 0.1 * Math.max(0, pores);
+      const f = Math.exp(-k * Math.max(0, minutes));
+      const L = eq + (left - eq) * f;
+      const R = eq + (right - eq) * f;
+      return { left: L, right: R, difference: Math.abs(L - R), rate: (k * (L - R)) / 2, equilibrium: eq };
+    },
+    /**
+     * Predator and prey (Lotka–Volterra) after `years`: prey grow at `birth` per year and are eaten at
+     * hunt × prey × predators; predators grow at 0.2 × hunt × prey and die at 0.4 per year.
+     * The numbers circle around the balance point preyEq = 2 ÷ hunt, predEq = birth ÷ hunt.
+     * series = [[year, prey, predators], …] every 0.1 year.
+     */
+    predatorPrey(prey0, pred0, birth, hunt, years) {
+      const f = (x, y) => [birth * x - hunt * x * y, 0.2 * hunt * x * y - 0.4 * y];
+      const dt = 0.02;
+      let x = Math.max(0, prey0);
+      let y = Math.max(0, pred0);
+      const series = [[0, x, y]];
+      const steps = Math.round(Math.max(0, years) / dt);
+      for (let i = 1; i <= steps; i++) {
+        const [a1, b1] = f(x, y);
+        const [a2, b2] = f(x + (a1 * dt) / 2, y + (b1 * dt) / 2);
+        const [a3, b3] = f(x + (a2 * dt) / 2, y + (b2 * dt) / 2);
+        const [a4, b4] = f(x + a3 * dt, y + b3 * dt);
+        x = Math.min(1e4, Math.max(0, x + (dt * (a1 + 2 * a2 + 2 * a3 + a4)) / 6));
+        y = Math.min(1e4, Math.max(0, y + (dt * (b1 + 2 * b2 + 2 * b3 + b4)) / 6));
+        if (i % 5 === 0 || i === steps) series.push([i * dt, x, y]);
+      }
+      return { prey: x, predators: y, preyEq: 2 / hunt, predEq: birth / hunt, series };
+    },
+    /**
+     * Base pairing. template: letters such as "ATGCCA"; bases: the new strand as numbers, one per template base
+     * (0 = empty, 1 = A, 2 = T (U in RNA), 3 = G, 4 = C). A pairs with T (or U), G with C.
+     * → { matches: [true/false …], correct, complete, bonds (hydrogen bonds of the finished strand: A–T 2, G–C 3) }
+     */
+    basePairs(template, bases) {
+      const partner = { A: 2, T: 1, U: 1, G: 4, C: 3 };
+      const letters = String(template).toUpperCase().split("");
+      const matches = letters.map((l, i) => partner[l] === Number((bases || [])[i]));
+      const correct = matches.filter(Boolean).length;
+      return { matches, correct, complete: correct === letters.length, bonds: letters.reduce((sum, l) => sum + (l === "G" || l === "C" ? 3 : 2), 0) };
+    },
+    /**
+     * Cell division by mitosis. stage 0–5: interphase (DNA copied), prophase, metaphase, anaphase, telophase,
+     * cytokinesis; pairs = pairs of chromosomes (2 pairs → 4 chromosomes).
+     * → { name, cells, chromosomes (in the whole picture: doubles when the copies separate), perCell }
+     */
+    mitosis(stage, pairs) {
+      const st = Math.max(0, Math.min(5, Math.round(stage)));
+      const chromosomes = (st >= 3 ? 4 : 2) * pairs;
+      const cells = st >= 5 ? 2 : 1;
+      return { name: ["interphase", "prophase", "metaphase", "anaphase", "telophase", "cytokinesis"][st], cells, chromosomes, perCell: chromosomes / cells };
+    },
+    /**
+     * Two plates. speed in cm per year (+ = moving together, − = apart), time in million years, kind
+     * "ocean-ocean", "ocean-continent" or "continent-continent".
+     * → { boundary: "convergent" | "divergent" | "none", feature, distance (km moved: 10 km per cm/yr per million years) }
+     */
+    plates(speed, millionYears, kind) {
+      const boundary = speed > 0 ? "convergent" : speed < 0 ? "divergent" : "none";
+      const land = kind === "continent-continent";
+      const feature =
+        boundary === "none" ? "no change" : boundary === "divergent" ? (land ? "rift valley" : "mid-ocean ridge") : land ? "mountain range" : kind === "ocean-ocean" ? "trench and island arc" : "trench and volcanoes";
+      return { boundary, feature, distance: Math.abs(speed) * Math.max(0, millionYears) * 10 };
+    },
+    /**
+     * Water vapour in air. vapour in g/m³, temperature in °C. Warm air can hold more: the limit is
+     * saturation = 5 × 2^(T ÷ 10) g/m³ (it doubles every 10 °C).
+     * → { saturation, relative (% humidity), dewPoint (°C at which this air is saturated), condensing (relative ≥ 100) }
+     */
+    humidity(vapour, tempC) {
+      const saturation = 5 * Math.pow(2, tempC / 10);
+      const relative = (100 * vapour) / saturation;
+      return { saturation, relative, dewPoint: 10 * Math.log2(Math.max(vapour, 1e-9) / 5), condensing: relative >= 100 - 1e-9 };
+    },
+    /** Sum of two vectors given by components → { x, y, magnitude, angle (degrees, 0–360), magA, magB }. */
+    vectorSum(ax, ay, bx, by) {
+      const x = ax + bx;
+      const y = ay + by;
+      return { x, y, magnitude: Math.hypot(x, y), angle: ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360, magA: Math.hypot(ax, ay), magB: Math.hypot(bx, by) };
+    },
+    /** Sine, cosine and tangent of an angle in degrees → { sin, cos, tan (null at 90° and 270°), quadrant (1–4) }. */
+    trig(angleDeg) {
+      const a = ((angleDeg % 360) + 360) % 360;
+      const clean = (v) => (Math.abs(v) < 1e-12 ? 0 : v);
+      const sin = clean(Math.sin((a * Math.PI) / 180));
+      const cos = clean(Math.cos((a * Math.PI) / 180));
+      return { sin, cos, tan: cos === 0 ? null : sin / cos, quadrant: a < 90 ? 1 : a < 180 ? 2 : a < 270 ? 3 : 4 };
+    },
+    /**
+     * pH of a solution that starts at `pH0` and is diluted tenfold `dilutions` times: each tenfold dilution moves
+     * the pH one step towards 7 (never past it).
+     * → { pH, kind: "acid" | "neutral" | "base", exponent (so that [H+] = 10^exponent mol/L), timesNeutral
+     *     (how many times more H+ than neutral water: 10^(7 − pH)) }
+     */
+    ph(pH0, dilutions) {
+      const n = Math.max(0, dilutions || 0);
+      const pH = pH0 < 7 ? Math.min(7, pH0 + n) : Math.max(7, pH0 - n);
+      return { pH, kind: pH < 6.95 ? "acid" : pH > 7.05 ? "base" : "neutral", exponent: -pH, timesNeutral: Math.pow(10, 7 - pH) };
+    },
+    /**
+     * Gravity between two masses. m1, m2 in 10^24 kg, r in 10^8 m (Earth 5.97, Moon 0.0735, 3.84 apart).
+     * → { force } in 10^20 N = 66.74 × m1 × m2 ÷ r²
+     */
+    gravity(m1, m2, r) {
+      return { force: (66.74 * m1 * m2) / Math.max(r * r, 1e-9) };
+    },
+    /** Planets of the Solar System, 1 = Mercury … 8 = Neptune. */
+    planets: [
+      { name: "Mercury", a: 0.39 }, { name: "Venus", a: 0.72 }, { name: "Earth", a: 1 }, { name: "Mars", a: 1.52 },
+      { name: "Jupiter", a: 5.2 }, { name: "Saturn", a: 9.58 }, { name: "Uranus", a: 19.2 }, { name: "Neptune", a: 30.1 },
+    ],
+    /**
+     * One planet (index 1–8) → { name, a (distance from the Sun in AU), period (years for one orbit = a^1.5),
+     *   speed (km/s = 29.8 ÷ √a), orbits (completed in `years`, default 1) }
+     */
+    planet(index, years) {
+      const p = kit.physics.planets[Math.max(1, Math.min(8, Math.round(index))) - 1];
+      const period = Math.pow(p.a, 1.5);
+      return { name: p.name, a: p.a, period, speed: 29.8 / Math.sqrt(p.a), orbits: (years == null ? 1 : years) / period };
+    },
+    /**
+     * Life of a star of `mass` Suns at `stage` 0–4.
+     * → { lifetime (billion years on the main sequence = 10 × mass^−2.5), temperature (K at the surface on the
+     *     main sequence ≈ 5800 × √mass), massive (mass ≥ 8), fate ("white dwarf", "neutron star" below 20 Suns,
+     *     else "black hole"), stages: the five names in order, name (of this stage) }
+     */
+    star(mass, stage) {
+      const m = Math.max(0.1, mass);
+      const massive = m >= 8;
+      const fate = !massive ? "white dwarf" : m < 20 ? "neutron star" : "black hole";
+      const stages = ["nebula", "main sequence", massive ? "red supergiant" : "red giant", massive ? "supernova" : "planetary nebula", fate];
+      return { lifetime: 10 * Math.pow(m, -2.5), temperature: 5800 * Math.sqrt(m), massive, fate, stages, name: stages[Math.max(0, Math.min(4, Math.round(stage || 0)))] };
+    },
+    /**
+     * Ice and warming with a tipping point. heating 0–10; startIce: 1 = the planet starts with ice, 0 = without.
+     * Ice reflects sunlight, which keeps it cold (a feedback loop). With ice: cover = 100 − 6 × heating, until
+     * heating passes 7 and the ice collapses. Without ice it only returns when heating falls below 3.
+     * → { ice (% cover), state: "icy" | "ice-free", temperature (°C = −5 + 2 × heating + 0.1 × (100 − ice)) }
+     */
+    tipping(heating, startIce) {
+      const h = Math.max(0, Math.min(10, heating));
+      const icy = startIce ? h <= 7 : h < 3;
+      const ice = icy ? 100 - 6 * h : 0;
+      return { ice, state: icy ? "icy" : "ice-free", temperature: -5 + 2 * h + 0.1 * (100 - ice) };
+    },
+    /** The amino acid (three-letter name, or "Stop") for an mRNA codon such as "AUG". */
+    codon(triplet) {
+      const t = String(triplet).toUpperCase().replace(/T/g, "U");
+      const table = "UUU Phe UUC Phe UUA Leu UUG Leu CUU Leu CUC Leu CUA Leu CUG Leu AUU Ile AUC Ile AUA Ile AUG Met GUU Val GUC Val GUA Val GUG Val UCU Ser UCC Ser UCA Ser UCG Ser CCU Pro CCC Pro CCA Pro CCG Pro ACU Thr ACC Thr ACA Thr ACG Thr GCU Ala GCC Ala GCA Ala GCG Ala UAU Tyr UAC Tyr UAA Stop UAG Stop CAU His CAC His CAA Gln CAG Gln AAU Asn AAC Asn AAA Lys AAG Lys GAU Asp GAC Asp GAA Glu GAG Glu UGU Cys UGC Cys UGA Stop UGG Trp CGU Arg CGC Arg CGA Arg CGG Arg AGU Ser AGC Ser AGA Arg AGG Arg GGU Gly GGC Gly GGA Gly GGG Gly".split(" ");
+      const i = table.indexOf(t);
+      return i >= 0 && i % 2 === 0 ? table[i + 1] : "?";
+    },
+    /**
+     * Translation of an mRNA such as "AUGGCUUGGUAA" (read three letters at a time).
+     * picks: the student's choice per codon as numbers (0 = empty, k = the k-th entry of `choices`).
+     * → { codons, protein (the right amino acids), choices (alphabetical list offered: the right ones plus Gly
+     *     and Ser), answer (the right number per codon), matches, correct, complete }
+     */
+    translate(mrna, picks) {
+      const codons = (String(mrna).toUpperCase().replace(/T/g, "U").match(/.{3}/g) || []).slice(0, 5);
+      const protein = codons.map((c) => kit.physics.codon(c));
+      const choices = Array.from(new Set(protein.concat(["Gly", "Ser"]))).sort();
+      const answer = protein.map((a) => choices.indexOf(a) + 1);
+      const matches = answer.map((a, i) => a === Number((picks || [])[i]));
+      const correct = matches.filter(Boolean).length;
+      return { codons, protein, choices, answer, matches, correct, complete: correct === codons.length };
+    },
+    /**
+     * A robot on a grid runs: repeat `repeat` times { move forward `forward` squares; turn }.
+     * turn: 0 = none, 1 = left, 2 = right. It starts at (startX, startY) facing east on a cols × rows grid
+     * (default start (1, 1), grid 8 × 6) and stops at a wall.
+     * → { x, y, facing ("east" | "north" | "west" | "south"), path: [[x, y], …], moves (squares moved), crashed }
+     */
+    robot(repeat, forward, turn, cols, rows, startX, startY) {
+      const W = cols || 8;
+      const H = rows || 6;
+      let x = startX == null ? 1 : startX;
+      let y = startY == null ? 1 : startY;
+      let dir = 0; // 0 east, 1 north, 2 west, 3 south
+      const path = [[x, y]];
+      let crashed = false;
+      for (let i = 0; i < Math.round(repeat) && !crashed; i++) {
+        for (let k = 0; k < Math.round(forward); k++) {
+          const nx = x + [1, 0, -1, 0][dir];
+          const ny = y + [0, 1, 0, -1][dir];
+          if (nx < 1 || ny < 1 || nx > W || ny > H) {
+            crashed = true;
+            break;
+          }
+          x = nx;
+          y = ny;
+          path.push([x, y]);
+        }
+        if (!crashed) dir = (dir + (turn === 1 ? 1 : turn === 2 ? 3 : 0)) % 4;
+      }
+      return { x, y, facing: ["east", "north", "west", "south"][dir], path, moves: path.length - 1, crashed };
+    },
+    /** A box l × w × h → { surface (area of all six faces), volume, base (l × w), front (l × h), side (w × h) }. */
+    cuboid(l, w, h) {
+      return { surface: 2 * (l * w + l * h + w * h), volume: l * w * h, base: l * w, front: l * h, side: w * h };
+    },
+    /** A ratio a : b at the amount x of the first quantity → { y (= x × b ÷ a), unitRate (b ÷ a), scale (x ÷ a) }. */
+    ratio(a, b, x) {
+      return { y: (x * b) / a, unitRate: b / a, scale: x / a };
+    },
+    /**
+     * Samples from a large population in which `percent` % are red: `count` samples of `size` each (always the
+     * same draws for the same numbers).
+     * → { results (% red in each sample), last (the newest sample's %), mean (of the sample results),
+     *     standardError (= √(p(1 − p) ÷ size) in % points), low, high (95 % interval around the last sample:
+     *     last ± 1.96 × √(last(100 − last) ÷ size)), contains (does that interval include `percent`?) }
+     */
+    sampling(percent, size, count) {
+      const p = Math.max(0, Math.min(100, percent)) / 100;
+      const n = Math.max(1, Math.round(size));
+      const k = Math.max(1, Math.round(count));
+      let seed = 12345 + Math.round(percent) * 7 + n * 131;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+      for (let i = 0; i < 5; i++) rnd(); // the first few numbers of this generator are not well mixed
+      const results = [];
+      for (let i = 0; i < k; i++) {
+        let red = 0;
+        for (let j = 0; j < n; j++) if (rnd() < p) red++;
+        results.push((100 * red) / n);
+      }
+      const last = results[k - 1];
+      const half = 1.96 * Math.sqrt((last * (100 - last)) / n);
+      const low = Math.max(0, last - half);
+      const high = Math.min(100, last + half);
+      return { results, last, mean: results.reduce((a, b) => a + b, 0) / k, standardError: 100 * Math.sqrt((p * (1 - p)) / n), low, high, contains: low <= percent && percent <= high };
+    },
     /** Straight-line fit of points [[x, y], …]: { slope, intercept, r (correlation, −1 to 1) }. */
     correlation(points) {
       const n = points.length;
