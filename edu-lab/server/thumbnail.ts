@@ -3,7 +3,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { chromium, type Browser } from "playwright";
+import type { Browser } from "playwright";
+import { launchChrome } from "./chrome.ts";
 import { DATA_ROOT } from "./env.ts";
 
 const DIR = join(DATA_ROOT, "thumbs");
@@ -11,13 +12,16 @@ let browser: Promise<Browser> | null = null;
 let queue: Promise<unknown> = Promise.resolve();
 
 const launch = () =>
-  (browser ||= chromium
-    .launch({ channel: "chrome" })
-    .catch(() => chromium.launch())
-    .then((b) => {
-      b.on("disconnected", () => (browser = null));
-      return b;
-    }));
+  (browser ||= launchChrome().then(
+      (b) => {
+        b.on("disconnected", () => (browser = null));
+        return b;
+      },
+      (err) => {
+        browser = null; // try again on the next request instead of failing every card until a restart
+        throw err;
+      },
+    ));
 
 /** Path to a PNG of the lesson's simulation; rendered once per version of the lesson. */
 export function thumbnail(id: string, html: string): Promise<string> {

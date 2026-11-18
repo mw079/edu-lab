@@ -4,16 +4,16 @@
 // Costs nothing: it only assembles lessons that already exist.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { audienceLevel } from "../server/audience.ts";
 import { lessonSourceFromDir } from "../server/design.ts";
 import { ROOT } from "../server/env.ts";
+import { escapeHtml } from "../server/html.ts";
 import { buildLessonHtml } from "../server/lesson.ts";
 import { DATA, getDraft } from "../server/pipeline.ts";
 import { thumbnail } from "../server/thumbnail.ts";
 
 const OUT = join(ROOT, "..", "docs");
 const list = JSON.parse(readFileSync(join(ROOT, "showcase.json"), "utf8")) as { id: string; try: string }[];
-const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-const level = (s = "") => ["Middle school", "High school", "Undergraduate"].find((a) => s.toLowerCase().startsWith(a.toLowerCase())) || "High school";
 
 // Showcase lessons live in examples/ (committed). A generated lesson in data/ (not committed) also works, but
 // then the export only works on this machine; copy its design.json and scene.js to examples/<name>/ to keep it.
@@ -48,7 +48,7 @@ for (const { item, lesson: found } of lessons) {
   const name = item.id.replace(/-[0-9a-f]{6}$/, "").replace(/-+$/, "");
   writeFileSync(join(OUT, "lessons", `${name}.html`), html.replace('<html lang="en">', '<html lang="en" data-back="../index.html">'));
   copyFileSync(await thumbnail(item.id, html), join(OUT, "thumbs", `${name}.png`));
-  cards.push(`<li><a href="lessons/${name}.html"><div class="thumb"><img src="thumbs/${name}.png" alt="" width="1000" height="560" loading="lazy"></div><h2>${esc(lesson.title)}</h2><p>${esc(level(lesson.audience))} · ${esc(item.try)}</p></a></li>`);
+  cards.push(`<li><a href="lessons/${name}.html"><div class="thumb"><img src="thumbs/${name}.png" alt="" width="1000" height="560" loading="lazy"></div><h2>${escapeHtml(lesson.title)}</h2><p>${escapeHtml(audienceLevel(lesson.audience))} · ${escapeHtml(item.try)}</p></a></li>`);
   console.log(`wrote ${name}.html  (${Math.round(html.length / 1024)} kB)`);
 }
 

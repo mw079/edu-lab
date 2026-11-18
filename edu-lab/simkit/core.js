@@ -230,8 +230,13 @@
   kit.click = function (el, link, fn) {
     if (typeof link !== "function") return;
     const enabled = () => !link.enabled || link.enabled();
-    el.style.cursor = enabled() ? "pointer" : "";
-    el.classList.toggle("simkit-clickable", enabled());
+    // The lock state changes between steps: look again whenever the pointer arrives, not only once.
+    const refresh = () => {
+      el.style.cursor = enabled() ? "pointer" : "";
+      el.classList.toggle("simkit-clickable", enabled());
+    };
+    refresh();
+    el.addEventListener("pointerenter", refresh);
     el.addEventListener("click", () => enabled() && fn());
   };
 

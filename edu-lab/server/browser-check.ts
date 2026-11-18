@@ -1,28 +1,27 @@
-// Play a built lesson in headless Chrome: load, solve every level through the UI, take screenshots.
+// Play a built lesson in headless Chrome: load, solve every level through the UI, check the layout, and take a
+// picture of the simulation at the start of each step (for the visual review).
 import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium, type Browser } from "playwright";
+import { launchChrome } from "./chrome.ts";
 
 const LAYOUT_CHECK = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "layout-check.js"), "utf8");
 
-type LevelResult = { level: number; startsUnsolved: boolean; solvedViaUi: boolean; feedback: string; screenshots: string[] };
-type BrowserReport = { ok: boolean; errors: string[]; layout: string[]; levels: LevelResult[]; screenshots: string[]; stageShots: string[] };
+type LevelResult = { level: number; startsUnsolved: boolean; solvedViaUi: boolean };
+type BrowserReport = { ok: boolean; errors: string[]; layout: string[]; levels: LevelResult[]; stageShots: string[] };
 
-async function launch(): Promise<Browser> {
-  try {
-    return await chromium.launch({ channel: "chrome", headless: true });
-  } catch {
-    return await chromium.launch({ headless: true });
-  }
-}
+/**
+ * How long the action buttons (e.g. "Run collision") run after they are pressed, so errors in their animation
+ * show up. Actions run 1–6 s; the first step that has them gets a longer look, the later steps run the same
+ * code with other values and a short look is enough (a step change stops the animation).
+ */
+const ACTION_MS = { first: 1200, later: 300 };
 
 export async function browserCheck(html: string, outDir: string): Promise<BrowserReport> {
   mkdirSync(outDir, { recursive: true });
-  const browser = await launch();
+  const browser = await launchChrome();
   const errors: string[] = [];
   const levels: LevelResult[] = [];
-  const screenshots: string[] = [];
   const stageShots: string[] = []; // the simulation only, at the start of each step (for the visual review)
   const layout = new Set<string>();
   try {
@@ -38,20 +37,13 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
 
     // Wait for the page instead of sleeping: two animation frames let the redraw reach the screen.
     const settle = () => page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
-    const shot = async (name: string) => {
-      const file = join(outDir, name);
-      await page.screenshot({ path: file });
-      screenshots.push(file);
-      return file;
-    };
-    if (!(await page.evaluate(() => !!(window as any).__lesson?.levelCount))) return { ok: false, errors, layout: [], levels, screenshots, stageShots };
+    if (!(await page.evaluate(() => !!(window as any).__lesson?.levelCount))) return { ok: false, errors, layout: [], levels, stageShots };
 
     const count: number = await page.evaluate(() => (window as any).__lesson.levelCount);
+    let actionsSeen = false;
     for (let i = 0; i < count; i++) {
-      const files: string[] = [];
       await page.evaluate((n) => (window as any).__lesson.goTo(n), i);
       await settle();
-      files.push(await shot(`${String(i + 1).padStart(2, "0")}-start.png`));
       const stageFile = join(outDir, `stage-${i + 1}.png`);
       await page.locator(".stage svg").screenshot({ path: stageFile });
       stageShots.push(stageFile);
@@ -62,23 +54,22 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
       await settle();
       for (const m of (await page.evaluate(LAYOUT_CHECK)) as string[]) layout.add(`level ${i + 1} (solved): ${m}`);
       const solvedViaUi: boolean = await page.evaluate((n) => (window as any).__lesson.solved(n), i);
-      const feedback = (await page.textContent(".feedback").catch(() => "")) || "";
       // Exercise each unlocked action (e.g. "Run collision") after solving.
-      const actions = await page.$$("[data-action]:visible");
+      const actions = await page.locator("[data-action]:visible").all();
       for (const a of actions) if (await a.isEnabled()) await a.click();
-      if (actions.length) await page.waitForTimeout(1200); // let animations run long enough to surface errors
-      files.push(await shot(`${String(i + 1).padStart(2, "0")}-solved.png`));
-      levels.push({ level: i + 1, startsUnsolved, solvedViaUi, feedback: feedback.trim(), screenshots: files });
+      if (actions.length) {
+        await page.waitForTimeout(actionsSeen ? ACTION_MS.later : ACTION_MS.first);
+        actionsSeen = true;
+      }
+      levels.push({ level: i + 1, startsUnsolved, solvedViaUi });
     }
-    await page.waitForTimeout(800);
-    await shot("99-complete.png");
     const lateErrors: string[] = await page.evaluate(() => (window as any).__lesson.errors);
     errors.push(...lateErrors);
   } finally {
     await browser.close();
   }
   const ok = errors.length === 0 && levels.length > 0 && levels.every((l) => l.startsUnsolved && l.solvedViaUi);
-  return { ok, errors, layout: dedupe([...layout]), levels, screenshots, stageShots };
+  return { ok, errors, layout: dedupe([...layout]), levels, stageShots };
 }
 
 /** The same layout problem usually appears on every level; report it once with the levels listed. */

@@ -2,6 +2,7 @@
 import express from "express";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { AUDIENCES, audienceLevel } from "./audience.ts";
 import { ROOT, config } from "./env.ts";
 import { buildLessonHtml } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
@@ -13,11 +14,8 @@ app.use(express.json({ limit: "400kb" }));
 const EXAMPLES = join(ROOT, "examples");
 const ID = /^[a-z0-9-]+$/;
 
-export const AUDIENCES = ["Middle school", "High school", "Undergraduate"];
 const isExample = (id: string) => existsSync(join(EXAMPLES, id, "design.json"));
 
-/** Older lessons stored free-text audiences such as "High school physics". */
-const audienceLevel = (s = "") => AUDIENCES.find((a) => s.toLowerCase().startsWith(a.toLowerCase())) || (/college|univ/i.test(s) ? "Undergraduate" : "High school");
 
 function listLessons() {
   const examples = readdirSync(EXAMPLES)

@@ -2,6 +2,7 @@
 // need no math library at run time (only KaTeX's stylesheet and fonts, inlined by lesson.ts).
 // Used by the server and the teacher app.
 import katex from "katex";
+import { escapeHtml } from "./html.ts";
 
 export type Rich = string | { html: string };
 
@@ -19,7 +20,6 @@ export function repairLatex(latex: string): string {
   return latex.replace(/[\f\t\b\r\v\n]/g, (c) => map[c]).replace(/\u00b7/g, "\u22c5");
 }
 
-const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** One LaTeX expression as HTML. Throws on invalid LaTeX. */
 export const mathHtml = (latex: string, display = false) =>

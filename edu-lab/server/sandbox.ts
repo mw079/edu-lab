@@ -9,9 +9,9 @@ import type { ValidationReport } from "./lesson.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
-export const SANDBOX_TIMEOUT_MS = 5000;
+const SANDBOX_TIMEOUT_MS = 5000;
 
-const READABLE = ["server/sandbox-run.ts", "server/lesson.ts", "simkit/core.js", "package.json"].map((f) => `--allow-fs-read=${join(ROOT, f)}`);
+const READABLE = ["server/sandbox-run.ts", "server/lesson.ts", "server/html.ts", "simkit/core.js", "package.json"].map((f) => `--allow-fs-read=${join(ROOT, f)}`);
 
 /** Load lesson.js and run validateLesson on it in the sandbox. Throws if the code does not load or takes too long. */
 export function checkLesson(lessonJs: string): ValidationReport {

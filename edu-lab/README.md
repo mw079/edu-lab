@@ -66,6 +66,7 @@ npm run generate -- "Ohm's law with series resistors" --audience "High school"  
 npm run regenerate -- <lesson-id> [--from design|build]   # redo named lessons only; backs up to data/backups/
 npm run eval [-- --only id1,id2]   # eval/requests.json through the whole pipeline → data/eval/<run>/summary.md
 npm run export         # the lessons in showcase.json as static pages → ../docs (free, no model calls)
+npm run check [-- id…] # re-check the examples and your lessons against today's checks, in Chrome (free)
 npm test               # validator, design checks, math, snippets, browser tests
 npm run typecheck
 ```
@@ -86,7 +87,7 @@ npm run typecheck
 | `eval/` | Evaluation requests (`requests.json`) |
 
 **Running model-written code.** The logic checks run a lesson's expressions in a separate Node process with
-the permission model on (it can read only three files, cannot write or start processes, and gets no environment
+the permission model on (it can read only four files, cannot write or start processes, and gets no environment
 variables, so no API key) and a 5 s limit, so a broken or hostile expression cannot reach the server or hang it.
 The scene itself only runs in headless Chrome. Needs Node 22.13 or later.
 
@@ -125,7 +126,8 @@ then open as a preview to approve or change. A teacher can delete their own less
 
 ### Evaluation (`eval/requests.json`)
 
-**Full run, 59 requests (one per topic the library covers, plus one from pasted text), 2026-11-15:**
+**Full run, 59 requests (one per topic the library covered then, plus one from pasted text), 2026-11-15.**
+`eval/requests.json` has since grown to 92 requests; these numbers are from the 59-request run.
 59/59 lessons built. Average 106 s per lesson (median 90 s, slowest 423 s); 21 of 59 passed every check on
 the first try, the rest needed one or more fix rounds. The visual review reported 25 problems in total;
 after its fix round 22 remained, spread over 20 lessons. These remaining findings have not been judged by

@@ -10,6 +10,10 @@ type Request = { id: string; audience: string; request: string; sourceText?: str
 
 const args = process.argv.slice(2);
 const oi = args.indexOf("--only");
+if (oi >= 0 && !args[oi + 1]) {
+  console.error("Usage: npm run eval [-- --only id1,id2]");
+  process.exit(2);
+}
 const only = oi >= 0 ? new Set(args[oi + 1].split(",")) : null;
 const requests = (JSON.parse(readFileSync("eval/requests.json", "utf8")) as Request[]).filter((r) => !only || only.has(r.id));
 const run = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);

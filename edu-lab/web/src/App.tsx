@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AUDIENCES } from "../../server/audience";
 import { richHtml } from "../../server/math";
 
 type LessonSummary = { id: string; title: string; audience: string; own: boolean };
@@ -127,7 +128,6 @@ function Home() {
 
 const statusLabel = (s: string) => ({ working: "Building…", planned: "Plan ready to review", designed: "Steps ready to review", built: "Lesson ready to review", failed: "Failed" })[s] || s;
 
-const AUDIENCES = ["Middle school", "High school", "Undergraduate"];
 
 /** A lesson in the app. The teacher's own lessons get a bar above it: approve the preview, ask for changes, undo. */
 function LessonView({ id }: { id: string }) {

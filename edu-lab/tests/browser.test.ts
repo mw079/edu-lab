@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -156,5 +156,16 @@ test("motion: app-made value changes travel, state is final at once; labels use 
     assert.deepEqual(await page.evaluate(`window.__lesson.errors`), []);
   } finally {
     await browser.close();
+  }
+});
+
+test("every example lesson plays in Chrome: each step starts unsolved and is solved through the UI", { timeout: 120_000 }, async () => {
+  for (const id of readdirSync("examples")) {
+    const src = lessonSourceFromDir(join("examples", id));
+    const r = await browserCheck(buildLessonHtml(src, id), mkdtempSync(join(tmpdir(), `example-${id}-`)));
+    assert.deepEqual(r.errors, [], `${id}: errors`);
+    assert.equal(r.levels.length, 5, `${id}: five steps`);
+    for (const l of r.levels) assert.ok(l.startsUnsolved && l.solvedViaUi, `${id}: step ${l.level}`);
+    assert.deepEqual(r.layout, [], `${id}: layout problems`);
   }
 });

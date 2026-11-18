@@ -1,11 +1,16 @@
 // Build a lesson HTML file from lesson.js and validate a lesson's logic without a browser.
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
+import { escapeHtml } from "./html.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js", "gas.js", "projectile.js", "pendulum.js", "incline.js", "refraction.js", "orbit.js", "beaker.js", "reaction.js", "atom.js", "plant.js", "numberline.js", "lens.js", "wave.js", "lever.js", "punnett.js", "photoelectric.js", "fraction.js", "triangle.js", "charges.js", "moon.js", "buoyancy.js", "motion.js", "atwood.js", "decay.js", "slit.js", "calorimeter.js", "states.js", "balance.js", "selection.js", "plane.js", "circle.js", "standing.js", "energy.js", "titration.js", "pyramid.js", "osmosis.js", "seasons.js", "dotplot.js", "protractor.js", "spinner.js", "binary.js", "gate.js", "sort.js", "search.js", "weather.js", "greenhouse.js", "charts.js", "bio.js", "earth.js", "vectors.js", "science2.js", "mathcs.js", "life.js", "earth2.js", "maths2.js", "machines.js"];
+/**
+ * The simkit files: core.js first (it defines the kit the others add to), then every other .js file in simkit/.
+ * Read from the folder, so a new component file is included without editing a list.
+ */
+const simkitList = () => ["core.js", ...readdirSync(join(ROOT, "simkit")).filter((f) => f.endsWith(".js") && f !== "core.js").sort()];
 
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 
@@ -14,7 +19,7 @@ const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
  * the rest of simkit, so a component added while the server runs is found (61 small files: about 2 ms).
  */
 const componentFiles = () =>
-  new Map(SIMKIT_FILES.slice(1).flatMap((f) => [...read("simkit", f).matchAll(/^\s*kit\.(\w+)\s*=/gm)].map((m) => [m[1], f] as [string, string])));
+  new Map(simkitList().slice(1).flatMap((f) => [...read("simkit", f).matchAll(/^\s*kit\.(\w+)\s*=/gm)].map((m) => [m[1], f] as [string, string])));
 
 /** The files `code` needs: core.js plus every file defining a `kit.x` / `simkit.x` it uses, and what those use. */
 export function simkitFiles(code: string): string[] {
@@ -27,15 +32,14 @@ export function simkitFiles(code: string): string[] {
       if (f && !files.has(f)) files.add(f), queue.push(read("simkit", f));
     }
   }
-  return SIMKIT_FILES.filter((f) => files.has(f));
+  return simkitList().filter((f) => files.has(f));
 }
 
 /** simkit for a page: only the files `code` uses, or the whole library when no code is given. */
 export function simkitSource(code?: string): string {
-  return (code === undefined ? SIMKIT_FILES : simkitFiles(code)).map((f) => `/* ---- simkit/${f} ---- */\n${read("simkit", f)}`).join("\n");
+  return (code === undefined ? simkitList() : simkitFiles(code)).map((f) => `/* ---- simkit/${f} ---- */\n${read("simkit", f)}`).join("\n");
 }
 
-const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 // Prevent a script body from closing its own <script> tag.
 const scriptSafe = (s: string) => s.replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
 
