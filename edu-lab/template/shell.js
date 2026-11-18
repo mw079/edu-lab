@@ -302,6 +302,14 @@
       update();
       travel(before);
       renderCard(changedStep);
+      // Inside the teacher app: say which step is showing (it preselects that step for a change request).
+      if (window.parent !== window) {
+        try {
+          window.parent.postMessage({ source: "edu-lab", step: current }, location.origin === "null" ? "*" : location.origin);
+        } catch (e) {
+          /* a lesson opened from a file has no parent to tell */
+        }
+      }
     }
 
     // ---------- Task card ----------

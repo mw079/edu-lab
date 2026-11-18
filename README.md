@@ -9,6 +9,10 @@ offline HTML file, with no AI running.
 **Try the lessons:** open [`docs/index.html`](docs/index.html) in a browser (six example lessons, no install).
 The same folder can be served with GitHub Pages.
 
+**Watch a lesson being made** (55 s, with music; a real lesson, generated live):
+
+[![A teacher creating a lesson in Edu Lab](docs/video/creating-a-lesson.jpg)](docs/video/creating-a-lesson.mp4)
+
 ![Overview of the example lessons](docs/img/overview.png)
 
 ## How it works, in short

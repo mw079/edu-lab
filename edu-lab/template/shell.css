@@ -8,9 +8,9 @@ html, body { height: 100%; }
 .top h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 .back { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 17px; background: var(--surface); box-shadow: var(--shadow); color: var(--ink-2); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
 @media (hover: hover) and (pointer: fine) { .back:hover { color: var(--ink); } .pill:hover { border-color: #cfcec9; } }
-.nav { display: flex; align-items: center; gap: 14px; }
+.nav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
 .steps { display: flex; align-items: center; gap: 6px; }
-.pill { height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
+.pill { height: 30px; padding: 0 12px; white-space: nowrap; flex: none; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
 .pill[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 .top { position: relative; }
 
@@ -58,7 +58,9 @@ html, body { height: 100%; }
 .control-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .control label { font-size: 14px; font-weight: 500; color: var(--ink-2); }
 .control output { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.control .segmented { margin-top: 6px; }
+.control .segmented { margin-top: 6px; flex-wrap: wrap; }
+/* Many named options (rock types, cell parts) wrap onto more rows instead of squeezing their names. */
+.control .segmented button { flex: 1 1 auto; white-space: nowrap; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Slider: thin track filled up to the thumb (--pct is set by the shell). */

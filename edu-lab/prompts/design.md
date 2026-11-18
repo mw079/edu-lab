@@ -80,6 +80,9 @@ Math.abs(d.p - 12) < 1e-6, and typed answers with a looser one: Math.abs(answer 
 - Mix goal steps ("make X equal 12") and question steps ("predict X"); for question steps lock the
   controls and hide the readout that shows the answer.
 - Use whole-number slider steps where possible so goals are reachable exactly.
+- A choice between named things (a rock type, a cell part, a kind of transformation) is a select control with the
+  names as labels; its option values may be numbers when the component needs them. Never make students read a
+  number that stands for a name, and write goals with the names ("make metamorphic rock"), not the numbers.
 - Feedback names the likely mistake (wrong sign, forgot to divide, …). End the list with
   { "when": "true", "say": "… {key} …" } to report the current value.
 - Plain language for the audience; SI units.

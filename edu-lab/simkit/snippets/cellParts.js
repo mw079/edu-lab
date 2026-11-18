@@ -7,7 +7,8 @@
 //   → { name, job, plant, animal, present (does this kind of cell have it?), partsInCell (5 animal, 8 plant) }
 //   Jobs: nucleus holds the DNA and controls the cell; mitochondria release energy (respiration); ribosomes make
 //   proteins; chloroplasts absorb light for photosynthesis; the cell wall supports; the vacuole keeps the cell firm.
-// Use sliders: kind 0–1 (step 1), part 0–7 (step 1). A check like d.part === 6 asks the student to find a part.
+// Use select controls with numeric values, labelled with names: kind 0–1 ("Animal cell", "Plant cell"), part 0–7
+// (the part names), so students see names, not numbers. A check like d.part === 6 asks the student to find a part.
 // Always visible: the cell and its parts, and what the highlighted part does. With show({ names: false }) the list
 // says "part 1" … and the line below "This part: …" (to ask which part does a job).
 // Occupies x … x+850, y … y+500: use it alone on the stage.

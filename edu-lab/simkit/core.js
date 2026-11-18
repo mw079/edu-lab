@@ -243,6 +243,18 @@
   /** True when a link from app.link exists and its control is unlocked right now. */
   kit.linked = (link) => typeof link === "function" && (!link.enabled || link.enabled());
 
+  /**
+   * A link that also needs `when()` to be true, e.g. dragging that only makes sense in one mode of a component.
+   * While it is off, the object shows no grab cursor and moving it changes nothing. null when there is no link.
+   */
+  kit.only = function (link, when) {
+    if (typeof link !== "function") return null;
+    const gated = (v) => link(v);
+    gated.key = link.key;
+    gated.enabled = () => when() && (!link.enabled || link.enabled());
+    return gated;
+  };
+
   /** A soft ring behind something the student can grab. */
   kit.grip = function (parent, x, y, r) {
     return kit.el("circle", { cx: x, cy: y, r, fill: kit.colors.purple, "fill-opacity": 0.16, stroke: kit.colors.purple, "stroke-opacity": 0.5, "stroke-width": 2, "stroke-dasharray": "4 5", class: "simkit-grip" }, parent);

@@ -10,6 +10,10 @@ h2 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px
 .back { display: inline-block; margin-bottom: 14px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; }
 @media (hover: hover) and (pointer: fine) { .back:hover { color: var(--ink); } }
 .error { color: var(--no); white-space: pre-wrap; font: inherit; }
+.banner { margin: 0 0 14px; padding: 10px 14px; border-radius: var(--radius-sm); background: #fdecea; }
+.details { margin: 4px 0 16px; font-size: 14px; color: var(--muted); }
+.details summary { cursor: pointer; }
+.details pre { margin: 8px 0 0; }
 .warn { color: var(--warn); }
 
 /* Overview */

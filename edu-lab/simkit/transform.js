@@ -22,14 +22,17 @@
     const ox = o.x + 260;
     const oy = o.y + 240;
     const px = ([gx, gy]) => [ox + gx * U, oy - gy * U];
-    const links = o.drag ? [o.drag.dx, o.drag.dy].filter((l) => typeof l === "function") : [];
+    // Dragging the image is a translation: it does nothing (and shows no grab cursor) for the other kinds.
+    const translating = () => Math.round(o.kind) === 0;
+    const moveX = kit.only(o.drag && o.drag.dx, translating);
+    const moveY = kit.only(o.drag && o.drag.dy, translating);
     const dragger = kit.drag(
       stage,
       handle,
-      links,
+      [moveX, moveY].filter(Boolean),
       (p, start, data) => {
-        if (o.drag.dx) o.drag.dx(kit.clamp(data.dx + (p.x - start.x) / U, -9, 9));
-        if (o.drag.dy) o.drag.dy(kit.clamp(data.dy - (p.y - start.y) / U, -9, 9));
+        if (kit.linked(moveX)) moveX(kit.clamp(data.dx + (p.x - start.x) / U, -9, 9));
+        if (kit.linked(moveY)) moveY(kit.clamp(data.dy - (p.y - start.y) / U, -9, 9));
       },
       () => ({ dx: o.dx, dy: o.dy })
     );
@@ -79,7 +82,7 @@
       if (o.showImage) {
         poly(s.image, kit.colors.red, kit.colors.redDark, handle);
         const [ix, iy] = px(s.image[0]);
-        if (kit.linked(links[0]) && kind === 0) kit.grip(handle, ix, iy, 22);
+        if (kit.linked(moveX) || kit.linked(moveY)) kit.grip(handle, ix, iy, 22);
         kit.el("circle", { cx: ix, cy: iy, r: 5, fill: kit.colors.redDark }, handle);
       }
       dragger.refresh();

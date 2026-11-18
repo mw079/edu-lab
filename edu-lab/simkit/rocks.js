@@ -105,7 +105,7 @@
       });
       // Sample of the current rock.
       const px = o.x + 620;
-      kit.el("text", { x: px, y: o.y + 60, class: "simkit-label", style: "font-size:20px", fill: kit.colors.ink, text: o.showNames ? s.name : "This rock" }, g);
+      kit.el("text", { x: px, y: o.y + 60, class: "simkit-label", style: "font-size:20px", fill: kit.colors.ink, text: s.name }, g);
       sample(s.rock, px, o.y + 80);
       ABOUT[s.rock].forEach((line, i) => kit.el("text", { x: px, y: o.y + 276 + i * 22, class: "simkit-tick", text: line }, g));
       kit.el("text", { x: px, y: o.y + 340, class: "simkit-tick", text: !o.showProcesses ? "Which processes can act on this rock?" : s.next.length > 1 ? "Click a process to see what it makes." : "Click the process to see what it makes." }, g);

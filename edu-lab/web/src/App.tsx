@@ -18,6 +18,8 @@ type Draft = {
   error?: string;
   version?: number;
   hasPrevious?: boolean;
+  componentNames?: string[];
+  startedAt?: string;
   notice?: { applied: boolean; text: string };
   revisions?: { at: string; note: string; step?: number }[];
   log: { at: string; stage: string; what: string; ms?: number }[];
@@ -153,6 +155,14 @@ function ReviewBar({ d, onChange }: { d: Draft; onChange: (d: Draft) => void }) 
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState("");
   const [step, setStep] = useState(0);
+  const [viewing, setViewing] = useState(0); // the step the lesson shows (1–5), 0 = exploring or unknown
+  useEffect(() => {
+    const on = (e: MessageEvent) => {
+      if (e.origin === location.origin && e.data?.source === "edu-lab" && typeof e.data.step === "number") setViewing(e.data.step >= 0 && e.data.step < 5 ? e.data.step + 1 : 0);
+    };
+    addEventListener("message", on);
+    return () => removeEventListener("message", on);
+  }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const post = async (path: string, body: object = {}) => {
@@ -192,7 +202,17 @@ function ReviewBar({ d, onChange }: { d: Draft; onChange: (d: Draft) => void }) 
         </div>
         <div className="row">
           {d.hasPrevious && <button className="link quiet" disabled={busy} onClick={undo}>Undo last change</button>}
-          <button className="btn" aria-expanded={open} disabled={busy} onClick={() => setOpen(!open)}>Request changes</button>
+          <button
+            className="btn"
+            aria-expanded={open}
+            disabled={busy}
+            onClick={() => {
+              if (!open) setStep(viewing); // the step the teacher is looking at
+              setOpen(!open);
+            }}
+          >
+            Request changes
+          </button>
           {preview && <button className="btn primary" disabled={busy} onClick={approve}>Approve</button>}
         </div>
       </div>
@@ -236,7 +256,16 @@ function NewLesson() {
       <h1>What should your students learn?</h1>
       <label>
         Lesson request
-        <textarea value={request} onChange={(e) => setRequest(e.target.value)} rows={4} required minLength={5} placeholder="e.g. Ohm's law: how current depends on voltage and resistance, with series resistors" />
+        <textarea
+          value={request}
+          onChange={(e) => setRequest(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (e.metaKey || e.ctrlKey) && e.currentTarget.form?.requestSubmit()}
+          rows={4}
+          required
+          minLength={5}
+          autoFocus
+          placeholder="e.g. Ohm's law: how current depends on voltage and resistance, with series resistors"
+        />
       </label>
       <details className="source" open={!!sourceText}>
         <summary>Source text <span className="muted">(optional)</span></summary>
@@ -252,7 +281,7 @@ function NewLesson() {
       </fieldset>
       {error && <p className="error">{error}</p>}
       <button className="btn primary" disabled={busy}>{busy ? "Starting…" : "Plan the lesson"}</button>
-      <p className="muted small">You review the plan and the five steps before anything is built. Takes about two minutes.</p>
+      <p className="muted small">You review the plan, the five steps and the finished lesson before it goes into the overview. About two minutes in all.</p>
     </form>
   );
 }
@@ -266,7 +295,15 @@ const STEPS = [
 function DraftView({ id }: { id: string }) {
   const [d, setD] = useState<Draft | null>(null);
   const [error, setError] = useState("");
-  const load = () => api<Draft>(`/api/drafts/${id}`).then(setD).catch((e: Error) => setError(e.message));
+  const [sending, setSending] = useState(false); // a button's request is on its way: no second click
+  // A successful load clears an earlier error (e.g. a dropped connection while polling).
+  const load = () =>
+    api<Draft>(`/api/drafts/${id}`)
+      .then((next) => {
+        setD(next);
+        setError("");
+      })
+      .catch((e: Error) => setError(e.message));
   useEffect(() => {
     load();
   }, [id]);
@@ -278,16 +315,26 @@ function DraftView({ id }: { id: string }) {
   useEffect(() => {
     if (d?.status === "built" || d?.status === "ready") location.replace(`#/lesson/${id}`); // preview or approved
   }, [d?.status]);
-  const run = (stage: string, body: object = {}) => api<Draft>(`/api/drafts/${id}/${stage}`, body).then(setD).catch((e: Error) => setError(e.message));
+  const run = (stage: string, body: object = {}) => {
+    if (sending) return;
+    setSending(true);
+    setError("");
+    api<Draft>(`/api/drafts/${id}/${stage}`, body)
+      .then(setD)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setSending(false));
+  };
 
-  if (error) return <p className="error">{error}</p>;
-  if (!d) return <p className="muted">Loading…</p>;
+  // Errors are shown above the page, which stays usable; without a draft there is nothing else to show.
+  const banner = error && <p className="error banner" role="alert">{error}</p>;
+  if (!d) return banner || <p className="muted">Loading…</p>;
   if (d.status === "built" || d.status === "ready") return null;
   const current = STEPS.findIndex((s) => s.key === (d.stage === "revise" ? "build" : d.stage));
   return (
     <>
       <a href="#/" className="back">← All lessons</a>
       <p className="request">“{d.request}” <span className="muted">· {d.audience}</span></p>
+      {banner}
       <ol className="stepper">
         {STEPS.map((s, i) => (
           <li key={s.key} className={i < current || (i === current && d.status !== "working" && d.status !== "failed") ? "done" : i === current ? "now" : ""}>{s.label}</li>
@@ -296,41 +343,46 @@ function DraftView({ id }: { id: string }) {
       {d.status === "working" && <Working d={d} />}
       {d.status === "failed" && (
         <div className="panel">
-          <h2>Something went wrong</h2>
-          <pre className="error">{d.error}</pre>
-          <button className="btn primary" onClick={() => run(d.stage)}>Try again</button>
+          <h2>{{ plan: "The plan could not be made", design: "The steps did not pass the checks", build: "The simulation could not be made to work", revise: "The change could not be made" }[d.stage]}</h2>
+          <p className="muted">The model's answers did not pass the automatic checks in time. Trying again usually works; everything you approved so far is kept.</p>
+          <details className="details">
+            <summary>Technical details</summary>
+            <pre className="error small">{d.error}</pre>
+          </details>
+          <button className="btn primary" disabled={sending} onClick={() => run(d.stage)}>Try again</button>
         </div>
       )}
-      {d.status === "planned" && d.plan && <PlanReview d={d} run={run} />}
-      {d.status === "designed" && d.design && <LevelsReview d={d} run={run} />}
+      {d.status === "planned" && d.plan && <PlanReview d={d} run={run} sending={sending} />}
+      {d.status === "designed" && d.design && <LevelsReview d={d} run={run} sending={sending} />}
     </>
   );
 }
 
 function Working({ d }: { d: Draft }) {
-  // While a change request runs, show only its own progress and what was asked.
+  // Only what happened in the stage that is running now (for a change request: since it was asked).
   const request = d.stage === "revise" ? d.revisions?.at(-1) : undefined;
-  const log = request ? d.log.filter((l) => l.at >= request.at) : d.log;
+  const since = request?.at || d.startedAt;
+  const log = since ? d.log.filter((l) => l.at >= since) : d.log;
   return (
     <div className="panel working">
       <span className="spinner" aria-hidden="true" />
       <div>
         {request && <p className="small">Your request{request.step ? ` (step ${request.step})` : ""}: “{request.note}”</p>}
         <strong>{d.activity || "Working…"}</strong>
-        <p className="muted small">{log.map((l) => `${l.what} (${Math.round((l.ms || 0) / 1000)} s)`).join(" · ") || "This usually takes 10–60 seconds per step."}</p>
+        <p className="muted small">{log.length ? `Done: ${log.map((l) => `${l.what.toLowerCase()} (${Math.round((l.ms || 0) / 1000)} s)`).join(" · ")}` : "This usually takes 10–60 seconds per step."}</p>
       </div>
     </div>
   );
 }
 
-function PlanReview({ d, run }: { d: Draft; run: (stage: string, body?: object) => void }) {
+function PlanReview({ d, run, sending }: { d: Draft; run: (stage: string, body?: object) => void; sending: boolean }) {
   const p = d.plan!;
   const [objectives, setObjectives] = useState(p.objectives.join("\n"));
   return (
     <div className="panel">
       <h2>{p.title}</h2>
       <p>{p.idea}</p>
-      <p className="muted small">Uses: {p.components.join(", ")}</p>
+      <p className="muted small">Uses: {(d.componentNames?.length ? d.componentNames : p.components).join(", ")}</p>
       {d.source && (
         <p className="muted small">
           Based on your pasted text ({Math.round(d.source.text.length / 1000) || "<1"}k characters)
@@ -342,8 +394,8 @@ function PlanReview({ d, run }: { d: Draft; run: (stage: string, body?: object) 
         <textarea value={objectives} onChange={(e) => setObjectives(e.target.value)} rows={5} />
       </label>
       <div className="row">
-        <button className="btn primary" onClick={() => run("design", { objectives: objectives.split("\n") })}>Approve and design the steps</button>
-        <button className="btn" onClick={() => run("plan")}>New plan</button>
+        <button className="btn primary" disabled={sending || !objectives.trim()} onClick={() => run("design", { objectives: objectives.split("\n") })}>Approve and design the steps</button>
+        <button className="btn" disabled={sending} onClick={() => run("plan")}>New plan</button>
       </div>
     </div>
   );
@@ -381,7 +433,7 @@ function LevelList({ levels }: { levels: Level[] }) {
   );
 }
 
-function LevelsReview({ d, run }: { d: Draft; run: (stage: string, body?: object) => void }) {
+function LevelsReview({ d, run, sending }: { d: Draft; run: (stage: string, body?: object) => void; sending: boolean }) {
   const [note, setNote] = useState("");
   return (
     <div className="panel">
@@ -393,8 +445,8 @@ function LevelsReview({ d, run }: { d: Draft; run: (stage: string, body?: object
         <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="e.g. make step 2 easier, add a step about power" />
       </label>
       <div className="row">
-        <button className="btn primary" onClick={() => run("build")}>Approve and build the lesson</button>
-        <button className="btn" disabled={!note.trim()} onClick={() => run("design", { note })}>Redo the steps with my note</button>
+        <button className="btn primary" disabled={sending} onClick={() => run("build")}>Approve and build the lesson</button>
+        <button className="btn" disabled={sending || !note.trim()} onClick={() => run("design", { note })}>Redo the steps with my note</button>
       </div>
     </div>
   );

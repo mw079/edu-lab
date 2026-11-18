@@ -37,6 +37,7 @@ export type Draft = {
   status: "working" | "planned" | "designed" | "built" | "ready" | "failed"; // built = preview, ready = approved
   stage: Stage; // the stage that is running, or the last one that ran
   activity?: string; // what is happening right now, for the UI
+  startedAt?: string; // when the running (or last) stage started
   source?: Source; // pasted text the lesson is based on
   plan?: Plan;
   design?: Design;
@@ -106,7 +107,7 @@ export function runStage(d: Draft, stage: Stage, opts: { objectives?: string[]; 
   if (running.has(d.id)) return false;
   running.add(d.id);
   const was = d.status;
-  Object.assign(d, { status: "working", stage, error: undefined, activity: "Starting…" });
+  Object.assign(d, { status: "working", stage, error: undefined, activity: "Starting…", startedAt: new Date().toISOString() });
   saveDraft(d);
   const work = stage === "plan" ? plan(d) : stage === "design" ? design(d, opts) : stage === "build" ? build(d) : reviseLesson(d, { ...opts, was });
   work

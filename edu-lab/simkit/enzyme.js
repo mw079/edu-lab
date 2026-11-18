@@ -31,10 +31,14 @@
     const ax = () => AXES[o.axis === "pH" ? "pH" : "temp"];
     const xOf = (v) => X0 + (kit.clamp(v, 0, ax().max) / ax().max) * W;
     const yR = (r) => Y0 - (kit.clamp(r, 0, 100) / 100) * H;
-    const links = o.drag ? [o.drag.temp, o.drag.pH].filter((l) => typeof l === "function") : [];
-    const dragger = kit.drag(stage, handle, links, (p) => {
-      const link = o.drag[ax().key];
-      if (link) link(kit.clamp(((p.x - X0) / W) * ax().max, 0, ax().max));
+    // Each link works only while its axis is shown.
+    const drags = {
+      temp: kit.only(o.drag && o.drag.temp, () => ax().key === "temp"),
+      pH: kit.only(o.drag && o.drag.pH, () => ax().key === "pH"),
+    };
+    const dragger = kit.drag(stage, handle, [drags.temp, drags.pH].filter(Boolean), (p) => {
+      const link = drags[ax().key];
+      if (kit.linked(link)) link(kit.clamp(((p.x - X0) / W) * ax().max, 0, ax().max));
     });
     const sol = () => kit.physics.enzyme(o.temp, o.pH, o.bestTemp, o.bestPH);
     const rateAt = (v) => (ax().key === "pH" ? kit.physics.enzyme(o.temp, v, o.bestTemp, o.bestPH) : kit.physics.enzyme(v, o.pH, o.bestTemp, o.bestPH)).rate;
@@ -98,7 +102,7 @@
       graph(s);
       // Marker on the axis for the current temperature or pH (grabbable while its link is on).
       const px = xOf(o[ax().key]);
-      if (kit.linked(o.drag && o.drag[ax().key])) kit.grip(handle, px, Y0, 22);
+      if (kit.linked(drags[ax().key])) kit.grip(handle, px, Y0, 22);
       else kit.el("circle", { cx: px, cy: Y0, r: 22, fill: "#fff", "fill-opacity": 0.01 }, handle);
       kit.el("path", { d: `M ${px} ${Y0 - 2} l -9 14 h 18 z`, fill: kit.colors.ink }, handle);
       dragger.refresh();

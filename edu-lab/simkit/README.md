@@ -17,6 +17,7 @@ Physical inputs are SI unless stated.
 | `kit.fmt(n, digits)`, `kit.clamp`, `kit.lerp`, `kit.ticks` | Helpers. |
 | `kit.arrow(stage, { x, y, dx, dy, color, label, labelSide })` | Labelled vector → `{ update(opts), show(bool) }`. |
 | `kit.drag(stage, el, link, move)`, `kit.click(el, link, fn)`, `kit.linked(link)`, `kit.grip(parent, x, y, r)` | Direct interaction (see below). |
+| `kit.only(link, when)` | A link that works only while `when()` is true (e.g. dragging that applies to one mode of a component). |
 | `kit.physics.collide1D(m1, v1, m2, v2, e)` | Final velocities; `e = 1` elastic, `0` sticky. |
 | `kit.physics.circuit(layout, V, [R…])` | `{ totalR, current, parts: [{ R, I, V, P }] }` for `"series"`/`"parallel"`. |
 | `kit.physics.gasPressure(n, T, V)` | kPa, with n mol, T kelvin, V litres. |

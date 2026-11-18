@@ -4,7 +4,9 @@
 // Data for derived values: simkit.physics.rockCycle(rock) → { rock, name, next: [{ process, to, name }], names }
 //   Processes: magma —cooling→ igneous; any rock —weathering and erosion→ sediment; sediment —compaction and
 //   cementation→ sedimentary; igneous or sedimentary —heat and pressure→ metamorphic; any rock —melting→ magma.
-// Use a slider for rock: 0–4 (step 1). A check like s.rock === 4 asks the student to make that rock.
+// Use a select control for rock with numeric values 0–4 and the names as labels (Magma, Igneous rock, Sediment,
+// Sedimentary rock, Metamorphic rock), so students see names, not numbers. Write goals with the names too.
+// A check like s.rock === 4 asks the student to make that rock.
 // Always visible: the five stages and the current rock (highlighted, with a sample and a description).
 // The processes that can act on the rock (arrows with names) are visible unless show({ processes: false }); hide them
 // in a step that asks which or how many processes act on a rock. With show({ names: false }) the other stages show

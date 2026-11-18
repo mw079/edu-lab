@@ -5,7 +5,7 @@
 // Physics for derived values: law of reflection, angle of reflection = angle of incidence (both from the normal).
 //   Concave mirror images: simkit.physics.mirror(f, dObject) → { dImg (cm, + = real, in front), m, real, upright }
 //   Example: f = 10 cm, object at 30 cm → image at 15 cm, real, upside down, half the size (m = −0.5).
-// Use sliders: angle 0–85 (step 5), focal 5–25 (step 5); curved 0–1 (step 1).
+// Use sliders for angle 0–85 (step 5) and focal 5–25 (step 5); a select control for curved 0–1 ("Flat", "Concave").
 // Always visible: the mirror, the normal (dashed), the incoming ray and its angle i. The reflected ray and its angle r
 // (flat), or the reflected rays and F (concave), are hidden with show({ reflected: false }).
 // Occupies x−260 … x+330, y−300 … y+20.

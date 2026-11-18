@@ -144,14 +144,14 @@
 
   /**
    * opts: { x=400, y=190 (centre of the coil), turns=20 (10–100), current=2 (A, −5…5: the sign swaps the poles),
-   *         core=1 (1 = iron core, 0 = air), showField=true,
+   *         core=1 (1 = iron core, 0 = air), showField=true, showClips=true,
    *         click: { current: app.link("key") } (the student clicks the battery to reverse the current) }
-   * Returns { update({ turns, current, core }), show({ field }), values() }
+   * Returns { update({ turns, current, core }), show({ field, clips }), values() }
    * values() -> { field (mT), clips (paper clips it holds, 0–12), north ("right", "left" or "none") }
    *   (see simkit.physics.electromagnet)
    */
   kit.electromagnet = function (stage, opts) {
-    const o = Object.assign({ x: 400, y: 190, turns: 20, current: 2, core: 1, showField: true }, opts);
+    const o = Object.assign({ x: 400, y: 190, turns: 20, current: 2, core: 1, showField: true, showClips: true }, opts);
     const g = stage.layer({ class: "simkit-electromagnet" });
     const flip = o.click && o.click.current;
     const sol = () => kit.physics.electromagnet(o.turns, o.current, o.core);
@@ -203,10 +203,10 @@
       kit.el("text", { x: o.x, y: by + 50, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink, text: `current ${kit.fmt(Math.abs(o.current), 1)} A` }, g);
       // Paper clips held under the right end: a hanging chain.
       const cx = R - 30;
-      for (let i = 0; i < s.clips; i++) {
+      for (let i = 0; i < (o.showClips ? s.clips : 0); i++) {
         kit.el("rect", { x: cx - 6, y: o.y + 24 + i * 11, width: 12, height: 16, rx: 5, fill: "none", stroke: kit.colors.steel, "stroke-width": 2 }, g);
       }
-      kit.el("text", { x: R + 60, y: o.y + 60, "text-anchor": "start", class: "simkit-label", fill: kit.colors.ink, text: `holds ${s.clips} paper clip${s.clips === 1 ? "" : "s"}` }, g);
+      kit.el("text", { x: R + 60, y: o.y + 60, "text-anchor": "start", class: "simkit-label", fill: kit.colors.ink, text: o.showClips ? `holds ${s.clips} paper clip${s.clips === 1 ? "" : "s"}` : "holds ? paper clips" }, g);
       kit.el("text", { x: R + 60, y: o.y + 88, "text-anchor": "start", class: "simkit-label", fill: kit.colors.purple, text: o.showField ? `field ${kit.fmt(s.field, s.field < 10 ? 1 : 0)} mT` : "field ? mT" }, g);
     }
 
@@ -217,9 +217,13 @@
         for (const key of ["turns", "current", "core"]) if (next[key] != null) o[key] = next[key];
         draw();
       },
-      /** show({ field: false }) writes "field ? mT" (the clips stay visible). */
+      /**
+       * show({ field: false }) writes "field ? mT"; show({ clips: false }) removes the clips and writes "holds ? paper
+       * clips". The clips show the field to within 10 mT, so hide both when a step asks for the field.
+       */
       show(which) {
         if (which.field != null) o.showField = which.field;
+        if (which.clips != null) o.showClips = which.clips;
         draw();
       },
       values: sol,

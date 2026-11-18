@@ -89,9 +89,9 @@ html, body { height: 100%; }
 .top h1 { margin: 0; font-size: 18px; font-weight: 650; letter-spacing: -0.01em; }
 .back { display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 17px; background: var(--surface); box-shadow: var(--shadow); color: var(--ink-2); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
 @media (hover: hover) and (pointer: fine) { .back:hover { color: var(--ink); } .pill:hover { border-color: #cfcec9; } }
-.nav { display: flex; align-items: center; gap: 14px; }
+.nav { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; }
 .steps { display: flex; align-items: center; gap: 6px; }
-.pill { height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
+.pill { height: 30px; padding: 0 12px; white-space: nowrap; flex: none; border: 1px solid var(--line); border-radius: 15px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--ink-2); transition: background-color var(--dur-fast) ease, border-color var(--dur-fast) ease, color var(--dur-fast) ease, transform var(--dur-press) var(--ease-out); }
 .pill[aria-expanded="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 .top { position: relative; }
 
@@ -139,7 +139,9 @@ html, body { height: 100%; }
 .control-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .control label { font-size: 14px; font-weight: 500; color: var(--ink-2); }
 .control output { font-size: 14px; font-weight: 650; font-variant-numeric: tabular-nums; }
-.control .segmented { margin-top: 6px; }
+.control .segmented { margin-top: 6px; flex-wrap: wrap; }
+/* Many named options (rock types, cell parts) wrap onto more rows instead of squeezing their names. */
+.control .segmented button { flex: 1 1 auto; white-space: nowrap; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Slider: thin track filled up to the thumb (--pct is set by the shell). */
@@ -440,13 +442,30 @@ svg.simkit-dragging .simkit-grip { fill-opacity: 0.26; stroke-opacity: 0.85; }
   kit.click = function (el, link, fn) {
     if (typeof link !== "function") return;
     const enabled = () => !link.enabled || link.enabled();
-    el.style.cursor = enabled() ? "pointer" : "";
-    el.classList.toggle("simkit-clickable", enabled());
+    // The lock state changes between steps: look again whenever the pointer arrives, not only once.
+    const refresh = () => {
+      el.style.cursor = enabled() ? "pointer" : "";
+      el.classList.toggle("simkit-clickable", enabled());
+    };
+    refresh();
+    el.addEventListener("pointerenter", refresh);
     el.addEventListener("click", () => enabled() && fn());
   };
 
   /** True when a link from app.link exists and its control is unlocked right now. */
   kit.linked = (link) => typeof link === "function" && (!link.enabled || link.enabled());
+
+  /**
+   * A link that also needs `when()` to be true, e.g. dragging that only makes sense in one mode of a component.
+   * While it is off, the object shows no grab cursor and moving it changes nothing. null when there is no link.
+   */
+  kit.only = function (link, when) {
+    if (typeof link !== "function") return null;
+    const gated = (v) => link(v);
+    gated.key = link.key;
+    gated.enabled = () => when() && (!link.enabled || link.enabled());
+    return gated;
+  };
 
   /** A soft ring behind something the student can grab. */
   kit.grip = function (parent, x, y, r) {
@@ -1293,6 +1312,121 @@ svg.simkit-dragging .simkit-grip { fill-opacity: 0.26; stroke-opacity: 0.85; }
       return { ratio, outTurns: (turns || 0) / ratio, speedTimes: 1 / ratio, forceTimes: ratio, direction: "opposite" };
     },
 
+    // ---- Magnetism, mirrors, circular motion, chemistry, biology, rocks, transformations ----
+
+    /**
+     * EMF when a bar magnet moves through a coil (Faraday's law). turns, speed in m/s (+ into the coil, − out),
+     * strength 1–3 (each unit is 1 mWb of flux, which changes over the 10 cm the magnet travels into the coil).
+     * emf in mV; positive moves the meter needle to the right.
+     */
+    induction(turns, speed, strength) {
+      const emf = 10 * turns * (strength == null ? 1 : strength) * speed;
+      return { emf, size: Math.abs(emf), direction: emf > 0 ? "right" : emf < 0 ? "left" : "none" };
+    },
+    /** Field inside a 10 cm coil (B = µ0 µr N I / L) in mT; an iron core (core = 1) multiplies it by 200. */
+    electromagnet(turns, current, core) {
+      const field = Math.abs((4 * Math.PI * 1e-7 * (core ? 200 : 1) * turns * current) / 0.1) * 1000;
+      return { field, clips: Math.min(12, Math.floor(field / 10 + 1e-9)), north: current > 0 ? "right" : current < 0 ? "left" : "none" };
+    },
+    /** Concave mirror with focal length f (> 0) and an object dObj in front: image distance (+ = in front, real). */
+    mirror(f, dObj) {
+      if (Math.abs(dObj - f) < 1e-9) return { dImg: Infinity, m: Infinity, real: false, upright: true };
+      const dImg = (f * dObj) / (dObj - f);
+      const m = -dImg / dObj;
+      return { dImg, m, real: dImg > 0, upright: m > 0 };
+    },
+    /** Uniform circular motion of mass m (kg) at speed v (m/s) on radius r (m). */
+    circular(m, v, r) {
+      return { force: (m * v * v) / r, accel: (v * v) / r, period: v ? (2 * Math.PI * r) / v : Infinity, omega: v / r };
+    },
+    /**
+     * Elements 1–20: group, period, valence electrons, shells, kind, covalent radius (pm), Pauling
+     * electronegativity (null for the noble gases) and first ionisation energy (kJ/mol).
+     */
+    periodic(z) {
+      const rows = {
+        1: [1, 31, 2.2, 1312, "non-metal"], 2: [18, 28, null, 2372, "noble gas"], 3: [1, 128, 0.98, 520, "metal"], 4: [2, 96, 1.57, 900, "metal"],
+        5: [13, 84, 2.04, 801, "metalloid"], 6: [14, 76, 2.55, 1086, "non-metal"], 7: [15, 71, 3.04, 1402, "non-metal"], 8: [16, 66, 3.44, 1314, "non-metal"],
+        9: [17, 57, 3.98, 1681, "non-metal"], 10: [18, 58, null, 2081, "noble gas"], 11: [1, 166, 0.93, 496, "metal"], 12: [2, 141, 1.31, 738, "metal"],
+        13: [13, 121, 1.61, 578, "metal"], 14: [14, 111, 1.9, 787, "metalloid"], 15: [15, 107, 2.19, 1012, "non-metal"], 16: [16, 105, 2.58, 1000, "non-metal"],
+        17: [17, 102, 3.16, 1251, "non-metal"], 18: [18, 106, null, 1521, "noble gas"], 19: [1, 203, 0.82, 419, "metal"], 20: [2, 176, 1.0, 590, "metal"],
+      };
+      const n = kit.clamp(Math.round(z), 1, 20);
+      const [group, radius, electronegativity, ionization, kind] = rows[n];
+      const { symbol, name, shells } = kit.physics.element(n);
+      const valence = n === 2 ? 2 : group <= 2 ? group : group - 10;
+      return { z: n, symbol, name, group, period: shells.length, valence, shells, radius, electronegativity, ionization, kind };
+    },
+    /**
+     * A + B ⇌ C. Start concentrations a0, b0, c0 (mol/L), temperature in °C, K at 25 °C (L/mol) and ΔH of the forward
+     * reaction in kJ/mol (negative = exothermic). Returns the equilibrium concentrations, K at that temperature,
+     * the starting quotient Q and which way the mixture shifts.
+     */
+    equilibrium(a0, b0, c0, tempC, K25, dH) {
+      const T = (tempC == null ? 25 : tempC) + 273.15;
+      const K = (K25 == null ? 2 : K25) * Math.exp(((-(dH == null ? -40 : dH) * 1000) / 8.314) * (1 / T - 1 / 298.15));
+      // K (a0 − x)(b0 − x) = c0 + x; the smaller root lies between −c0 and min(a0, b0).
+      const qb = -(K * (a0 + b0) + 1);
+      const qc = K * a0 * b0 - c0;
+      const x = (-qb - Math.sqrt(Math.max(0, qb * qb - 4 * K * qc))) / (2 * K);
+      const clean = (v) => (Math.abs(v) < 1e-12 ? 0 : v);
+      const formed = clean(x);
+      return { a: clean(a0 - x), b: clean(b0 - x), c: clean(c0 + x), K, Q: a0 * b0 > 0 ? c0 / (a0 * b0) : Infinity, formed, shift: Math.abs(formed) < 1e-9 ? "none" : formed > 0 ? "right" : "left" };
+    },
+    /**
+     * Enzyme reaction rate in % of the best rate: it doubles every 10 °C up to the best temperature, falls fast
+     * above it (the enzyme denatures) and falls on both sides of the best pH.
+     */
+    enzyme(tempC, pH, bestTemp, bestPH) {
+      const tBest = bestTemp == null ? 37 : bestTemp;
+      const pBest = bestPH == null ? 7 : bestPH;
+      const fT = tempC <= tBest ? Math.pow(2, (tempC - tBest) / 10) : Math.exp(-Math.pow((tempC - tBest) / 8, 2));
+      const fP = Math.exp(-Math.pow((pH - pBest) / 1.5, 2));
+      return { rate: 100 * fT * fP, denatured: tempC >= tBest + 10 || Math.abs(pH - pBest) >= 3, tempFactor: fT, pHFactor: fP };
+    },
+    /** The parts of a plant and an animal cell, in the order the cellParts component numbers them (0–7). */
+    cellParts: [
+      { name: "Nucleus", job: "holds the DNA and controls the cell", plant: true, animal: true },
+      { name: "Cell membrane", job: "controls what goes in and out", plant: true, animal: true },
+      { name: "Cytoplasm", job: "jelly where most reactions happen", plant: true, animal: true },
+      { name: "Mitochondria", job: "release energy from glucose (respiration)", plant: true, animal: true },
+      { name: "Ribosomes", job: "make proteins", plant: true, animal: true },
+      { name: "Cell wall", job: "strengthens and supports the cell", plant: true, animal: false },
+      { name: "Chloroplasts", job: "absorb light for photosynthesis", plant: true, animal: false },
+      { name: "Permanent vacuole", job: "stores cell sap and keeps the cell firm", plant: true, animal: false },
+    ],
+    /** One cell part (index 0–7) and whether a cell of this kind (0 animal, 1 plant) has it. */
+    cellPart(index, kind) {
+      const part = kit.physics.cellParts[kit.clamp(Math.round(index), 0, 7)];
+      const count = kit.physics.cellParts.filter((p) => (kind ? p.plant : p.animal)).length;
+      return Object.assign({}, part, { present: kind ? part.plant : part.animal, partsInCell: count });
+    },
+    /** Rock cycle: rock 0 magma, 1 igneous, 2 sediment, 3 sedimentary, 4 metamorphic; the processes that change it. */
+    rockCycle(rock) {
+      const names = ["Magma", "Igneous rock", "Sediment", "Sedimentary rock", "Metamorphic rock"];
+      const weather = { process: "weathering and erosion", to: 2 };
+      const heat = { process: "heat and pressure", to: 4 };
+      const melt = { process: "melting", to: 0 };
+      const next = [[{ process: "cooling", to: 1 }], [weather, heat, melt], [{ process: "compaction and cementation", to: 3 }], [weather, heat, melt], [weather, melt]];
+      const r = kit.clamp(Math.round(rock), 0, 4);
+      return { rock: r, name: names[r], next: next[r].map((s) => Object.assign({ name: names[s.to] }, s)), names };
+    },
+    /**
+     * Image of points [[x, y], …]: kind 0 translate by (a, b); 1 reflect in the x-axis (a = 0), y-axis (a = 1) or
+     * y = x (a = 2); 2 rotate a degrees anticlockwise about the origin; 3 enlarge by scale factor a about the origin.
+     */
+    transform(points, kind, a, b) {
+      const r = (Number(a) * Math.PI) / 180;
+      const map = [
+        ([x, y]) => [x + a, y + (b || 0)],
+        ([x, y]) => (a === 2 ? [y, x] : a === 1 ? [-x, y] : [x, -y]),
+        ([x, y]) => [x * Math.cos(r) - y * Math.sin(r), x * Math.sin(r) + y * Math.cos(r)],
+        ([x, y]) => [x * a, y * a],
+      ][kit.clamp(Math.round(kind), 0, 3)];
+      const tidy = (v) => (Math.abs(v - Math.round(v)) < 1e-9 ? Math.round(v) : Number(v.toFixed(6))) || 0;
+      return points.map((p) => map(p).map(tidy));
+    },
+
     /** `count` samples of `size` from a population with `percent` % red; one interval per sample at `level` % confidence. */
     intervals(percent, size, level, count) {
       const Z = { 80: 1.282, 90: 1.645, 95: 1.96, 99: 2.576 };
@@ -1848,6 +1982,14 @@ svg.simkit-dragging .simkit-grip { fill-opacity: 0.26; stroke-opacity: 0.85; }
       update();
       travel(before);
       renderCard(changedStep);
+      // Inside the teacher app: say which step is showing (it preselects that step for a change request).
+      if (window.parent !== window) {
+        try {
+          window.parent.postMessage({ source: "edu-lab", step: current }, location.origin === "null" ? "*" : location.origin);
+        } catch (e) {
+          /* a lesson opened from a file has no parent to tell */
+        }
+      }
     }
 
     // ---------- Task card ----------

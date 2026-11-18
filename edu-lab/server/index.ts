@@ -7,6 +7,7 @@ import { ROOT, config } from "./env.ts";
 import { buildLessonHtml } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
 import { thumbnail } from "./thumbnail.ts";
+import { catalog } from "./catalog.ts";
 import { DATA, approveDraft, deleteDraft, getDraft, hasPrevious, listDrafts, newDraft, recoverInterrupted, runStage, undoRevision, type Stage } from "./pipeline.ts";
 
 const app = express();
@@ -50,7 +51,10 @@ app.get("/api/drafts", (_req, res) => {
 
 const draftJson = (id: string) => {
   const d = getDraft(id);
-  return d && { ...d, hasPrevious: hasPrevious(id) };
+  if (!d) return null;
+  // The plan screen shows components by name ("Rock cycle"), not by id ("rockCycle").
+  const names = new Map(catalog().map((c) => [c.id, c.name]));
+  return { ...d, hasPrevious: hasPrevious(id), componentNames: (d.plan?.components || []).map((c) => names.get(c) || c) };
 };
 
 app.get("/api/drafts/:id", (req, res) => {

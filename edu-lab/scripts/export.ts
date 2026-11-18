@@ -52,6 +52,21 @@ for (const { item, lesson: found } of lessons) {
   console.log(`wrote ${name}.html  (${Math.round(html.length / 1024)} kB)`);
 }
 
+// The hosted teacher app (EDU_APP_URL, e.g. the Render address), when there is one: a button to create a lesson.
+const appUrl = process.env.EDU_APP_URL || "";
+const create = appUrl
+  ? `<a class="button" href="${escapeHtml(appUrl)}">Create a lesson</a>`
+  : "";
+const note = appUrl ? `<p class="note">Free demo server: the first visit after a quiet spell can take about a minute to wake up.</p>\n` : "";
+
+// The demo video (npm run demo-video), when there is one: shown above the lessons, loaded only when played.
+const demo = existsSync(join(OUT, "video", "creating-a-lesson.mp4"))
+  ? `<figure class="demo">
+<video controls preload="none" playsinline poster="video/creating-a-lesson.jpg"><source src="video/creating-a-lesson.mp4" type="video/mp4"></video>
+</figure>
+<p class="section">Try the example lessons</p>
+`
+  : "";
 writeFileSync(
   join(OUT, "index.html"),
   `<!doctype html>
@@ -64,8 +79,16 @@ writeFileSync(
 ${readFileSync(join(ROOT, "template", "tokens.css"), "utf8")}
 body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
 main { max-width: 1152px; margin: 0 auto; padding: 48px 24px 72px; }
-h1 { margin: 0 0 8px; font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
-.lead { margin: 0 0 40px; max-width: 65ch; font-size: 16px; line-height: 1.55; color: var(--muted); }
+header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; margin: 0 0 40px; }
+h1 { margin: 0; font-size: 28px; line-height: 44px; font-weight: 700; letter-spacing: -0.02em; }
+.button { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; transition: background 150ms; }
+.button::after { content: "→"; margin-left: 8px; transition: transform 150ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) { .button:hover { background: var(--ink-2); } .button:hover::after { transform: translateX(3px); } }
+.button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.note { margin: 0 auto 32px; max-width: 80ch; text-wrap: balance; text-align: center; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+.demo { margin: 0 0 56px; }
+.demo video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; background: #2a0d07; box-shadow: var(--shadow); }
+.section { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 36px 24px; }
 a { display: block; color: inherit; text-decoration: none; }
 .thumb { aspect-ratio: 1000 / 560; border-radius: 14px; overflow: hidden; background: var(--paper); box-shadow: var(--shadow); }
@@ -80,9 +103,8 @@ li p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
 </head>
 <body>
 <main>
-<h1>Edu Lab</h1>
-<p class="lead">Interactive science lessons generated from a teacher's one-sentence request. Each lesson has five steps and then free exploration; where a dashed ring marks an object, it can be dragged. Every page is one self-contained file and no AI runs while it is used.</p>
-<ul>
+<header><h1>Edu Lab</h1>${create}</header>
+${note}${demo}<ul>
 ${cards.join("\n")}
 </ul>
 </main>

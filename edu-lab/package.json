@@ -14,7 +14,8 @@
     "regenerate": "tsx scripts/regenerate.ts",
     "eval": "tsx scripts/eval.ts",
     "export": "tsx scripts/export.ts",
-    "check": "tsx scripts/check.ts"
+    "check": "tsx scripts/check.ts",
+    "demo-video": "tsx scripts/demo-video.ts"
   },
   "engines": {
     "node": ">=22.13"
