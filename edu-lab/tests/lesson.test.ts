@@ -120,7 +120,7 @@ test("a lesson's math gets only the KaTeX fonts it uses", () => {
   assert.ok(fonts("$\\left(\\dfrac{a}{b}\\right)$").some((f) => f.startsWith("KaTeX_Size")));
 });
 
-test("lesson code is checked in a sandbox: an endless check() is stopped, not hung", { timeout: 15_000 }, () => {
+test("lesson code is checked in a sandbox: an endless check() is stopped, not hung", { timeout: 25_000 }, () => {
   const looping = tiny().replace("check: (s, d) => d.double === 8", "check: (s, d) => { while (true); }");
   assert.throws(() => checkLesson(looping), /longer than \d+ s/);
 });

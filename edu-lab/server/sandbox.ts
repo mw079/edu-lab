@@ -15,12 +15,18 @@ const READABLE = ["server/sandbox-run.ts", "server/lesson.ts", "server/html.ts",
 
 /** Load lesson.js and run validateLesson on it in the sandbox. Throws if the code does not load or takes too long. */
 export function checkLesson(lessonJs: string): ValidationReport {
-  const r = spawnSync(
-    process.execPath,
-    ["--experimental-strip-types", "--disable-warning=ExperimentalWarning", "--permission", ...READABLE, join(HERE, "sandbox-run.ts")],
-    { input: lessonJs, encoding: "utf8", timeout: SANDBOX_TIMEOUT_MS, env: {}, maxBuffer: 8 * 1024 * 1024 },
-  );
-  if ((r.error as NodeJS.ErrnoException | undefined)?.code === "ETIMEDOUT" || r.signal)
+  const run = () =>
+    spawnSync(
+      process.execPath,
+      ["--experimental-strip-types", "--disable-warning=ExperimentalWarning", "--permission", ...READABLE, join(HERE, "sandbox-run.ts")],
+      { input: lessonJs, encoding: "utf8", timeout: SANDBOX_TIMEOUT_MS, env: {}, maxBuffer: 8 * 1024 * 1024 },
+    );
+  const timedOut = (r: ReturnType<typeof run>) => (r.error as NodeJS.ErrnoException | undefined)?.code === "ETIMEDOUT" || Boolean(r.signal);
+  // A check normally takes under 0.1 s. A busy machine can stall the new process past the limit once, so a time-out
+  // is tried again before the lesson is blamed for an endless loop.
+  let r = run();
+  if (timedOut(r)) r = run();
+  if (timedOut(r))
     throw new Error(`Running the lesson's expressions took longer than ${SANDBOX_TIMEOUT_MS / 1000} s; one of them probably never finishes (an endless loop)`);
   if (r.error) throw r.error;
   let out: ValidationReport & { error?: string };

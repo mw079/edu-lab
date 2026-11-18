@@ -45,6 +45,9 @@ Drafts live in `data/lessons/<id>/` with every model reply (`llm/`); the check s
 
 ## Run
 
+Needs Node 22.13 or later and Chrome for the checks and card pictures: an installed Google Chrome is used,
+otherwise Playwright's Chromium (`npx playwright install chromium` once).
+
 ```sh
 npm install
 npm run build          # teacher app
