@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Teacher-facing generator for interactive science lessons.",
   "scripts": {
-    "dev": "concurrently -k -n server,web \"tsx watch server/index.ts\" \"vite\"",
+    "dev": "concurrently -k -n server,web \"PORT=8787 tsx watch server/index.ts\" \"vite\"",
     "start": "tsx server/index.ts",
     "build": "vite build",
     "test": "tsx --test tests/*.test.ts",
