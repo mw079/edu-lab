@@ -9,7 +9,8 @@ import type { ValidationReport } from "./lesson.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
-const SANDBOX_TIMEOUT_MS = 5000;
+// A slow host (a free server has a tenth of a CPU) needs more time just to start Node: EDU_SANDBOX_TIMEOUT_MS.
+const SANDBOX_TIMEOUT_MS = Number(process.env.EDU_SANDBOX_TIMEOUT_MS) || 5000;
 
 const READABLE = ["server/sandbox-run.ts", "server/lesson.ts", "server/html.ts", "simkit/core.js", "package.json"].map((f) => `--allow-fs-read=${join(ROOT, f)}`);
 

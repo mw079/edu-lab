@@ -1,5 +1,5 @@
 // Usage: npm run export
-// Writes the lessons listed in showcase.json as static pages to ../docs (GitHub Pages can serve that folder):
+// Writes the lessons listed in showcase.json as static pages to ../docs (the server serves that folder at /):
 // docs/index.html, docs/lessons/<name>.html (each one self-contained and offline) and docs/thumbs/<name>.png.
 // Costs nothing: it only assembles lessons that already exist.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -52,8 +52,9 @@ for (const { item, lesson: found } of lessons) {
   console.log(`wrote ${name}.html  (${Math.round(html.length / 1024)} kB)`);
 }
 
-// The hosted teacher app (EDU_APP_URL, e.g. the Render address), when there is one: a button to create a lesson.
-const appUrl = process.env.EDU_APP_URL || "";
+// The teacher app: the server serves this website at / and the app at /app/ (EDU_APP_URL= hides the button, e.g.
+// for a copy of the website hosted without the server).
+const appUrl = process.env.EDU_APP_URL ?? "app/";
 const create = appUrl
   ? `<a class="button" href="${escapeHtml(appUrl)}">Create a lesson</a>`
   : "";

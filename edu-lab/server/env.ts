@@ -19,6 +19,12 @@ if (existsSync(file)) {
 
 export const config = {
   port: Number(process.env.PORT || 8787),
+  /** 0.0.0.0 on a host (Dockerfile); only this computer otherwise. */
+  host: process.env.HOST || "127.0.0.1",
+  /** When set, the teacher app and API ask for this password (the website and its example lessons stay open). */
+  password: process.env.EDU_PASSWORD || "",
+  /** When set, at most this many model runs (new lessons, changes, retries) a day. */
+  dailyLimit: Number(process.env.EDU_DAILY_LIMIT || 0),
   fireworksKey: process.env.FIREWORKS_API_KEY || "",
   model: process.env.FIREWORKS_MODEL || "accounts/fireworks/models/glm-5p3-flash",
 };

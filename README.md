@@ -7,7 +7,7 @@ offline HTML file, with no AI running.
 ![Dragging the incoming ray in a generated lesson on Snell's law, then solving the step](docs/img/drag.gif)
 
 **Try the lessons:** open [`docs/index.html`](docs/index.html) in a browser (six example lessons, no install).
-The same folder can be served with GitHub Pages.
+Hosted, the server shows this same site at `/` and the teacher app at `/app/` (see "Host it" in `edu-lab/README.md`).
 
 **Watch a lesson being made** (55 s, with music; a real lesson, generated live):
 

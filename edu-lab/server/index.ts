@@ -7,11 +7,22 @@ import { ROOT, config } from "./env.ts";
 import { buildLessonHtml } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
 import { thumbnail } from "./thumbnail.ts";
+import { dailyLimit, passwordGate } from "./guard.ts";
 import { catalog } from "./catalog.ts";
 import { DATA, approveDraft, deleteDraft, getDraft, hasPrevious, listDrafts, newDraft, recoverInterrupted, runStage, undoRevision, type Stage } from "./pipeline.ts";
 
 const app = express();
 app.use(express.json({ limit: "400kb" }));
+
+// The public website (../docs: the demo video and the example lessons) at /, open to everyone. It is static, so
+// no AI runs there. Everything after this (the teacher app at /app/, the API) sits behind the password, if set.
+const SITE = join(ROOT, "..", "docs");
+if (existsSync(join(SITE, "index.html"))) app.use(express.static(SITE, { index: "index.html" }));
+app.use(passwordGate(config.password));
+// Model work (new lessons, change requests, retries) counts toward the daily limit.
+const limit = dailyLimit(config.dailyLimit);
+const MODEL_WORK = /^\/api\/drafts(\/[^/]+\/(revise|plan|design|build))?$/;
+app.use((req, res, next) => (req.method === "POST" && MODEL_WORK.test(req.path) ? limit(req, res, next) : next()));
 const EXAMPLES = join(ROOT, "examples");
 const ID = /^[a-z0-9-]+$/;
 
@@ -152,13 +163,12 @@ app.get("/lessons/:id/thumb.png", async (req, res) => {
   }
 });
 
+// The teacher app (npm run build) at /app/.
 const web = join(ROOT, "dist", "web");
-if (existsSync(web)) {
-  app.use(express.static(web));
-  app.get("/", (_req, res) => res.sendFile(join(web, "index.html")));
-}
+if (existsSync(web)) app.use("/app", express.static(web));
 
 recoverInterrupted();
-app.listen(config.port, "127.0.0.1", () => {
-  console.log(`Edu Lab on http://127.0.0.1:${config.port}  (model: ${config.model}, key: ${config.fireworksKey ? "set" : "MISSING"})`);
+app.listen(config.port, config.host, () => {
+  const guard = `${config.password ? "password on" : "no password"}, ${config.dailyLimit > 0 ? `${config.dailyLimit} runs a day` : "no daily limit"}`;
+  console.log(`Edu Lab on http://${config.host}:${config.port}  (model: ${config.model}, key: ${config.fireworksKey ? "set" : "MISSING"}, ${guard})`);
 });
