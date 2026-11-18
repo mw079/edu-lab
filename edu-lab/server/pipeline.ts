@@ -332,6 +332,8 @@ async function build(d: Draft) {
   d.check = { ok: r.ok, errors: r.errors, layout: r.layout, levels: r.levels.map(({ level, startsUnsolved, solvedViaUi }) => ({ level, startsUnsolved, solvedViaUi })) };
   writeFileSync(join(dirOf(d.id), "scene.js"), accepted.scene + "\n");
   writeFileSync(join(dirOf(d.id), "lesson.js"), accepted.js);
+  // The screenshots were only needed for the checks; a failed build keeps them for debugging.
+  for (const name of ["screenshots", "screenshots-review"]) rmSync(shots(name), { recursive: true, force: true });
   d.status = "ready";
 }
 
@@ -371,21 +373,6 @@ async function reviewAndFix(d: Draft, design: Design, messages: Message[], accep
   return accepted;
 }
 
-/** Run only the visual review (and its fix round) on a finished lesson's current simulation. */
-export async function reviewExisting(d: Draft): Promise<void> {
-  if (!d.design || !existsSync(join(dirOf(d.id), "scene.js"))) throw new Error("No finished simulation to review");
-  const scene = readFileSync(join(dirOf(d.id), "scene.js"), "utf8").trim();
-  const messages = [...sceneMessages(d, d.design), { role: "assistant" as const, content: "```js\n" + scene + "\n```" }];
-  const accepted = await tryScene(d, d.design, messages[messages.length - 1].content as string, join(dirOf(d.id), "screenshots"));
-  if (!accepted.report.ok) throw new Error("The current simulation does not pass the browser check");
-  const kept = await reviewAndFix(d, d.design, messages, accepted);
-  writeFileSync(join(dirOf(d.id), "scene.js"), kept.scene + "\n");
-  writeFileSync(join(dirOf(d.id), "lesson.js"), kept.js);
-  d.activity = undefined;
-  saveDraft(d);
-}
-
-
 /** Ask the vision model what a student would notice in the step screenshots. Never throws: no review = no issues. */
 async function visualReview(d: Draft, design: Design, images: string[]): Promise<ReviewIssue[]> {
   if (!images.length) return [];
@@ -422,7 +409,9 @@ export async function reviewFinal(d: Draft): Promise<ReviewIssue[]> {
   const dir = join(dirOf(d.id), "screenshots-final");
   rmSync(dir, { recursive: true, force: true });
   const report = await browserCheck(buildLessonHtml(readFileSync(join(dirOf(d.id), "lesson.js"), "utf8"), d.design.title), dir);
-  return visualReview(d, d.design, report.stageShots);
+  const issues = await visualReview(d, d.design, report.stageShots);
+  rmSync(dir, { recursive: true, force: true });
+  return issues;
 }
 
 /** Drafts left "working" by a stopped server can never finish; mark them failed so they can be retried. */

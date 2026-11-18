@@ -4,10 +4,6 @@ A teacher describes a science lesson (optionally pasting a textbook section); Ed
 five-step interactive simulation, checks it automatically and lets the teacher review it. Inspired by
 Google's "Harnessing Generative UI for Education: Tailored Learning Interactives" (arXiv 2609.20738).
 
-Status: **M0–M4 done** (90-component library, lesson template, two worked examples, automatic checks, generator
-with teacher review, visual review and evaluation set) and **M5** (53 of the 90 components can be dragged or
-clicked directly; the rest use sliders).
-
 ![A generated lesson: the simulation on the left, one task card on the right](../docs/img/lesson.png)
 
 Six example lessons are exported as static pages in [`../docs/`](../docs/index.html) (`npm run export`).
@@ -25,7 +21,7 @@ The model only fills in small, checked pieces; templates and examples do the res
 
 Each step gets up to two fix rounds with the check results sent back to the model. `assembleLesson`
 turns `design.json` + `scene.js` into `lesson.js`; the model never writes the UI or the level logic.
-Drafts live in `data/lessons/<id>/` with every model reply (`llm/`) and screenshots.
+Drafts live in `data/lessons/<id>/` with every model reply (`llm/`); the check screenshots are deleted once a lesson is ready.
 
 - **Source text**: the teacher can paste a textbook section or notes; the plan and design steps base the
   lesson on it (`server/source.ts`, first 12k characters). The app never reads from the web.
@@ -108,7 +104,7 @@ then open. A teacher can delete their own lessons (moved to `data/trash/`, not e
 | M2 | Pipeline plan → steps → simulation with check-and-fix rounds; teacher app; redesign; LaTeX; pasted source text | done |
 | M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on 10 requests | done |
 | M4 | More components (toward 50–100 objects) and example lessons | 90 components across physics, chemistry, biology, earth science, astronomy, maths, computer science and data; second example lesson (pendulum) |
-| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 53 components: pendulum, number line, lever, lens, scatter plot, spring, carts, projectile, right triangle, bar chart, charges, coordinate plane, protractor, incline, refraction, wave, orbit, vector sum, unit circle, plate boundary, water cycle, predator–prey, pH scale, gravity pair, tipping point, cuboid net, ratio line, heart and lungs, food chain, buffer, ocean gyre, feedback loop, earthquake, heat engine, shape builder, cut axis, pulley, gears (drag); binary bits, fraction bars, logic gate, membrane, DNA strand, mitosis, solar system, star life cycle, codon chain, robot grid, sampling box, cell respiration, land use, open sets, confidence intervals (click) |
+| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 53 of 90 components (each snippet's "Direct interaction" note says how) |
 
 ### Evaluation (`eval/requests.json`)
 

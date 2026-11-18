@@ -4,7 +4,7 @@ The rules the fixed parts follow: `template/tokens.css` (shared tokens), the les
 the component library (`simkit/`) and the teacher app (`web/`). The model never reads this file; it writes
 scene code with components that already follow it, so every lesson inherits it.
 
-Sources (reference copies in `../design-skills/`): Emil Kowalski's skills (motion, gestures, polish),
+Sources (kept outside this repo): Emil Kowalski's skills (motion, gestures, polish),
 impeccable's craft floor and "operate" mode (a working tool, not a showcase), taste-skill's timing values.
 
 ## 1. What the page is

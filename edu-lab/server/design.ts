@@ -44,7 +44,7 @@ const json = (v: unknown) => JSON.stringify(v ?? null);
 const KEY = /^[A-Za-z_$][\w$]*$/;
 
 /** Syntax-check every expression on its own so errors point at the exact field. */
-export function checkExpressions(design: Design): Issue[] {
+function checkExpressions(design: Design): Issue[] {
   const issues: Issue[] = [];
   const tryExpr = (src: unknown, where: string, level?: number) => {
     if (typeof src !== "string" || !src.trim()) return issues.push({ level, message: `${where} must be a non-empty expression string` });

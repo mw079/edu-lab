@@ -4,4 +4,3 @@ node_modules/
 edu-lab/dist/
 edu-lab/data/
 .claude/settings.local.json
-design-skills/*/
