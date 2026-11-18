@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { lessonSourceFromDir } from "../server/design.ts";
 import { buildLessonHtml, loadLesson, validateLesson } from "../server/lesson.ts";

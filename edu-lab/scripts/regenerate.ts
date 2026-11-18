@@ -2,7 +2,7 @@
 // Re-runs the pipeline for the named lessons only (default: from "design", keeping the approved plan).
 // "--from build" redraws the simulation and keeps the steps. Lessons are run one at a time to stay
 // under the API rate limit; each lesson's folder is backed up to data/backups/ first.
-import { cpSync, existsSync, mkdirSync } from "node:fs";
+import { cpSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { DATA, getDraft, runAll, type Stage } from "../server/pipeline.ts";
 
