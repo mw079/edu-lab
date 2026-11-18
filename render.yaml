@@ -13,6 +13,9 @@ services:
         sync: false
       - key: EDU_DAILY_LIMIT
         value: "20"
+      # The demo keeps no lessons: one a visitor created is erased 14 minutes after anyone last opened or changed it.
+      - key: EDU_LESSON_MINUTES
+        value: "14"
       # The free plan has a tenth of a CPU: give the lesson-code check more time to start.
       - key: EDU_SANDBOX_TIMEOUT_MS
         value: "20000"

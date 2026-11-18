@@ -6,7 +6,7 @@
 // teacher can ask for changes (revise): the model decides whether the picture or the steps change, and the new
 // version replaces the old one only if it passes every check (the old one is kept in previous/ for Undo).
 // Drafts live in data/lessons/<id>/ (draft.json, design.json, scene.js, lesson.js, llm/ replies, screenshots/).
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { DATA_ROOT, ROOT } from "./env.ts";
@@ -83,6 +83,39 @@ export function newDraft(request: string, audience: string, sourceText?: string)
   if (sourceText?.trim()) d.source = { text: cleanText(sourceText) };
   saveDraft(d);
   return d;
+}
+
+// ---------- Lessons that expire (a hosted demo keeps no lessons) ----------
+
+const lastUsed = new Map<string, number>();
+
+/** Note that someone opened or changed this lesson (the server calls it for every request about a lesson). */
+export function touchDraft(id: string, at = Date.now()) {
+  if (getDraft(id)) lastUsed.set(id, at);
+}
+
+/**
+ * Erase (not move to trash) every lesson a teacher created that nobody has opened or changed for `ttlMs`, and
+ * empty the trash. A lesson still being made counts as in use. The examples live in examples/ and are never
+ * touched. Returns the ids erased.
+ */
+export function expireDrafts(ttlMs: number, now = Date.now()): string[] {
+  const erased: string[] = [];
+  for (const d of listDrafts()) {
+    if (d.eval) continue;
+    if (running.has(d.id)) {
+      lastUsed.set(d.id, now);
+      continue;
+    }
+    // After a restart nothing is in memory yet: the last save is the last use.
+    const last = lastUsed.get(d.id) ?? statSync(join(dirOf(d.id), "draft.json")).mtimeMs;
+    if (now - last < ttlMs) continue;
+    rmSync(dirOf(d.id), { recursive: true, force: true });
+    lastUsed.delete(d.id);
+    erased.push(d.id);
+  }
+  rmSync(join(DATA_ROOT, "trash"), { recursive: true, force: true });
+  return erased;
 }
 
 // ---------- Running a stage ----------

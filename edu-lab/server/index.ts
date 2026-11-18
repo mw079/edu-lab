@@ -6,10 +6,10 @@ import { AUDIENCES, audienceLevel } from "./audience.ts";
 import { ROOT, config } from "./env.ts";
 import { buildLessonHtml } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
-import { thumbnail } from "./thumbnail.ts";
+import { forgetThumbnails, thumbnail } from "./thumbnail.ts";
 import { dailyLimit, passwordGate } from "./guard.ts";
 import { catalog } from "./catalog.ts";
-import { DATA, approveDraft, deleteDraft, getDraft, hasPrevious, listDrafts, newDraft, recoverInterrupted, runStage, undoRevision, type Stage } from "./pipeline.ts";
+import { DATA, approveDraft, deleteDraft, expireDrafts, getDraft, hasPrevious, listDrafts, newDraft, recoverInterrupted, runStage, touchDraft, undoRevision, type Stage } from "./pipeline.ts";
 
 const app = express();
 app.use(express.json({ limit: "400kb" }));
@@ -19,6 +19,12 @@ app.use("/video", express.static(join(ROOT, "..", "docs", "video")));
 app.use(passwordGate(config.password));
 // Model work (new lessons, change requests, retries) counts toward the daily limit.
 const limit = dailyLimit(config.dailyLimit);
+// Any request about one lesson (opening, previewing, changing it) counts as using it.
+app.use((req, _res, next) => {
+  const id = req.path.match(/^\/(?:api\/drafts|lessons)\/([a-z0-9-]+)/)?.[1];
+  if (id) touchDraft(id);
+  next();
+});
 const MODEL_WORK = /^\/api\/drafts(\/[^/]+\/(revise|plan|design|build))?$/;
 app.use((req, res, next) => (req.method === "POST" && MODEL_WORK.test(req.path) ? limit(req, res, next) : next()));
 const EXAMPLES = join(ROOT, "examples");
@@ -166,7 +172,14 @@ const web = join(ROOT, "dist", "web");
 if (existsSync(web)) app.use(express.static(web));
 
 recoverInterrupted();
+// A hosted demo keeps no lessons: those nobody has used for EDU_LESSON_MINUTES are erased (checked every minute).
+if (config.lessonMinutes > 0)
+  setInterval(() => expireDrafts(config.lessonMinutes * 60_000).forEach(forgetThumbnails), 60_000).unref();
 app.listen(config.port, config.host, () => {
-  const guard = `${config.password ? "password on" : "no password"}, ${config.dailyLimit > 0 ? `${config.dailyLimit} runs a day` : "no daily limit"}`;
+  const guard = [
+    config.password ? "password on" : "no password",
+    config.dailyLimit > 0 ? `${config.dailyLimit} runs a day` : "no daily limit",
+    config.lessonMinutes > 0 ? `lessons erased after ${config.lessonMinutes} idle min` : "lessons kept",
+  ].join(", ");
   console.log(`Edu Lab on http://${config.host}:${config.port}  (model: ${config.model}, key: ${config.fireworksKey ? "set" : "MISSING"}, ${guard})`);
 });

@@ -70,10 +70,11 @@ app (with the demo video above the lessons) and Chromium for the checks.
 1. Push the repository to GitHub.
 2. On render.com: **New → Blueprint**, pick the repository, and paste the Fireworks API key when asked.
 3. Open the `onrender.com` address Render shows. After 15 idle minutes the free service sleeps; the next visit
-   takes about a minute to wake it. Lessons made there disappear when it restarts.
+   takes about a minute to wake it.
 
 Settings (in Render's Environment tab): `EDU_DAILY_LIMIT` caps new lessons, changes and retries per day for
-everyone together (20; the count resets on restart), `EDU_PASSWORD` asks for a password before the teacher app
+everyone together (20; the count resets on restart), `EDU_LESSON_MINUTES` erases a lesson a visitor created that many minutes after anyone last opened or changed it,
+and empties the trash (14; the examples are never erased; off on your own computer), `EDU_PASSWORD` asks for a password before the teacher app
 (off), `EDU_SANDBOX_TIMEOUT_MS` gives the lesson-code check more time on the slow free CPU (20000). To try the
 image locally: `docker build -t edu-lab . && docker run -p 10000:10000 --env-file edu-lab/.env edu-lab`.
 

@@ -25,6 +25,8 @@ export const config = {
   password: process.env.EDU_PASSWORD || "",
   /** When set, at most this many model runs (new lessons, changes, retries) a day. */
   dailyLimit: Number(process.env.EDU_DAILY_LIMIT || 0),
+  /** When set, a lesson a teacher created is erased this many minutes after anyone last opened or changed it. */
+  lessonMinutes: Number(process.env.EDU_LESSON_MINUTES || 0),
   fireworksKey: process.env.FIREWORKS_API_KEY || "",
   model: process.env.FIREWORKS_MODEL || "accounts/fireworks/models/glm-5p3-flash",
 };

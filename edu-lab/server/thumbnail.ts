@@ -56,7 +56,7 @@ export function thumbnail(id: string, html: string): Promise<string> {
       });
       const png = await page.screenshot({ clip });
       mkdirSync(DIR, { recursive: true });
-      for (const old of readdirSync(DIR)) if (old.startsWith(`${id}-`) && /^[0-9a-f]{10}\.png$/.test(old.slice(id.length + 1))) rmSync(join(DIR, old));
+      forgetThumbnails(id);
       writeFileSync(file, png);
       return file;
     } finally {
@@ -65,4 +65,10 @@ export function thumbnail(id: string, html: string): Promise<string> {
   });
   queue = job.catch(() => {});
   return job;
+}
+
+/** Remove the cached card pictures of a lesson. */
+export function forgetThumbnails(id: string) {
+  if (!existsSync(DIR)) return;
+  for (const old of readdirSync(DIR)) if (old.startsWith(`${id}-`) && /^[0-9a-f]{10}\.png$/.test(old.slice(id.length + 1))) rmSync(join(DIR, old));
 }
