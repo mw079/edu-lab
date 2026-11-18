@@ -8,14 +8,18 @@ type Draft = {
   id: string;
   request: string;
   audience: string;
-  status: "working" | "planned" | "designed" | "ready" | "failed";
-  stage: "plan" | "design" | "build";
+  status: "working" | "planned" | "designed" | "built" | "ready" | "failed";
+  stage: "plan" | "design" | "build" | "revise";
   activity?: string;
   source?: { text: string };
   plan?: { title: string; audience: string; idea: string; objectives: string[]; components: string[]; fit?: string; note?: string };
   design?: { title: string; subtitle?: string; levels: Level[] };
   error?: string;
-  log: { stage: string; what: string; ms?: number }[];
+  version?: number;
+  hasPrevious?: boolean;
+  notice?: { applied: boolean; text: string };
+  revisions?: { at: string; note: string; step?: number }[];
+  log: { at: string; stage: string; what: string; ms?: number }[];
 };
 
 async function api<T>(path: string, body?: unknown, method?: string): Promise<T> {
@@ -62,7 +66,7 @@ function Home() {
   }, []);
   const shown = lessons?.filter((l) => filter === "All" || l.audience === filter);
   const remove = async (id: string, title: string) => {
-    if (!confirm(`Delete "${title}"? Students will no longer be able to open it.`)) return;
+    if (!confirm(`Delete "${title}"?`)) return;
     try {
       await api(`/api/drafts/${id}`, undefined, "DELETE");
       setLessons((list) => list && list.filter((l) => l.id !== id));
@@ -121,14 +125,91 @@ function Home() {
   );
 }
 
-const statusLabel = (s: string) => ({ working: "Building…", planned: "Plan ready to review", designed: "Steps ready to review", failed: "Failed" })[s] || s;
+const statusLabel = (s: string) => ({ working: "Building…", planned: "Plan ready to review", designed: "Steps ready to review", built: "Lesson ready to review", failed: "Failed" })[s] || s;
 
 const AUDIENCES = ["Middle school", "High school", "Undergraduate"];
 
+/** A lesson in the app. The teacher's own lessons get a bar above it: approve the preview, ask for changes, undo. */
 function LessonView({ id }: { id: string }) {
+  // undefined while loading, null for a built-in example (no draft behind it)
+  const [d, setD] = useState<Draft | null | undefined>(undefined);
+  useEffect(() => {
+    api<Draft>(`/api/drafts/${id}`).then(setD).catch(() => setD(null));
+  }, [id]);
+  useEffect(() => {
+    if (d && d.status !== "built" && d.status !== "ready") location.replace(`#/draft/${id}`); // still being made or changed
+  }, [d?.status]);
+  if (d === undefined) return null;
   return (
-    // The lesson shows its own "← All lessons" link when it is embedded.
-    <iframe className="lesson-view" src={`/lessons/${id}`} title="Lesson" />
+    <div className="lesson-page">
+      {d && <ReviewBar d={d} onChange={setD} />}
+      {/* The lesson shows its own "← All lessons" link when it is embedded. ?v= reloads it after a change. */}
+      <iframe className="lesson-view" src={`/lessons/${id}${d?.version ? `?v=${d.version}` : ""}`} title="Lesson" />
+    </div>
+  );
+}
+
+function ReviewBar({ d, onChange }: { d: Draft; onChange: (d: Draft) => void }) {
+  const [open, setOpen] = useState(false);
+  const [note, setNote] = useState("");
+  const [step, setStep] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const post = async (path: string, body: object = {}) => {
+    setBusy(true);
+    setError("");
+    try {
+      return await api<Draft>(`/api/drafts/${d.id}/${path}`, body);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const approve = async () => {
+    const next = await post("approve");
+    if (next) onChange(next);
+  };
+  const undo = async () => {
+    const next = await post("undo");
+    if (next) onChange(next);
+  };
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (await post("revise", { note, step: step || undefined })) location.hash = `#/draft/${d.id}`;
+  };
+  const preview = d.status === "built";
+  return (
+    <section className={`review-bar${preview ? " preview" : ""}`} aria-label="Review this lesson">
+      <div className="review-row">
+        <div className="review-text">
+          {preview ? (
+            <p><strong>Preview.</strong> <span className="muted">Try every step, then approve it or ask for changes.</span></p>
+          ) : (
+            <p><span className="badge">✓ Approved</span> <span className="muted">This lesson is in the overview.</span></p>
+          )}
+          {d.notice && <p className={`notice small${d.notice.applied ? "" : " warn"}`}>{d.notice.applied ? d.notice.text : `Not changed: ${d.notice.text} The lesson stays as it was.`}</p>}
+        </div>
+        <div className="row">
+          {d.hasPrevious && <button className="link quiet" disabled={busy} onClick={undo}>Undo last change</button>}
+          <button className="btn" aria-expanded={open} disabled={busy} onClick={() => setOpen(!open)}>Request changes</button>
+          {preview && <button className="btn primary" disabled={busy} onClick={approve}>Approve</button>}
+        </div>
+      </div>
+      {open && (
+        <form className="review-form" onSubmit={send}>
+          <select value={step} onChange={(e) => setStep(Number(e.target.value))} aria-label="Which part">
+            <option value={0}>Whole lesson</option>
+            {(d.design?.levels || []).map((l, i) => (
+              <option key={i} value={i + 1}>Step {i + 1}: {l.title}</option>
+            ))}
+          </select>
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} required autoFocus placeholder="e.g. Use a 9 V battery in this step, or: make the resistor labels bigger" />
+          <button className="btn primary" disabled={busy || note.trim().length < 3}>Send</button>
+        </form>
+      )}
+      {error && <p className="error small">{error}</p>}
+    </section>
   );
 }
 
@@ -195,14 +276,14 @@ function DraftView({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [d?.status]);
   useEffect(() => {
-    if (d?.status === "ready") location.replace(`#/lesson/${id}`);
+    if (d?.status === "built" || d?.status === "ready") location.replace(`#/lesson/${id}`); // preview or approved
   }, [d?.status]);
   const run = (stage: string, body: object = {}) => api<Draft>(`/api/drafts/${id}/${stage}`, body).then(setD).catch((e: Error) => setError(e.message));
 
   if (error) return <p className="error">{error}</p>;
   if (!d) return <p className="muted">Loading…</p>;
-  if (d.status === "ready") return null;
-  const current = STEPS.findIndex((s) => s.key === d.stage);
+  if (d.status === "built" || d.status === "ready") return null;
+  const current = STEPS.findIndex((s) => s.key === (d.stage === "revise" ? "build" : d.stage));
   return (
     <>
       <a href="#/" className="back">← All lessons</a>
@@ -227,12 +308,16 @@ function DraftView({ id }: { id: string }) {
 }
 
 function Working({ d }: { d: Draft }) {
+  // While a change request runs, show only its own progress and what was asked.
+  const request = d.stage === "revise" ? d.revisions?.at(-1) : undefined;
+  const log = request ? d.log.filter((l) => l.at >= request.at) : d.log;
   return (
     <div className="panel working">
       <span className="spinner" aria-hidden="true" />
       <div>
+        {request && <p className="small">Your request{request.step ? ` (step ${request.step})` : ""}: “{request.note}”</p>}
         <strong>{d.activity || "Working…"}</strong>
-        <p className="muted small">{d.log.map((l) => `${l.what} (${Math.round((l.ms || 0) / 1000)} s)`).join(" · ") || "This usually takes 10–60 seconds per step."}</p>
+        <p className="muted small">{log.map((l) => `${l.what} (${Math.round((l.ms || 0) / 1000)} s)`).join(" · ") || "This usually takes 10–60 seconds per step."}</p>
       </div>
     </div>
   );

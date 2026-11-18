@@ -6,7 +6,7 @@ import { ROOT, config } from "./env.ts";
 import { buildLessonHtml } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
 import { thumbnail } from "./thumbnail.ts";
-import { DATA, deleteDraft, getDraft, listDrafts, newDraft, recoverInterrupted, runStage, type Stage } from "./pipeline.ts";
+import { DATA, approveDraft, deleteDraft, getDraft, hasPrevious, listDrafts, newDraft, recoverInterrupted, runStage, undoRevision, type Stage } from "./pipeline.ts";
 
 const app = express();
 app.use(express.json({ limit: "400kb" }));
@@ -50,9 +50,45 @@ app.get("/api/drafts", (_req, res) => {
   res.json(listDrafts().filter((d) => !d.eval).map(({ id, request, status, stage, createdAt, plan }) => ({ id, request, status, stage, createdAt, title: plan?.title })));
 });
 
+const draftJson = (id: string) => {
+  const d = getDraft(id);
+  return d && { ...d, hasPrevious: hasPrevious(id) };
+};
+
 app.get("/api/drafts/:id", (req, res) => {
-  const d = getDraft(req.params.id);
+  const d = draftJson(req.params.id);
   return d ? res.json(d) : res.status(404).json({ error: "Draft not found" });
+});
+
+// ---------- After the preview: approve, ask for changes, undo the last change ----------
+
+const BUSY = "This lesson is still being worked on. Try again when it has finished.";
+
+app.post("/api/drafts/:id/approve", (req, res) => {
+  const r = approveDraft(req.params.id);
+  if (r === "missing") return res.status(404).json({ error: "Lesson not found" });
+  if (r === "busy") return res.status(409).json({ error: BUSY });
+  if (r === "not-built") return res.status(409).json({ error: "Only a built lesson waiting for review can be approved." });
+  res.json(draftJson(req.params.id));
+});
+
+app.post("/api/drafts/:id/revise", (req, res) => {
+  const d = getDraft(req.params.id);
+  if (!d) return res.status(404).json({ error: "Lesson not found" });
+  if (d.status !== "built" && d.status !== "ready") return res.status(409).json({ error: "Only a built lesson can be changed." });
+  const note = String(req.body?.note || "").trim().slice(0, 1000);
+  if (note.length < 3) return res.status(400).json({ error: "Describe the change you want." });
+  const step = Number(req.body?.step) || undefined;
+  if (!runStage(d, "revise", { note, step })) return res.status(409).json({ error: BUSY });
+  res.status(202).json(draftJson(d.id));
+});
+
+app.post("/api/drafts/:id/undo", (req, res) => {
+  const r = undoRevision(req.params.id);
+  if (r === "missing") return res.status(404).json({ error: "Lesson not found" });
+  if (r === "busy") return res.status(409).json({ error: BUSY });
+  if (r === "nothing") return res.status(409).json({ error: "There is no earlier version to go back to." });
+  res.json(draftJson(req.params.id));
 });
 
 // Deletes a lesson the teacher created, finished or not. The built-in examples cannot be deleted.
@@ -82,7 +118,7 @@ app.post("/api/drafts/:id/:stage(plan|design|build)", (req, res) => {
   const objectives = Array.isArray(req.body?.objectives) ? req.body.objectives.map(String).map((s: string) => s.trim()).filter(Boolean).slice(0, 6) : undefined;
   const note = req.body?.note ? String(req.body.note).slice(0, 1000) : undefined;
   if (!runStage(d, stage, { objectives, note })) return res.status(409).json({ error: "This draft is already working." });
-  res.status(202).json(getDraft(d.id));
+  res.status(202).json(draftJson(d.id));
 });
 
 // ---------- Lesson pages ----------

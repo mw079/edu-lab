@@ -18,6 +18,16 @@ The model only fills in small, checked pieces; templates and examples do the res
 | 2. Steps | plan + chosen components' API + `examples/momentum/design.json` | `design.json`: data, short JS expressions, LaTeX text, 5 levels | `checkDesign` (`server/design.ts`): expressions and LaTeX parse; each level states its whole starting situation, starts unsolved, and its solution solves it with unlocked, in-range controls; a question step's answer is not already on a visible readout; readout limits | approves or asks for changes |
 | 3. Simulation | design summary + chosen components' snippets (`simkit/snippets/`) + example scene | one `scene` function (≈15–40 lines), which also links draggable objects to their sliders (`app.link`) | every level played and solved in headless Chrome; layout check (`server/layout-check.js`) | opens the lesson |
 | 4. Visual review | a screenshot of the simulation at the start of each step + the step goals and hidden values (`prompts/review.md`) | up to 5 problems a student would notice | — (suggestions: one fix round, kept only if the lesson still works, has no more layout problems and a second review finds fewer problems; the fix call is limited to 45 s and little thinking, otherwise the lesson stays as built) | — |
+| 5. Preview | — | — | — | tries the built lesson, then approves it or asks for changes |
+
+**Preview and approval.** A built lesson opens as a preview with a bar above it. Only after **Approve** does it
+appear in the overview. **Request changes** (for the whole lesson or one step) works on approved
+lessons too. A first model call decides whether only the picture changes (the scene is redrawn and the steps
+are kept) or the steps change (the design is rewritten, then the current scene is tried with it before
+anything is redrawn). The new version replaces the lesson only if it passes every check and adds no layout
+problems. Otherwise the lesson stays as it was and the bar says why. **Undo last change** restores the
+previous version (kept in `previous/`), and a changed lesson needs approving again. Lessons made with
+`generate`, `regenerate` or `eval` are approved automatically.
 
 Each step gets up to two fix rounds with the check results sent back to the model. `assembleLesson`
 turns `design.json` + `scene.js` into `lesson.js`; the model never writes the UI or the level logic.
@@ -68,7 +78,7 @@ npm run typecheck
 | `simkit/` | SVG science components (`README.md`), the catalogue the planner picks from (`catalog.json`) and a usage example per component (`snippets/`) |
 | `template/` | Fixed student UI (`shell.js`, `shell.css`, `lesson.html`), design tokens shared with the teacher app (`tokens.css`), lesson format (`CONTRACT.md`) |
 | `examples/` | Reference lessons as `design.json` + `scene.js`: `momentum` is shown to the generator, `pendulum` shows direct interaction; all six are the showcase lessons `export` publishes |
-| `prompts/` | Prompts for plan, steps and simulation |
+| `prompts/` | Prompts for plan, steps, simulation, visual review and sorting change requests (`revise.md`) |
 | `server/` | Express API (`index.ts`), pipeline (`pipeline.ts`), design checks and assembly (`design.ts`), lesson build and logic validation (`lesson.ts`), sandbox that runs model-written lesson code for those checks (`sandbox.ts`), math (`math.ts`), Chrome check (`browser-check.ts`, `layout-check.js`), card pictures (`thumbnail.ts`), Fireworks client (`llm.ts`) |
 | `web/` | React teacher app |
 | `scripts/` | `generate`, `regenerate`, `eval`, `export` |
@@ -100,7 +110,7 @@ the keyboard and small-screen route (see "Direct interaction" in `simkit/README.
 **Teacher app.** Overview of picture cards (the simulation at step 1, `server/thumbnail.ts`, cached in
 `data/thumbs/`) with title and audience (Middle school, High school, Undergraduate) and an audience
 filter. Lessons open in the same tab with "← All lessons". New lessons go through plan → steps review and
-then open. A teacher can delete their own lessons (moved to `data/trash/`, not erased). No UI library: plain CSS on shared tokens, because each lesson must stay one offline file.
+then open as a preview to approve or change. A teacher can delete their own lessons (moved to `data/trash/`, not erased). No UI library: plain CSS on shared tokens, because each lesson must stay one offline file.
 
 ## Plan
 

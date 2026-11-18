@@ -53,8 +53,8 @@ h2 { font-size: 19px; font-weight: 650; letter-spacing: -0.01em; margin: 0 0 6px
 .form h1 { font-size: 24px; margin-bottom: 8px; }
 label { display: grid; gap: 8px; margin: 20px 0; font-weight: 600; font-size: 14px; }
 label .muted { font-weight: 400; }
-textarea, input { font: inherit; font-weight: 400; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; width: 100%; resize: vertical; }
-textarea:focus, input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea, input, select { font: inherit; font-weight: 400; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; width: 100%; resize: vertical; }
+textarea:focus, input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .source { margin: -6px 0 20px; }
 .source summary { cursor: pointer; font-weight: 600; font-size: 14px; }
 .source textarea { margin-top: 8px; }
@@ -86,7 +86,19 @@ legend { font-weight: 600; font-size: 14px; margin-bottom: 8px; padding: 0; }
 .levels summary { cursor: pointer; }
 .tag { font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-soft); padding: 1px 8px; border-radius: 10px; }
 
-.lesson-view { display: block; width: 100%; height: 100vh; border: 0; }
+/* A lesson in the app: the review bar (own lessons only) above the lesson, which fills the rest of the window. */
+.lesson-page { display: flex; flex-direction: column; height: 100vh; }
+.lesson-view { display: block; flex: 1; min-height: 0; width: 100%; border: 0; }
+.review-bar { flex: none; padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
+.review-bar.preview { background: var(--accent-soft); }
+.review-row { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.review-row .row { margin-top: 0; }
+.review-text p { margin: 0; }
+.review-text .notice { margin-top: 4px; }
+.badge { font-size: 13px; font-weight: 600; color: var(--ok); background: var(--ok-soft); padding: 2px 10px; border-radius: 10px; }
+.review-form { display: grid; grid-template-columns: minmax(160px, 240px) 1fr auto; gap: 10px; align-items: start; margin-top: 12px; }
+.review-form textarea { min-height: 46px; }
+@media (max-width: 700px) { .review-form { grid-template-columns: 1fr; } .review-bar { padding: 12px 16px; } }
 @media (max-width: 600px) {
   .page { padding: 0 16px 48px; }
   .panel { padding: 20px; }

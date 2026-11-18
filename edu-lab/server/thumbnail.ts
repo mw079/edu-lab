@@ -4,9 +4,9 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { chromium, type Browser } from "playwright";
-import { ROOT } from "./env.ts";
+import { DATA_ROOT } from "./env.ts";
 
-const DIR = join(ROOT, "data", "thumbs");
+const DIR = join(DATA_ROOT, "thumbs");
 let browser: Promise<Browser> | null = null;
 let queue: Promise<unknown> = Promise.resolve();
 

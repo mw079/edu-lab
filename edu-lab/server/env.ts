@@ -4,6 +4,8 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+/** Where lessons, thumbnails and trash are kept (EDU_DATA_DIR lets tests use a temporary folder). */
+export const DATA_ROOT = process.env.EDU_DATA_DIR || join(ROOT, "data");
 
 const file = join(ROOT, ".env");
 if (existsSync(file)) {

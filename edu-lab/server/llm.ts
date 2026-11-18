@@ -5,10 +5,18 @@ const URL = "https://api.fireworks.ai/inference/v1/chat/completions";
 
 export type Part = { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
 export type Message = { role: "system" | "user" | "assistant"; content: string | Part[] };
-type ChatOptions = { model?: string; maxTokens?: number; temperature?: number; timeoutMs?: number; retries?: number; reasoningEffort?: "low" | "medium" | "high" };
-type ChatResult = { text: string; reasoning: string; ms: number; usage: { prompt_tokens?: number; completion_tokens?: number } };
+export type ChatOptions = { model?: string; maxTokens?: number; temperature?: number; timeoutMs?: number; retries?: number; reasoningEffort?: "low" | "medium" | "high" };
+export type ChatResult = { text: string; reasoning: string; ms: number; usage: { prompt_tokens?: number; completion_tokens?: number } };
+
+type ChatFn = (messages: Message[], opts: ChatOptions) => Promise<ChatResult>;
+let fake: ChatFn | null = null;
+/** Tests answer in place of the model (null restores the real API). */
+export function setChatForTests(fn: ChatFn | null) {
+  fake = fn;
+}
 
 export async function chat(messages: Message[], opts: ChatOptions = {}): Promise<ChatResult> {
+  if (fake) return fake(messages, opts);
   if (!config.fireworksKey) throw new Error("FIREWORKS_API_KEY is not set (edu-lab/.env)");
   const body = JSON.stringify({
     model: opts.model || config.model,

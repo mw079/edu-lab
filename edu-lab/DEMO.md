@@ -10,7 +10,7 @@ generated in case the live one is slow. A new lesson takes about 90 seconds to b
 
 Show the overview page: picture cards, audience filter.
 
-## 2. A finished lesson, as a student (60 s)
+## 2. A finished lesson (60 s)
 
 Open **The Pendulum's Period**.
 
@@ -27,7 +27,7 @@ Open **The Pendulum's Period**.
 
 ### Showcase lessons
 
-Six lessons that show the range; the first four can be dragged directly.
+The six example lessons (in `examples/`, also exported to `docs/`); the first four can be dragged directly.
 
 | Lesson | Audience | Show |
 |---|---|---|
@@ -36,7 +36,10 @@ Six lessons that show the range; the first four can be dragged directly.
 | Hooke's Law with a Spring | High school | pull the block; the pointer on the ruler reads the stretch |
 | Slope and Y-Intercept Explorer | Middle school | drag the y-intercept and a point on the line |
 | Ohm's Law with Series Resistors | High school | moving charges and a live graph (sliders) |
-| Atoms in Motion | Undergraduate | built from a pasted textbook section (sliders) |
+| Momentum and Collisions | High school | set masses and speeds, then run the collision |
+
+Also worth showing if it is on the demo machine (generated lessons are not committed): **Atoms in Motion**
+(Undergraduate), built from a pasted textbook section.
 
 ## 3. Make a new lesson, as a teacher (90 s)
 
@@ -51,7 +54,12 @@ Click **+ New lesson**. Type a request, for example *"Why some things float and 
   cannot be solved, or labels overlap, the errors go back to the model for a fix. Then the same model looks at
   screenshots of each step."
 
-Open the lesson when it is ready and solve step 1.
+The lesson opens as a **preview** with a bar above it. Solve step 1, then show the two choices:
+
+- **Request changes**: pick a step (or the whole lesson) and write what to change, e.g. *"Make the labels on
+  the drawing bigger."* The model decides whether only the picture or the steps change; the new version
+  replaces the lesson only if it passes every check again, and **Undo last change** goes back. (About 30–60 s.)
+- **Approve**: the lesson moves into the overview.
 
 ## 4. Why it is built this way (40 s)
 
