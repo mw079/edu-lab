@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { lessonSourceFromDir } from "../server/design.ts";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { checkDesign, lessonSourceFromDir } from "../server/design.ts";
+import { checkLesson } from "../server/sandbox.ts";
 import { buildLessonHtml, katexCss, loadLesson, simkitFiles, validateLesson } from "../server/lesson.ts";
 import { richHtml } from "../server/math.ts";
 import { extractJson } from "../server/llm.ts";
@@ -114,4 +118,34 @@ test("a lesson's math gets only the KaTeX fonts it uses", () => {
   assert.deepEqual(fonts("$F = ma$"), ["KaTeX_Main", "KaTeX_Math"]);
   assert.ok(fonts("$x \\in \\mathbb{R}$").includes("KaTeX_AMS"));
   assert.ok(fonts("$\\left(\\dfrac{a}{b}\\right)$").some((f) => f.startsWith("KaTeX_Size")));
+});
+
+test("lesson code is checked in a sandbox: an endless check() is stopped, not hung", { timeout: 15_000 }, () => {
+  const looping = tiny().replace("check: (s, d) => d.double === 8", "check: (s, d) => { while (true); }");
+  assert.throws(() => checkLesson(looping), /longer than \d+ s/);
+});
+
+test("lesson code in the sandbox cannot read the API key, files or start processes", () => {
+  const host = 'defineLesson.constructor("return process")()';
+  const attempts = {
+    key: `${host}.env.FIREWORKS_API_KEY === undefined`,
+    read: `${host}.getBuiltinModule("fs").readFileSync(${JSON.stringify(join(process.cwd(), "README.md"))}, "utf8") && false`,
+    write: `${host}.getBuiltinModule("fs").writeFileSync(${JSON.stringify(join(tmpdir(), "edu-lab-sandbox-probe"))}, "x") && false`,
+    spawn: `${host}.getBuiltinModule("child_process").execSync("true") && false`,
+  };
+  // Each check returns true only if the attempt was blocked; a blocked call throws, which the report records.
+  const key = checkLesson(tiny().replace("check: (s, d) => d.double === 8", `check: (s, d) => d.double === 8 && ${attempts.key}`));
+  assert.equal(key.ok, true, "the sandbox has no environment variables");
+  for (const name of ["read", "write", "spawn"] as const) {
+    const r = checkLesson(tiny().replace("check: (s, d) => d.double === 8", `check: (s, d) => d.double === 8 && ${attempts[name]}`));
+    assert.ok(r.errors.some((e) => /restricted|ERR_ACCESS_DENIED/i.test(e.message)), `${name} is blocked: ${JSON.stringify(r.errors)}`);
+  }
+  assert.equal(existsSync(join(tmpdir(), "edu-lab-sandbox-probe")), false);
+});
+
+test("every example lesson passes the design checks", () => {
+  for (const id of readdirSync("examples")) {
+    const design = JSON.parse(readFileSync(join("examples", id, "design.json"), "utf8"));
+    assert.deepEqual(checkDesign(design).errors, [], id);
+  }
 });

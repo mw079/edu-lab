@@ -6,8 +6,8 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSyn
 import { join } from "node:path";
 import { lessonSourceFromDir } from "../server/design.ts";
 import { ROOT } from "../server/env.ts";
-import { buildLessonHtml, loadLesson } from "../server/lesson.ts";
-import { DATA } from "../server/pipeline.ts";
+import { buildLessonHtml } from "../server/lesson.ts";
+import { DATA, getDraft } from "../server/pipeline.ts";
 import { thumbnail } from "../server/thumbnail.ts";
 
 const OUT = join(ROOT, "..", "docs");
@@ -15,23 +15,36 @@ const list = JSON.parse(readFileSync(join(ROOT, "showcase.json"), "utf8")) as { 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 const level = (s = "") => ["Middle school", "High school", "Undergraduate"].find((a) => s.toLowerCase().startsWith(a.toLowerCase())) || "High school";
 
+// Showcase lessons live in examples/ (committed). A generated lesson in data/ (not committed) also works, but
+// then the export only works on this machine; copy its design.json and scene.js to examples/<name>/ to keep it.
+function source(id: string): { js: string; title: string; audience?: string } | null {
+  const example = join(ROOT, "examples", id);
+  if (existsSync(join(example, "design.json"))) {
+    const design = JSON.parse(readFileSync(join(example, "design.json"), "utf8"));
+    return { js: lessonSourceFromDir(example), title: design.title, audience: design.audience };
+  }
+  const draft = getDraft(id);
+  const generated = join(DATA, id, "lesson.js");
+  return draft?.design && existsSync(generated) ? { js: readFileSync(generated, "utf8"), title: draft.design.title, audience: draft.audience } : null;
+}
+
+// Check every lesson before deleting the old pages, so a missing lesson never removes a published one.
+const lessons = list.map((item) => ({ item, lesson: source(item.id) }));
+const missing = lessons.filter((l) => !l.lesson).map((l) => l.item.id);
+if (missing.length) {
+  console.error(`Not exported: no lesson found for ${missing.join(", ")} (looked in examples/ and data/lessons/). docs/ is unchanged.`);
+  process.exit(1);
+}
 for (const dir of ["lessons", "thumbs"]) {
   rmSync(join(OUT, dir), { recursive: true, force: true });
   mkdirSync(join(OUT, dir), { recursive: true });
 }
 
 const cards: string[] = [];
-for (const item of list) {
-  const example = join(ROOT, "examples", item.id);
-  const generated = join(DATA, item.id, "lesson.js");
-  const js = existsSync(join(example, "design.json")) ? lessonSourceFromDir(example) : existsSync(generated) ? readFileSync(generated, "utf8") : null;
-  if (!js) {
-    console.log(`skip ${item.id}: no such lesson`);
-    continue;
-  }
-  const lesson = loadLesson(js) as { title: string; audience?: string };
-  const html = buildLessonHtml(js, lesson.title);
-  // A readable file name: the id without its random suffix.
+for (const { item, lesson: found } of lessons) {
+  const lesson = found!; // checked above
+  const html = buildLessonHtml(lesson.js, lesson.title);
+  // A readable file name: the id without a generated lesson's random suffix.
   const name = item.id.replace(/-[0-9a-f]{6}$/, "").replace(/-+$/, "");
   writeFileSync(join(OUT, "lessons", `${name}.html`), html.replace('<html lang="en">', '<html lang="en" data-back="../index.html">'));
   copyFileSync(await thumbnail(item.id, html), join(OUT, "thumbs", `${name}.png`));

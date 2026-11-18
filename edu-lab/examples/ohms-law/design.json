@@ -1,0 +1,322 @@
+{
+  "title": "Ohm's Law with Series Resistors",
+  "subtitle": "Turn up the voltage, add resistance, and find the rule that predicts the current.",
+  "audience": "High school physics",
+  "objectives": [
+    "Calculate the current through the circuit using I = V/R for given voltage and resistance values and verify against the simulation.",
+    "Predict the new current after adding a resistor in series, using the summed total resistance.",
+    "Describe the graph of current versus voltage at fixed resistance and explain what its straight-line shape shows."
+  ],
+  "components": [
+    "circuit",
+    "plot"
+  ],
+  "state": {
+    "V": 6,
+    "R1": 2,
+    "R2": 2
+  },
+  "controls": [
+    {
+      "key": "V",
+      "label": "Battery voltage",
+      "unit": "V",
+      "min": 1,
+      "max": 12,
+      "step": 1
+    },
+    {
+      "key": "R1",
+      "label": "Resistor 1",
+      "unit": "Ω",
+      "min": 1,
+      "max": 10,
+      "step": 1
+    },
+    {
+      "key": "R2",
+      "label": "Resistor 2",
+      "unit": "Ω",
+      "min": 1,
+      "max": 10,
+      "step": 1
+    }
+  ],
+  "derived": [
+    {
+      "key": "totalR",
+      "expr": "s.R1 + s.R2"
+    },
+    {
+      "key": "current",
+      "expr": "s.V / d.totalR"
+    },
+    {
+      "key": "V1",
+      "expr": "d.current * s.R1"
+    },
+    {
+      "key": "V2",
+      "expr": "d.current * s.R2"
+    }
+  ],
+  "readouts": [
+    {
+      "key": "totalR",
+      "label": "Total resistance",
+      "unit": "Ω",
+      "digits": 1
+    },
+    {
+      "key": "current",
+      "label": "Current",
+      "unit": "A",
+      "digits": 2
+    },
+    {
+      "key": "V1",
+      "label": "Voltage over R1",
+      "unit": "V",
+      "digits": 2
+    },
+    {
+      "key": "V2",
+      "label": "Voltage over R2",
+      "unit": "V",
+      "digits": 2
+    }
+  ],
+  "actions": [],
+  "formulas": [
+    {
+      "expr": "I = \\dfrac{V}{R}",
+      "meaning": "Ohm's law: current equals voltage divided by resistance."
+    },
+    {
+      "expr": "R_\\text{total} = R_1 + R_2",
+      "meaning": "Resistors in series add up."
+    },
+    {
+      "expr": "V_i = I\\,R_i",
+      "meaning": "The battery voltage splits over the series resistors, proportional to their resistance."
+    }
+  ],
+  "debrief": "At fixed resistance the current grows in a straight line with voltage; at fixed voltage it shrinks with resistance. In series, add the resistances first, then apply Ohm's law to the total.",
+  "levels": [
+    {
+      "title": "Voltage drives current",
+      "goal": "The circuit has 2 Ω in each resistor (4 in total). Change only the battery voltage so the current becomes exactly 2 A.",
+      "setup": {
+        "V": 6,
+        "R1": 2,
+        "R2": 2
+      },
+      "lock": [
+        "R1",
+        "R2"
+      ],
+      "show": [
+        "totalR",
+        "current"
+      ],
+      "hints": [
+        "Ohm's law says $I = \\dfrac{V}{R}$, so $V = I \\times R$.",
+        "You need $V = 2\\,\\text{A} \\times 4\\,\\Omega$."
+      ],
+      "check": "Math.abs(d.current - 2) < 1e-9",
+      "feedback": [
+        {
+          "when": "d.current > 2",
+          "say": "That is too much current: with 4 you need less voltage."
+        },
+        {
+          "when": "true",
+          "say": "The current is now {current} A at {V} V."
+        }
+      ],
+      "solution": {
+        "V": 8
+      },
+      "solutionText": "$V = I \\times R = 2 \\times 4 = 8\\,\\text{V}$. Check: $I = \\dfrac{8}{4} = 2\\,\\text{A}$.",
+      "explain": "Doubling the voltage doubles the current: current is proportional to voltage when resistance stays the same."
+    },
+    {
+      "title": "Resistance slows current",
+      "goal": "The battery is now fixed at 12 V. Change only Resistor 1 so the current drops to exactly 2 A.",
+      "setup": {
+        "V": 12,
+        "R1": 2,
+        "R2": 2
+      },
+      "lock": [
+        "V",
+        "R2"
+      ],
+      "show": [
+        "totalR",
+        "current"
+      ],
+      "hints": [
+        "Rearrange Ohm's law: $R = \\dfrac{V}{I}$.",
+        "You need a total resistance of $\\dfrac{12}{2} = 6\\,\\Omega$.",
+        "Resistor 2 already contributes 2, so Resistor 1 must provide the rest."
+      ],
+      "check": "Math.abs(d.current - 2) < 1e-9",
+      "feedback": [
+        {
+          "when": "d.current > 2",
+          "say": "Still too much current: the total resistance must be larger."
+        },
+        {
+          "when": "true",
+          "say": "With {totalR} the current is {current} A."
+        }
+      ],
+      "solution": {
+        "R1": 4
+      },
+      "solutionText": "$R_\\text{total} = \\dfrac{12}{2} = 6\\,\\Omega$, so $R_1 = 6 - 2 = 4\\,\\Omega$. Check: $I = \\dfrac{12}{6} = 2\\,\\text{A}$.",
+      "explain": "At fixed voltage the current is inversely proportional to resistance: watch the I–V points bend down as R grows. More resistance means less current."
+    },
+    {
+      "title": "Predict the current",
+      "goal": "The circuit has a 12 V battery, R1 = 3 Ω and R2 = 3 Ω in series. Predict the current in amperes before checking.",
+      "setup": {
+        "V": 12,
+        "R1": 3,
+        "R2": 3
+      },
+      "lock": [
+        "V",
+        "R1",
+        "R2"
+      ],
+      "show": [
+        "totalR",
+        "current"
+      ],
+      "hide": [
+        "current"
+      ],
+      "ask": {
+        "label": "Current",
+        "unit": "A"
+      },
+      "hints": [
+        "First add the series resistances: $R_\\text{total} = R_1 + R_2$.",
+        "Then apply Ohm's law: $I = \\dfrac{V}{R_\\text{total}}$."
+      ],
+      "check": "Math.abs(answer - 2) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 6) < 0.05",
+          "say": "6 is the total resistance in ohms. Divide the voltage by it."
+        },
+        {
+          "when": "Math.abs(answer - 4) < 0.05",
+          "say": "You divided by R1 only. Both resistors in series limit the current."
+        },
+        {
+          "when": "true",
+          "say": "You predicted {answer} A. The total resistance is {totalR}; check your division of 12 V."
+        }
+      ],
+      "solution": {
+        "answer": 2
+      },
+      "solutionText": "$R_\\text{total} = 3 + 3 = 6\\,\\Omega$, so $I = \\dfrac{12}{6} = 2\\,\\text{A}$.",
+      "explain": "In series, add the resistances first and only then apply Ohm's law. The same current flows through every series component."
+    },
+    {
+      "title": "Dial in a target current",
+      "goal": "The battery is 12 V and Resistor 1 is 4. Choose Resistor 2 so the current is exactly 1.5 A.",
+      "setup": {
+        "V": 12,
+        "R1": 4,
+        "R2": 2
+      },
+      "lock": [
+        "V",
+        "R1"
+      ],
+      "show": [
+        "totalR",
+        "current"
+      ],
+      "hints": [
+        "Work backwards: the total resistance must be $\\dfrac{12}{1.5}$ ohms.",
+        "$\\dfrac{12}{1.5} = 8\\,\\Omega$, and R1 already provides 4."
+      ],
+      "check": "Math.abs(d.current - 1.5) < 1e-9",
+      "feedback": [
+        {
+          "when": "d.current > 1.5",
+          "say": "Too much current: R2 must be bigger to push the total resistance up."
+        },
+        {
+          "when": "true",
+          "say": "With R2 at {R2} the current is {current} A."
+        }
+      ],
+      "solution": {
+        "R2": 4
+      },
+      "solutionText": "$R_\\text{total} = \\dfrac{12}{1.5} = 8\\,\\Omega$, so $R_2 = 8 - 4 = 4\\,\\Omega$. Check: $I = \\dfrac{12}{8} = 1.5\\,\\text{A}$.",
+      "explain": "Designing a circuit often means working backwards from a target current to the resistance you still need to add."
+    },
+    {
+      "title": "Sharing the voltage",
+      "goal": "A 12 V battery drives R1 = 2 Ω and R2 = 4 Ω in series. Predict the voltage across Resistor 2, in volts.",
+      "setup": {
+        "V": 12,
+        "R1": 2,
+        "R2": 4
+      },
+      "lock": [
+        "V",
+        "R1",
+        "R2"
+      ],
+      "show": [
+        "totalR",
+        "current",
+        "V2"
+      ],
+      "hide": [
+        "V2"
+      ],
+      "ask": {
+        "label": "Voltage over R2",
+        "unit": "V"
+      },
+      "hints": [
+        "First find the current: $I = \\dfrac{V}{R_1 + R_2}$.",
+        "Then use $V_2 = I \\times R_2$: the bigger resistor takes the bigger share."
+      ],
+      "check": "Math.abs(answer - 8) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 4) < 0.05",
+          "say": "4 is the resistance of R2 in ohms, not its voltage."
+        },
+        {
+          "when": "Math.abs(answer - 2) < 0.05",
+          "say": "2 is the current in amperes. Multiply it by R2."
+        },
+        {
+          "when": "Math.abs(answer - 12) < 0.05",
+          "say": "12 V is the whole battery voltage; it splits between the two resistors."
+        },
+        {
+          "when": "true",
+          "say": "You predicted {answer} V. The current is {current} A; multiply by R2 = 4 Ω."
+        }
+      ],
+      "solution": {
+        "answer": 8
+      },
+      "solutionText": "$I = \\dfrac{12}{2 + 4} = 2\\,\\text{A}$, so $V_2 = 2 \\times 4 = 8\\,\\text{V}$ (and R1 takes the remaining 4 V).",
+      "explain": "The battery voltage divides over series resistors in proportion to their size: R2 is twice R1, so it takes twice the voltage. The two shares always add up to 12 V."
+    }
+  ]
+}

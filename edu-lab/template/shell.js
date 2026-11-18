@@ -385,7 +385,7 @@
       if (busy) return p.solved;
       let answer;
       if (lv.ask) {
-        answer = parseFloat(answerInput.value.replace(",", ".").replace(/[^\d.eE+-]/g, ""));
+        answer = parseAnswer(answerInput.value);
         if (!Number.isFinite(answer)) {
           say("warn", "Type a number first.");
           answerInput.focus();
@@ -415,6 +415,17 @@
       return true;
     }
 
+    /**
+     * A typed number. Accepts the minus sign the page itself shows ("−2.5"), thousands separators ("1,500",
+     * "1 500"), a decimal comma ("2,5") and a trailing unit ("3 m/s").
+     */
+    function parseAnswer(text) {
+      let t = String(text).trim().replace(/[−‒–—]/g, "-").replace(/(\d)[\s  ]+(?=\d{3}(?!\d))/g, "$1");
+      // A comma before groups of exactly three digits after a leading 1–9 is a thousands separator, otherwise a decimal comma.
+      t = /^[-+]?[1-9]\d{0,2}(,\d{3})+(?![\d,])/.test(t) ? t.replace(/,/g, "") : t.replace(",", ".");
+      return parseFloat(t.replace(/[^\d.eE+-]/g, ""));
+    }
+
     function applySolution(i) {
       if (i !== current) goTo(i);
       const { answer, ...values } = levels[i].solution || {};
@@ -436,6 +447,7 @@
       applySolution,
       solved: (i) => progress[i == null ? current : i].solved,
       check,
+      parseAnswer,
       isSolvedNow: (answer) => !!levels[current].check(state, derived, answer),
     });
 

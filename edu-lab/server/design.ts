@@ -3,7 +3,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import vm from "node:vm";
-import { loadLesson, validateLesson, type Control, type Issue } from "./lesson.ts";
+import type { Control, Issue } from "./lesson.ts";
+import { checkLesson } from "./sandbox.ts";
 import { hasMath, mathError, mathHtml, rich } from "./math.ts";
 
 type DesignLevel = {
@@ -184,7 +185,7 @@ export function checkDesign(design: Design): { errors: Issue[]; warnings: Issue[
   errors.push(...checkExpressions(design), ...checkMath(design), ...checkSetups(design));
   if (errors.length) return { errors, warnings: [] };
   try {
-    const report = validateLesson(loadLesson(assembleLesson(design, EMPTY_SCENE)));
+    const report = checkLesson(assembleLesson(design, EMPTY_SCENE)); // model-written expressions: sandboxed
     return { errors: report.errors, warnings: report.warnings };
   } catch (e) {
     return { errors: [{ message: `The design could not be evaluated: ${(e as Error).message}` }], warnings: [] };

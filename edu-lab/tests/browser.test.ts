@@ -55,6 +55,9 @@ test("shell behaviour: steps, wrong answers, hidden controls and readouts, hints
     await page.fill("#answer-input", "12");
     await page.click("#check-btn");
     assert.match((await page.textContent(".feedback")) || "", /total momentum/);
+    // Typed answers: the page's own minus sign, thousands separators, decimal commas and units.
+    for (const [typed, value] of [["−2.5", -2.5], ["1,500", 1500], ["1 500", 1500], ["2,5", 2.5], ["0,125", 0.125], ["3 m/s", 3]] as const)
+      assert.equal(await lesson("parseAnswer", typed), value, typed);
     await page.fill("#answer-input", "3");
     await page.click("#check-btn");
     assert.equal(await lesson("solved", 3), true);

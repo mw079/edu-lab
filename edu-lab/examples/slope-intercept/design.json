@@ -1,0 +1,288 @@
+{
+  "title": "Slope and Y-Intercept Explorer",
+  "subtitle": "Tilt and slide a straight line to master y = mx + b.",
+  "audience": "Middle school",
+  "objectives": [
+    "Identify the slope and y-intercept from a graphed line and write its equation.",
+    "Predict how the line moves when m or b is changed, then check with the simulation.",
+    "Calculate the slope from the rise and run shown on the triangle."
+  ],
+  "components": [
+    "coordinatePlane"
+  ],
+  "state": {
+    "m": 1,
+    "b": 0
+  },
+  "controls": [
+    {
+      "key": "m",
+      "label": "Slope m",
+      "unit": "",
+      "min": -5,
+      "max": 5,
+      "step": 0.5
+    },
+    {
+      "key": "b",
+      "label": "Y-intercept b",
+      "unit": "",
+      "min": -5,
+      "max": 5,
+      "step": 1
+    }
+  ],
+  "derived": [
+    {
+      "key": "xint",
+      "expr": "s.m === 0 ? 0 : -s.b / s.m"
+    },
+    {
+      "key": "xAt9",
+      "expr": "s.m === 0 ? 0 : (9 - s.b) / s.m"
+    },
+    {
+      "key": "y8",
+      "expr": "s.m * 8 + s.b"
+    }
+  ],
+  "readouts": [
+    {
+      "key": "xint",
+      "label": "Line crosses x-axis at",
+      "unit": "",
+      "digits": 1
+    },
+    {
+      "key": "xAt9",
+      "label": "x when y = 9",
+      "unit": "",
+      "digits": 1
+    },
+    {
+      "key": "y8",
+      "label": "y when x = 8",
+      "unit": "",
+      "digits": 1
+    }
+  ],
+  "actions": [],
+  "formulas": [
+    {
+      "expr": "y = m\\,x + b",
+      "meaning": "Every straight line: m is the slope, b is the y-intercept."
+    },
+    {
+      "expr": "b = \\text{height at } x = 0",
+      "meaning": "The y-intercept is where the line crosses the y-axis."
+    },
+    {
+      "expr": "m = \\dfrac{\\text{rise}}{\\text{run}}",
+      "meaning": "The slope is how far the line goes up (or down) for each step right."
+    },
+    {
+      "expr": "x = -\\dfrac{b}{m}",
+      "meaning": "The x-intercept, where the line crosses the x-axis (y = 0)."
+    }
+  ],
+  "debrief": "Changing b slides the line up or down without changing its tilt, while changing m tilts the line around its y-intercept. Together, m and b pin down the line completely.",
+  "levels": [
+    {
+      "title": "Slide the line",
+      "goal": "Move the line so it crosses the y-axis at (0, -2), without changing its tilt.",
+      "setup": {
+        "m": 1,
+        "b": 3
+      },
+      "lock": [
+        "m"
+      ],
+      "show": [],
+      "hints": [
+        "Only the b slider moves the line up and down without tilting it.",
+        "b is the height where the line crosses the y-axis.",
+        "You need the crossing point 2 units below the x-axis."
+      ],
+      "check": "s.b === -2",
+      "feedback": [
+        {
+          "when": "s.b === 2",
+          "say": "Right distance, wrong side: a negative b puts the crossing below the x-axis."
+        },
+        {
+          "when": "true",
+          "say": "The line now crosses the y-axis at {b}."
+        }
+      ],
+      "solution": {
+        "b": -2
+      },
+      "solutionText": "The line crosses the y-axis at $(0, b)$, so set $b = -2$.",
+      "explain": "The y-intercept b is the height of the line at x = 0. Sliding b never changes the slope."
+    },
+    {
+      "title": "Tilt and place",
+      "goal": "Make a line that goes down 2 units for every step to the right and crosses the y-axis at 3.",
+      "setup": {
+        "m": 1,
+        "b": -3
+      },
+      "lock": [],
+      "show": [],
+      "hints": [
+        "A line that falls as you go right needs a negative slope.",
+        "Going down 2 for each step right means m = -2.",
+        "Set the tilt with m first, then slide b until the crossing is at 3."
+      ],
+      "check": "s.m === -2 && s.b === 3",
+      "feedback": [
+        {
+          "when": "s.m === 2",
+          "say": "That line climbs. You need it to fall: a negative slope goes down as x grows."
+        },
+        {
+          "when": "s.b === -3",
+          "say": "The tilt is right, but the line must cross the y-axis at 3, not at {b}."
+        },
+        {
+          "when": "true",
+          "say": "Right now the slope is {m} and the y-intercept is {b}."
+        }
+      ],
+      "solution": {
+        "m": -2,
+        "b": 3
+      },
+      "solutionText": "Down 2 per step right is $m = -2$, and crossing at height 3 is $b = 3$: the line $y = -2x + 3$.",
+      "explain": "The slope's sign sets the direction: negative m falls to the right. The y-intercept then places the line."
+    },
+    {
+      "title": "Reach height 9",
+      "goal": "The line y = 2x - 1 is drawn. At what x does this line reach y = 9? Type your prediction.",
+      "setup": {
+        "m": 2,
+        "b": -1
+      },
+      "lock": [
+        "m",
+        "b"
+      ],
+      "show": [
+        "xAt9"
+      ],
+      "hide": [
+        "xAt9"
+      ],
+      "ask": {
+        "label": "x when y = 9",
+        "unit": ""
+      },
+      "hints": [
+        "Put y = 9 into the equation y = 2x - 1.",
+        "You get 9 = 2x - 1. Add 1 to both sides.",
+        "Now 2x = 10; divide both sides by the slope."
+      ],
+      "check": "Math.abs(answer - 5) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 4) < 0.05",
+          "say": "That is where the line crosses the x-axis (y = 0). Here it must reach y = 9."
+        },
+        {
+          "when": "Math.abs(answer + 0.5) < 0.05",
+          "say": "Watch the signs: 9 = 2x - 1 gives 2x = 10, not 2x = -1."
+        },
+        {
+          "when": "true",
+          "say": "You answered {answer}. Solve 2x - 1 = 9 step by step."
+        }
+      ],
+      "solution": {
+        "answer": 5
+      },
+      "solutionText": "$9 = 2x - 1$, so $2x = 10$ and $x = 5$. Check: $2 \\times 5 - 1 = 9$.",
+      "explain": "The equation lets you find points that are hard to read from the picture: set y to 9 and solve for x."
+    },
+    {
+      "title": "Both intercepts",
+      "goal": "Build a line that crosses the x-axis at x = 4 and the y-axis at y = -2.",
+      "setup": {
+        "m": -1,
+        "b": 2
+      },
+      "lock": [],
+      "show": [
+        "xint"
+      ],
+      "hints": [
+        "Set the y-intercept first: b is where the line crosses the y-axis.",
+        "For the x-intercept, y = 0 there, so solve 0 = mx + b.",
+        "With b = -2, the line must climb 2 units over 4 steps right, so m × 4 = 2."
+      ],
+      "check": "Math.abs(s.b + 2) < 1e-9 && Math.abs(-s.b / s.m - 4) < 1e-6",
+      "feedback": [
+        {
+          "when": "Math.abs(s.b + 2) < 1e-9 && Math.abs(-s.b / s.m - 4) >= 1e-6",
+          "say": "The y-intercept is right. Now tilt the line until it also crosses the x-axis at 4."
+        },
+        {
+          "when": "true",
+          "say": "The line currently crosses the x-axis at {xint}."
+        }
+      ],
+      "solution": {
+        "m": 0.5,
+        "b": -2
+      },
+      "solutionText": "Crossing at $y = -2$ means $b = -2$. Then $0 = 4m - 2$, so $m = 0.5$: the line $y = 0.5x - 2$.",
+      "explain": "Two points fix a line. The two intercepts give you b directly and an equation for m."
+    },
+    {
+      "title": "Far along the line",
+      "goal": "The line y = -2x + 5 is drawn. Predict its height y when x = 8, far off the grid. Type your prediction.",
+      "setup": {
+        "m": -2,
+        "b": 5
+      },
+      "lock": [
+        "m",
+        "b"
+      ],
+      "show": [
+        "y8"
+      ],
+      "hide": [
+        "y8"
+      ],
+      "ask": {
+        "label": "y when x = 8",
+        "unit": ""
+      },
+      "hints": [
+        "Start at the y-intercept, 5, and take 8 steps of the slope.",
+        "Each step to the right lowers the line by 2.",
+        "Compute -2 × 8, then add 5."
+      ],
+      "check": "Math.abs(answer + 11) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer + 16) < 0.05",
+          "say": "You forgot the y-intercept: start at 5, then go down 2 for each of the 8 steps."
+        },
+        {
+          "when": "Math.abs(answer - 21) < 0.05",
+          "say": "Check the sign of the slope: m = -2 means the line goes down as x grows."
+        },
+        {
+          "when": "true",
+          "say": "You answered {answer}. Compute m × 8 first, then add b."
+        }
+      ],
+      "solution": {
+        "answer": -11
+      },
+      "solutionText": "$y = -2 \\times 8 + 5 = -16 + 5 = -11$.",
+      "explain": "The equation works for any x, even far outside the grid: multiply by the slope, then add the y-intercept."
+    }
+  ]
+}

@@ -3,7 +3,7 @@ import express from "express";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ROOT, config } from "./env.ts";
-import { buildLessonHtml, loadLesson } from "./lesson.ts";
+import { buildLessonHtml } from "./lesson.ts";
 import { lessonSourceFromDir } from "./design.ts";
 import { thumbnail } from "./thumbnail.ts";
 import { DATA, deleteDraft, getDraft, listDrafts, newDraft, recoverInterrupted, runStage, type Stage } from "./pipeline.ts";
@@ -90,9 +90,13 @@ app.post("/api/drafts/:id/:stage(plan|design|build)", (req, res) => {
 /** The lesson as one HTML file. Built on request so edits to simkit/template show up immediately. */
 function lessonHtml(id: string): string | null {
   if (!ID.test(id)) return null;
+  // The title comes from the design data, so serving a page never runs the lesson's code on the server.
+  if (isExample(id)) {
+    const dir = join(EXAMPLES, id);
+    return buildLessonHtml(lessonSourceFromDir(dir), JSON.parse(readFileSync(join(dir, "design.json"), "utf8")).title);
+  }
   const generated = join(DATA, id, "lesson.js");
-  const js = isExample(id) ? lessonSourceFromDir(join(EXAMPLES, id)) : existsSync(generated) ? readFileSync(generated, "utf8") : null;
-  return js && buildLessonHtml(js, loadLesson(js).title);
+  return existsSync(generated) ? buildLessonHtml(readFileSync(generated, "utf8"), getDraft(id)?.design?.title) : null;
 }
 
 app.get("/lessons/:id", (req, res) => {

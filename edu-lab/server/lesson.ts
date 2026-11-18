@@ -133,7 +133,7 @@ export function loadLesson(lessonJs: string): LessonConfig {
 }
 
 export type Issue = { level?: number; message: string };
-type ValidationReport = { ok: boolean; errors: Issue[]; warnings: Issue[] };
+export type ValidationReport = { ok: boolean; errors: Issue[]; warnings: Issue[] };
 
 /**
  * Structural and logical checks:

@@ -1,0 +1,305 @@
+{
+  "title": "Hooke's Law with a Spring",
+  "subtitle": "Stretch a spring, watch the restoring force grow, and find how stiffness and mass set the oscillation.",
+  "audience": "High school",
+  "objectives": [
+    "Calculate the spring force from the stretch and spring constant using F = kx.",
+    "Predict how the restoring-force arrow changes when the stretch is doubled.",
+    "Explain how the spring constant affects the force and the oscillation period."
+  ],
+  "components": [
+    "springMass"
+  ],
+  "state": {
+    "k": 20,
+    "m": 1,
+    "x": 0.2
+  },
+  "controls": [
+    {
+      "key": "k",
+      "label": "Spring constant",
+      "unit": "N/m",
+      "min": 10,
+      "max": 100,
+      "step": 5
+    },
+    {
+      "key": "m",
+      "label": "Block mass",
+      "unit": "kg",
+      "min": 0.5,
+      "max": 3,
+      "step": 0.5
+    },
+    {
+      "key": "x",
+      "label": "Stretch",
+      "unit": "m",
+      "min": 0.05,
+      "max": 0.5,
+      "step": 0.05
+    }
+  ],
+  "derived": [
+    {
+      "key": "Fmag",
+      "expr": "Math.abs(s.k * s.x)"
+    },
+    {
+      "key": "E",
+      "expr": "0.5 * s.k * s.x * s.x"
+    },
+    {
+      "key": "T",
+      "expr": "simkit.physics.springPeriod(s.k, s.m)"
+    }
+  ],
+  "readouts": [
+    {
+      "key": "Fmag",
+      "label": "Spring force",
+      "unit": "N",
+      "digits": 1
+    },
+    {
+      "key": "E",
+      "label": "Stored energy",
+      "unit": "J",
+      "digits": 2
+    },
+    {
+      "key": "T",
+      "label": "Period",
+      "unit": "s",
+      "digits": 2
+    }
+  ],
+  "actions": [
+    {
+      "id": "play",
+      "label": "Release"
+    }
+  ],
+  "formulas": [
+    {
+      "expr": "F = k\\,x",
+      "meaning": "Hooke's law: the spring force grows in proportion to the stretch."
+    },
+    {
+      "expr": "E = \\tfrac{1}{2}k\\,x^2",
+      "meaning": "Elastic energy stored in a stretched spring."
+    },
+    {
+      "expr": "T = 2\\pi\\sqrt{\\dfrac{m}{k}}",
+      "meaning": "Period of one full oscillation; it does not depend on the stretch."
+    }
+  ],
+  "debrief": "The spring force is proportional to the stretch: double the stretch and you double the force. A stiffer spring (larger k) gives more force and a shorter period, while a heavier block swings more slowly.",
+  "levels": [
+    {
+      "title": "Force from stretch",
+      "goal": "The spring constant is 20 N/m. Set the stretch so the spring pulls with a force of 10 N.",
+      "setup": {
+        "k": 20,
+        "m": 1,
+        "x": 0.2
+      },
+      "lock": [
+        "k",
+        "m",
+        "play"
+      ],
+      "show": [
+        "Fmag"
+      ],
+      "hints": [
+        "Hooke's law says $F = k\\,x$, so the force is 20 times the stretch.",
+        "You need $20 \\times x = 10$; divide 10 by 20 to find the stretch in metres."
+      ],
+      "check": "Math.abs(d.Fmag - 10) < 1e-9",
+      "feedback": [
+        {
+          "when": "Math.abs(d.Fmag - 4) < 1e-9",
+          "say": "That is still the starting stretch of 0.2 m."
+        },
+        {
+          "when": "true",
+          "say": "The spring force is now {Fmag} N."
+        }
+      ],
+      "solution": {
+        "x": 0.5
+      },
+      "solutionText": "$F = k\\,x = 20 \\times 0.5 = 10\\,\\text{N}$, so the stretch must be $x = \\dfrac{10}{20} = 0.5\\,\\text{m}$.",
+      "explain": "With a fixed spring constant the force is proportional to the stretch: 10 N needs a stretch of 0.5 m at 20 N/m."
+    },
+    {
+      "title": "Double the stretch",
+      "goal": "The spring (30 N/m) is stretched 0.1 m and pulls with 3 N. Double the stretch and watch what happens to the force.",
+      "setup": {
+        "k": 30,
+        "m": 1,
+        "x": 0.1
+      },
+      "lock": [
+        "k",
+        "m",
+        "play"
+      ],
+      "show": [
+        "Fmag"
+      ],
+      "hints": [
+        "Doubling 0.1 m gives 0.2 m of stretch.",
+        "Hooke's law is proportional: if $x$ doubles, $F = k\\,x$ doubles too."
+      ],
+      "check": "Math.abs(d.Fmag - 6) < 1e-9",
+      "feedback": [
+        {
+          "when": "Math.abs(d.Fmag - 3) < 1e-9",
+          "say": "The stretch has not changed yet."
+        },
+        {
+          "when": "Math.abs(d.Fmag - 12) < 1e-9",
+          "say": "You quadrupled the stretch; doubling 0.1 m gives 0.2 m."
+        },
+        {
+          "when": "true",
+          "say": "The spring force is now {Fmag} N."
+        }
+      ],
+      "solution": {
+        "x": 0.2
+      },
+      "solutionText": "Double the stretch: $x = 0.2\\,\\text{m}$. Then $F = 30 \\times 0.2 = 6\\,\\text{N}$, exactly twice 3 N.",
+      "explain": "Hooke's law is linear: doubling the stretch doubles the restoring force, whatever the spring constant is."
+    },
+    {
+      "title": "A stiffer spring",
+      "goal": "Keep the stretch at 0.2 m. Choose a spring constant so the force becomes 16 N.",
+      "setup": {
+        "k": 20,
+        "m": 1,
+        "x": 0.2
+      },
+      "lock": [
+        "m",
+        "x",
+        "play"
+      ],
+      "show": [
+        "Fmag"
+      ],
+      "hints": [
+        "The stretch stays at 0.2 m, so only $k$ changes.",
+        "From $F = k\\,x$ you get $k = \\dfrac{F}{x}$.",
+        "Divide 16 N by 0.2 m."
+      ],
+      "check": "Math.abs(d.Fmag - 16) < 1e-9",
+      "feedback": [
+        {
+          "when": "Math.abs(d.Fmag - 8) < 1e-9",
+          "say": "Doubling k to 40 N/m gives 8 N; you need twice that."
+        },
+        {
+          "when": "true",
+          "say": "The spring force is now {Fmag} N."
+        }
+      ],
+      "solution": {
+        "k": 80
+      },
+      "solutionText": "$k = \\dfrac{F}{x} = \\dfrac{16}{0.2} = 80\\,\\text{N/m}$. Check: $80 \\times 0.2 = 16\\,\\text{N}$.",
+      "explain": "At the same stretch, the force is proportional to the spring constant: a stiffer spring pulls four times as hard if k is four times as large."
+    },
+    {
+      "title": "Predict the energy",
+      "goal": "A spring with k = 50 N/m is stretched 0.2 m. How much elastic energy is stored in it? Type your prediction before checking.",
+      "setup": {
+        "k": 50,
+        "m": 1,
+        "x": 0.2
+      },
+      "lock": [
+        "k",
+        "m",
+        "x",
+        "play"
+      ],
+      "show": [
+        "E",
+        "Fmag"
+      ],
+      "hide": [
+        "E"
+      ],
+      "ask": {
+        "label": "Stored energy",
+        "unit": "J"
+      },
+      "hints": [
+        "Use $E = \\tfrac{1}{2}k\\,x^2$.",
+        "First square the stretch: $0.2^2 = 0.04$.",
+        "Then compute $\\tfrac{1}{2} \\times 50 \\times 0.04$."
+      ],
+      "check": "Math.abs(answer - 1) <= 0.05",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 2) < 0.05",
+          "say": "Close, but you forgot the factor of one half in the formula."
+        },
+        {
+          "when": "Math.abs(answer - 10) < 0.05",
+          "say": "You forgot to square the stretch: 0.2 squared is 0.04, not 0.2."
+        },
+        {
+          "when": "true",
+          "say": "The stored energy is {E} J."
+        }
+      ],
+      "solution": {
+        "answer": 1
+      },
+      "solutionText": "$E = \\tfrac{1}{2}k\\,x^2 = \\tfrac{1}{2} \\times 50 \\times 0.2^2 = \\tfrac{1}{2} \\times 50 \\times 0.04 = 1\\,\\text{J}$.",
+      "explain": "Energy grows with the square of the stretch, so it is not proportional the way force is: doubling the stretch would quadruple the energy."
+    },
+    {
+      "title": "Tune the period",
+      "goal": "Keep the stretch at 0.2 m and choose the spring constant and block mass so one full oscillation takes about 1.26 s. Press Release to watch it swing.",
+      "setup": {
+        "k": 100,
+        "m": 1,
+        "x": 0.2
+      },
+      "lock": [
+        "x"
+      ],
+      "show": [
+        "T"
+      ],
+      "hints": [
+        "The period does not depend on the stretch at all, so leave it alone.",
+        "Use $T = 2\\pi\\sqrt{m/k}$; you need $\\sqrt{m/k} = 0.2$.",
+        "That means $m/k = 0.04$, for example $m = 2\\,\\text{kg}$ and $k = 50\\,\\text{N/m}$."
+      ],
+      "check": "Math.abs(d.T - 1.2566) < 0.001",
+      "feedback": [
+        {
+          "when": "d.T < 1.2566",
+          "say": "Too fast: soften the spring or add mass to slow it down. The period is {T} s."
+        },
+        {
+          "when": "true",
+          "say": "Too slow: stiffen the spring or lighten the block. The period is {T} s."
+        }
+      ],
+      "solution": {
+        "k": 50,
+        "m": 2
+      },
+      "solutionText": "$T = 2\\pi\\sqrt{m/k} = 2\\pi\\sqrt{2/50} = 2\\pi \\times 0.2 \\approx 1.26\\,\\text{s}$.",
+      "explain": "The period depends only on the mass and the spring constant: more mass or a softer spring means a slower oscillation, and the stretch plays no role."
+    }
+  ]
+}

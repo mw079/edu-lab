@@ -1,8 +1,8 @@
 [
   { "id": "pendulum", "try": "Drag the bob to set the angle." },
-  { "id": "refraction-of-light-snell-s-law--6629fd", "try": "Swing the incoming ray by its end." },
-  { "id": "hooke-s-law-how-the-spring-force-a416bb", "try": "Pull the block along the ruler." },
-  { "id": "slope-and-y-intercept-of-a-strai-737532", "try": "Drag the y-intercept and a point on the line." },
+  { "id": "refraction", "try": "Swing the incoming ray by its end." },
+  { "id": "hookes-law", "try": "Pull the block along the ruler." },
+  { "id": "slope-intercept", "try": "Drag the y-intercept and a point on the line." },
   { "id": "momentum", "try": "Set masses and velocities, then run the collision." },
-  { "id": "ohm-s-law-how-current-depends-on-c9d2d6", "try": "Change the voltage and watch the charges and the graph." }
+  { "id": "ohms-law", "try": "Change the voltage and watch the charges and the graph." }
 ]

@@ -1,0 +1,341 @@
+{
+  "title": "Snell's Law at Glass",
+  "subtitle": "Swing a light ray into glass, measure how it bends, and find the angle where light gets trapped.",
+  "audience": "High school",
+  "objectives": [
+    "Calculate the angle of refraction using Snell's law for given refractive indices and angle of incidence.",
+    "Predict whether total internal reflection occurs when light travels from glass to air at a given angle.",
+    "Explain how the refracted ray bends as the refractive index of the second material increases."
+  ],
+  "components": [
+    "refraction"
+  ],
+  "state": {
+    "angle": 30,
+    "n1": 1,
+    "n2": 1.5
+  },
+  "controls": [
+    {
+      "key": "angle",
+      "label": "Angle of incidence",
+      "unit": "°",
+      "min": 0,
+      "max": 85,
+      "step": 1
+    },
+    {
+      "key": "n1",
+      "label": "Upper material",
+      "type": "select",
+      "options": [
+        {
+          "value": 1,
+          "label": "Air (n = 1.00)"
+        },
+        {
+          "value": 1.33,
+          "label": "Water (n = 1.33)"
+        },
+        {
+          "value": 1.5,
+          "label": "Glass (n = 1.50)"
+        },
+        {
+          "value": 2.42,
+          "label": "Diamond (n = 2.42)"
+        }
+      ]
+    },
+    {
+      "key": "n2",
+      "label": "Lower material",
+      "type": "select",
+      "options": [
+        {
+          "value": 1,
+          "label": "Air (n = 1.00)"
+        },
+        {
+          "value": 1.33,
+          "label": "Water (n = 1.33)"
+        },
+        {
+          "value": 1.5,
+          "label": "Glass (n = 1.50)"
+        },
+        {
+          "value": 2.42,
+          "label": "Diamond (n = 2.42)"
+        }
+      ]
+    }
+  ],
+  "derived": [
+    {
+      "key": "theta2",
+      "expr": "simkit.physics.snell(s.n1, s.n2, s.angle).theta2"
+    },
+    {
+      "key": "tir",
+      "expr": "simkit.physics.snell(s.n1, s.n2, s.angle).tir"
+    },
+    {
+      "key": "critical",
+      "expr": "simkit.physics.snell(s.n1, s.n2, s.angle).critical"
+    },
+    {
+      "key": "ratio",
+      "expr": "s.n1 * Math.sin(s.angle * Math.PI / 180)"
+    }
+  ],
+  "readouts": [
+    {
+      "key": "theta2",
+      "label": "Refraction angle",
+      "unit": "°",
+      "digits": 1
+    },
+    {
+      "key": "critical",
+      "label": "Critical angle",
+      "unit": "°",
+      "digits": 1
+    },
+    {
+      "key": "ratio",
+      "label": "n₁ · sin θ₁",
+      "unit": "",
+      "digits": 2
+    }
+  ],
+  "actions": [],
+  "formulas": [
+    {
+      "expr": "n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2",
+      "meaning": "Snell's law: the ray bends so this product stays the same across the surface."
+    },
+    {
+      "expr": "\\theta_c = \\arcsin\\!\\left(\\dfrac{n_2}{n_1}\\right)",
+      "meaning": "Critical angle, for light going from a denser material (n₁) into a lighter one (n₂)."
+    },
+    {
+      "expr": "\\theta_1 > \\theta_c \\;\\Rightarrow\\; \\text{total internal reflection}",
+      "meaning": "Past the critical angle no light crosses the surface at all."
+    }
+  ],
+  "debrief": "Snell's law, $n_1 \\sin\\theta_1 = n_2 \\sin\\theta_2$, predicts every bend: into a denser material the ray bends toward the normal, into a lighter one away from it. When light leaves glass at more than about $41.8^\\circ$, none of it escapes — total internal reflection.",
+  "levels": [
+    {
+      "title": "Watch the ray bend",
+      "goal": "Air sits on top of glass. Tilt the incoming ray so it hits the surface at exactly 45°, and watch it bend toward the normal inside the glass.",
+      "setup": {
+        "angle": 0,
+        "n1": 1,
+        "n2": 1.5
+      },
+      "lock": [
+        "n1",
+        "n2"
+      ],
+      "show": [
+        "theta2"
+      ],
+      "hints": [
+        "Drag the end of the incoming ray, or use the angle slider.",
+        "At 0° the ray goes straight through without bending; tilt it away from that.",
+        "Stop when the angle of incidence reads 45°."
+      ],
+      "check": "s.angle === 45 && s.n1 === 1 && s.n2 === 1.5",
+      "feedback": [
+        {
+          "when": "s.angle === 0",
+          "say": "Straight down does not bend at all — tilt the ray first."
+        },
+        {
+          "when": "true",
+          "say": "The refraction angle is now {theta2}°, smaller than the 45° you put in."
+        }
+      ],
+      "solution": {
+        "angle": 45
+      },
+      "solutionText": "Set the angle of incidence to $45^\\circ$. The refraction angle is $\\arcsin(\\sin 45^\\circ / 1.5) \\approx 28.1^\\circ$, so the ray bends toward the normal.",
+      "explain": "Going from air into glass the light slows down, so it bends toward the normal. The readout shows the same thing in numbers: 28.1° instead of 45°."
+    },
+    {
+      "title": "Predict the bend",
+      "goal": "Light in air hits glass (n = 1.5) at 40°. Use Snell's law to predict the refraction angle, then type it in.",
+      "setup": {
+        "angle": 40,
+        "n1": 1,
+        "n2": 1.5
+      },
+      "lock": [
+        "angle",
+        "n1",
+        "n2"
+      ],
+      "show": [
+        "theta2",
+        "ratio"
+      ],
+      "hide": [
+        "theta2"
+      ],
+      "ask": {
+        "label": "Refraction angle",
+        "unit": "°"
+      },
+      "hints": [
+        "Snell's law: $\\sin\\theta_2 = \\dfrac{n_1 \\sin\\theta_1}{n_2}$. The readout already gives you $n_1 \\sin\\theta_1$.",
+        "Divide 0.64 by 1.5, then take the inverse sine.",
+        "Going into a denser material the angle gets smaller, so the answer is below 40°."
+      ],
+      "check": "Math.abs(answer - 25.4) <= 0.2",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 40) < 0.05",
+          "say": "That is the angle of incidence. Snell's law gives a different angle on the glass side."
+        },
+        {
+          "when": "Math.abs(answer - 74.6) < 0.3",
+          "say": "You multiplied by 1.5 instead of dividing: entering a denser material bends the ray toward the normal, so the angle shrinks."
+        },
+        {
+          "when": "true",
+          "say": "Compute sin of the refraction angle as {ratio} divided by 1.5, then take the inverse sine."
+        }
+      ],
+      "solution": {
+        "answer": 25.4
+      },
+      "solutionText": "$\\sin\\theta_2 = \\dfrac{1.00 \\times \\sin 40^\\circ}{1.50} = \\dfrac{0.643}{1.50} = 0.429$, so $\\theta_2 = \\arcsin(0.429) \\approx 25.4^\\circ$.",
+      "explain": "Snell's law divides the sine of the incidence angle by the index ratio. Glass is denser, so the ray sits closer to the normal: 25.4° instead of 40°."
+    },
+    {
+      "title": "Denser bends more",
+      "goal": "Keep the angle at 50° and air on top. Switch the lower material until the refraction angle drops below 20°.",
+      "setup": {
+        "angle": 50,
+        "n1": 1,
+        "n2": 1.33
+      },
+      "lock": [
+        "angle",
+        "n1"
+      ],
+      "show": [
+        "theta2"
+      ],
+      "hints": [
+        "Only the lower material is free to change — try each one and watch the refraction angle.",
+        "A larger index bends the ray more, so you need the densest option.",
+        "Diamond has n = 2.42: $\\sin\\theta_2 = \\sin 50^\\circ / 2.42$."
+      ],
+      "check": "s.angle === 50 && d.theta2 !== null && d.theta2 < 20",
+      "feedback": [
+        {
+          "when": "d.theta2 >= 20",
+          "say": "The refraction angle is {theta2}° — still too wide. Pick a material with a larger index."
+        },
+        {
+          "when": "true",
+          "say": "The refraction angle is now {theta2}°."
+        }
+      ],
+      "solution": {
+        "n2": 2.42
+      },
+      "solutionText": "With diamond below, $\\sin\\theta_2 = \\dfrac{\\sin 50^\\circ}{2.42} = 0.317$, so $\\theta_2 \\approx 18.5^\\circ$, below 20°. Water gives 35.2° and glass 30.7° — both too wide.",
+      "explain": "The larger the second index, the smaller $\\sin\\theta_2 = n_1\\sin\\theta_1 / n_2$ becomes: a denser material bends the ray further toward the normal."
+    },
+    {
+      "title": "Find the critical angle",
+      "goal": "Now the light travels from glass into air at 40°, and the ray only just escapes. Predict the critical angle: the incidence angle above which the light would be totally reflected. Type it in.",
+      "setup": {
+        "angle": 40,
+        "n1": 1.5,
+        "n2": 1
+      },
+      "lock": [
+        "angle",
+        "n1",
+        "n2"
+      ],
+      "show": [
+        "critical",
+        "theta2"
+      ],
+      "hide": [
+        "critical"
+      ],
+      "ask": {
+        "label": "Critical angle",
+        "unit": "°"
+      },
+      "hints": [
+        "At the critical angle the refracted ray skims the surface: $\\theta_2 = 90^\\circ$.",
+        "Put that into Snell's law: $\\sin\\theta_c = \\dfrac{n_2}{n_1} = \\dfrac{1}{1.5}$.",
+        "Take the inverse sine of 0.667."
+      ],
+      "check": "Math.abs(answer - 41.8) <= 0.3",
+      "feedback": [
+        {
+          "when": "Math.abs(answer - 40) < 0.05",
+          "say": "That is the current angle of incidence, not the critical angle. Use the sine of the critical angle equals n2 divided by n1."
+        },
+        {
+          "when": "Math.abs(answer - 74.6) < 0.3",
+          "say": "That is the refraction angle at 40°. The critical angle comes from the sine of the critical angle equaling 1 divided by 1.5 instead."
+        },
+        {
+          "when": "true",
+          "say": "Start from the sine of the critical angle equaling 1 divided by 1.5, which is about 0.667, and take the inverse sine."
+        }
+      ],
+      "solution": {
+        "answer": 41.8
+      },
+      "solutionText": "$\\sin\\theta_c = \\dfrac{n_2}{n_1} = \\dfrac{1}{1.5} = 0.667$, so $\\theta_c = \\arcsin(0.667) \\approx 41.8^\\circ$.",
+      "explain": "Leaving glass, the ray bends away from the normal. At 41.8° the refraction angle would reach 90°; beyond that there is no direction left for the refracted ray."
+    },
+    {
+      "title": "Trap the light",
+      "goal": "Glass sits on top of air. Swing the ray past the critical angle until total internal reflection occurs and no ray crosses into the air.",
+      "setup": {
+        "angle": 35,
+        "n1": 1.5,
+        "n2": 1
+      },
+      "lock": [
+        "n1",
+        "n2"
+      ],
+      "show": [
+        "critical"
+      ],
+      "hints": [
+        "The critical angle readout tells you the threshold — the ray escapes while you stay below it.",
+        "Any incidence angle past 41.8° works; try 50°.",
+        "Watch the lower half of the picture: the refracted ray disappears and only the reflected ray remains."
+      ],
+      "check": "s.n1 === 1.5 && s.n2 === 1 && d.tir",
+      "feedback": [
+        {
+          "when": "!d.tir",
+          "say": "The ray still escapes into the air — swing it past the critical angle of {critical}°."
+        },
+        {
+          "when": "true",
+          "say": "Total internal reflection: the light bounces back into the glass."
+        }
+      ],
+      "solution": {
+        "angle": 50
+      },
+      "solutionText": "The critical angle is $41.8^\\circ$, so any incidence angle above it gives total internal reflection — for example $50^\\circ$.",
+      "explain": "Past the critical angle Snell's law has no solution for $\\theta_2$: the sine would exceed 1. All the light reflects back inside the glass, which is how optical fibres trap light."
+    }
+  ]
+}

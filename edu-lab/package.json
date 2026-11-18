@@ -16,7 +16,7 @@
     "export": "tsx scripts/export.ts"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.13"
   },
   "dependencies": {
     "express": "^4.21.2",

@@ -67,13 +67,18 @@ npm run typecheck
 | `DESIGN.md` | Design rules for the fixed parts (tokens, motion, interaction, states, drawing), taken from three design-skill repos |
 | `simkit/` | SVG science components (`README.md`), the catalogue the planner picks from (`catalog.json`) and a usage example per component (`snippets/`) |
 | `template/` | Fixed student UI (`shell.js`, `shell.css`, `lesson.html`), design tokens shared with the teacher app (`tokens.css`), lesson format (`CONTRACT.md`) |
-| `examples/` | Reference lessons as `design.json` + `scene.js`: `momentum` is shown to the generator, `pendulum` shows direct interaction |
+| `examples/` | Reference lessons as `design.json` + `scene.js`: `momentum` is shown to the generator, `pendulum` shows direct interaction; all six are the showcase lessons `export` publishes |
 | `prompts/` | Prompts for plan, steps and simulation |
-| `server/` | Express API (`index.ts`), pipeline (`pipeline.ts`), design checks and assembly (`design.ts`), lesson build and logic validation (`lesson.ts`), math (`math.ts`), Chrome check (`browser-check.ts`, `layout-check.js`), card pictures (`thumbnail.ts`), Fireworks client (`llm.ts`) |
+| `server/` | Express API (`index.ts`), pipeline (`pipeline.ts`), design checks and assembly (`design.ts`), lesson build and logic validation (`lesson.ts`), sandbox that runs model-written lesson code for those checks (`sandbox.ts`), math (`math.ts`), Chrome check (`browser-check.ts`, `layout-check.js`), card pictures (`thumbnail.ts`), Fireworks client (`llm.ts`) |
 | `web/` | React teacher app |
 | `scripts/` | `generate`, `regenerate`, `eval`, `export` |
 | `showcase.json` | The lessons `export` publishes to `../docs/` |
 | `eval/` | Evaluation requests (`requests.json`) |
+
+**Running model-written code.** The logic checks run a lesson's expressions in a separate Node process with
+the permission model on (it can read only three files, cannot write or start processes, and gets no environment
+variables, so no API key) and a 5 s limit, so a broken or hostile expression cannot reach the server or hang it.
+The scene itself only runs in headless Chrome. Needs Node 22.13 or later.
 
 A lesson is one HTML file: `server/lesson.ts` inlines the shell, simkit, the lesson and (when it has
 math) KaTeX's stylesheet and fonts. No AI runs while students use a lesson.

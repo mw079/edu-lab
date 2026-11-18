@@ -10,7 +10,8 @@ import { ROOT } from "./env.ts";
 import { chat, extractJson, type Message, type Part } from "./llm.ts";
 import { catalog, catalogSummary, snippet, snippetApi } from "./catalog.ts";
 import { assembleLesson, checkDesign, type Design, type Issue } from "./design.ts";
-import { buildLessonHtml, loadLesson } from "./lesson.ts";
+import { buildLessonHtml } from "./lesson.ts";
+import { checkLesson } from "./sandbox.ts";
 import { browserCheck } from "./browser-check.ts";
 import { cleanText, sourceBlock, type Source } from "./source.ts";
 
@@ -140,7 +141,7 @@ async function ask(d: Draft, stage: LogStage, what: string, messages: Message[],
   if (!r.text.trim()) {
     // Thought until the token limit without answering: ask again with less thinking.
     d.log.push({ at: new Date().toISOString(), stage, what: `${what}: empty reply, retrying with less thinking`, ms: r.ms, tokens: r.usage.completion_tokens });
-    r = await chat(messages, { maxTokens: 24000, temperature: 0.3, reasoningEffort: "low" });
+    r = await chat(messages, { maxTokens: 24000, temperature: 0.3, ...opts, reasoningEffort: "low" }); // keeps a caller's time limit
   }
   const llmDir = join(dirOf(d.id), "llm");
   mkdirSync(llmDir, { recursive: true });
@@ -202,6 +203,8 @@ async function design(d: Draft, opts: { objectives?: string[]; note?: string }) 
         `Teacher request: ${d.request}`,
         `Approved plan:\n${JSON.stringify(d.plan, null, 2)}`,
         d.source ? sourceBlock(d.source, 6000) : "",
+        // The note refers to the previous steps ("make step 2 easier"), so the model needs to see them.
+        opts.note && d.design ? `Previous version of the design (change what the note asks for; keep the rest):\n${JSON.stringify(d.design, null, 2)}` : "",
         opts.note ? `Teacher's note on the previous version: ${opts.note}` : "",
         "Write the lesson design JSON.",
       ]
@@ -267,7 +270,7 @@ type Attempt = { scene: string; js: string; report: Awaited<ReturnType<typeof br
 async function tryScene(d: Draft, design: Design, text: string, shotsDir: string): Promise<Attempt> {
   const scene = extractCode(text);
   const js = assembleLesson(design, scene);
-  loadLesson(js); // syntax
+  checkLesson(js); // loads in the sandbox: throws on syntax errors or code that never finishes
   d.activity = "Playing every step in Chrome";
   saveDraft(d);
   rmSync(shotsDir, { recursive: true, force: true });
