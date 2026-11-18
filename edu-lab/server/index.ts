@@ -19,9 +19,10 @@ app.use("/video", express.static(join(ROOT, "..", "docs", "video")));
 app.use(passwordGate(config.password));
 // Model work (new lessons, change requests, retries) counts toward the daily limit.
 const limit = dailyLimit(config.dailyLimit);
-// Any request about one lesson (opening, previewing, changing it) counts as using it.
+// Any request about one lesson (opening, previewing, changing it) counts as using it. Its card picture does not:
+// the overview loads every lesson's picture, and just looking at the overview should not keep them all.
 app.use((req, _res, next) => {
-  const id = req.path.match(/^\/(?:api\/drafts|lessons)\/([a-z0-9-]+)/)?.[1];
+  const id = req.path.match(/^\/(?:api\/drafts|lessons)\/([a-z0-9-]+)(?:\/(?!thumb\.png$)[^/]*)?$/)?.[1];
   if (id) touchDraft(id);
   next();
 });
