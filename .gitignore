@@ -1,8 +1,7 @@
-archive/
 node_modules/
 .env
 .DS_Store
-studio/dist/
-studio/data/
+edu-lab/dist/
+edu-lab/data/
 .claude/settings.local.json
 design-skills/*/

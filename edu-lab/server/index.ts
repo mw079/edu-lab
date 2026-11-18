@@ -68,7 +68,7 @@ app.post("/api/drafts", (req, res) => {
   const audience = String(req.body?.audience || "");
   if (!AUDIENCES.includes(audience)) return res.status(400).json({ error: `Audience must be one of: ${AUDIENCES.join(", ")}` });
   if (request.length < 5) return res.status(400).json({ error: "Describe the lesson in a sentence or two." });
-  if (!config.fireworksKey) return res.status(500).json({ error: "FIREWORKS_API_KEY is not set in studio/.env" });
+  if (!config.fireworksKey) return res.status(500).json({ error: "FIREWORKS_API_KEY is not set in edu-lab/.env" });
   const sourceText = req.body?.sourceText ? String(req.body.sourceText).slice(0, 60000) : undefined;
   const d = newDraft(request, audience, sourceText);
   runStage(d, "plan");

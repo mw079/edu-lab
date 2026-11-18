@@ -28,7 +28,7 @@ Inspired by Google's "Harnessing Generative UI for Education: Tailored Learning 
 
 | Path | What |
 |---|---|
-| [`studio/`](studio/README.md) | The app: generator, checks, component library, teacher app, evaluation results |
-| [`studio/DESIGN.md`](studio/DESIGN.md) | Design rules for the lesson page, the components and the teacher app |
-| [`studio/DEMO.md`](studio/DEMO.md) | A four-minute demo script |
-| `docs/` | Six exported example lessons (`npm run export` in `studio/`) |
+| [`edu-lab/`](edu-lab/README.md) | The app: generator, checks, component library, teacher app, evaluation results |
+| [`edu-lab/DESIGN.md`](edu-lab/DESIGN.md) | Design rules for the lesson page, the components and the teacher app |
+| [`edu-lab/DEMO.md`](edu-lab/DEMO.md) | A four-minute demo script |
+| `docs/` | Six exported example lessons (`npm run export` in `edu-lab/`) |

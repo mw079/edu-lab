@@ -9,7 +9,7 @@ type ChatOptions = { model?: string; maxTokens?: number; temperature?: number; t
 type ChatResult = { text: string; reasoning: string; ms: number; usage: { prompt_tokens?: number; completion_tokens?: number } };
 
 export async function chat(messages: Message[], opts: ChatOptions = {}): Promise<ChatResult> {
-  if (!config.fireworksKey) throw new Error("FIREWORKS_API_KEY is not set (studio/.env)");
+  if (!config.fireworksKey) throw new Error("FIREWORKS_API_KEY is not set (edu-lab/.env)");
   const body = JSON.stringify({
     model: opts.model || config.model,
     messages,
