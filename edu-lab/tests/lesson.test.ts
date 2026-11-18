@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { lessonSourceFromDir } from "../server/design.ts";
-import { buildLessonHtml, loadLesson, simkitFiles, validateLesson } from "../server/lesson.ts";
+import { buildLessonHtml, katexCss, loadLesson, simkitFiles, validateLesson } from "../server/lesson.ts";
+import { richHtml } from "../server/math.ts";
 import { extractJson } from "../server/llm.ts";
 
 const momentum = lessonSourceFromDir("examples/momentum");
@@ -106,4 +107,11 @@ test("a lesson includes only the simkit files it uses", () => {
   assert.deepEqual(simkitFiles("kit.doubleSlit(stage, {})"), ["core.js", "photoelectric.js", "slit.js"]);
   const html = buildLessonHtml(momentum);
   assert.ok(html.includes("simkit/carts.js") && !html.includes("simkit/pendulum.js"));
+});
+
+test("a lesson's math gets only the KaTeX fonts it uses", () => {
+  const fonts = (text: string) => [...katexCss(JSON.stringify(richHtml(text))).matchAll(/@font-face\{font-family:(KaTeX_\w+)/g)].map((m) => m[1]).filter((f, i, a) => a.indexOf(f) === i);
+  assert.deepEqual(fonts("$F = ma$"), ["KaTeX_Main", "KaTeX_Math"]);
+  assert.ok(fonts("$x \\in \\mathbb{R}$").includes("KaTeX_AMS"));
+  assert.ok(fonts("$\\left(\\dfrac{a}{b}\\right)$").some((f) => f.startsWith("KaTeX_Size")));
 });

@@ -9,20 +9,21 @@ const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js
 
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 
-/** Which file defines each component (`kit.name = ...`); core.js is always included. */
-let definedIn: Map<string, string> | null = null;
-function componentFiles(): Map<string, string> {
-  definedIn ??= new Map(SIMKIT_FILES.slice(1).flatMap((f) => [...read("simkit", f).matchAll(/^\s*kit\.(\w+)\s*=/gm)].map((m) => [m[1], f] as [string, string])));
-  return definedIn;
-}
+/**
+ * Which file defines each component (`kit.name = ...`); core.js is always included. Read on every build, like
+ * the rest of simkit, so a component added while the server runs is found (61 small files: about 2 ms).
+ */
+const componentFiles = () =>
+  new Map(SIMKIT_FILES.slice(1).flatMap((f) => [...read("simkit", f).matchAll(/^\s*kit\.(\w+)\s*=/gm)].map((m) => [m[1], f] as [string, string])));
 
 /** The files `code` needs: core.js plus every file defining a `kit.x` / `simkit.x` it uses, and what those use. */
 export function simkitFiles(code: string): string[] {
+  const definedIn = componentFiles();
   const files = new Set(["core.js"]);
   const queue = [code];
   while (queue.length) {
     for (const [, name] of queue.pop()!.matchAll(/\b(?:kit|simkit)\.(\w+)/g)) {
-      const f = componentFiles().get(name);
+      const f = definedIn.get(name);
       if (f && !files.has(f)) files.add(f), queue.push(read("simkit", f));
     }
   }
@@ -38,21 +39,47 @@ const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "
 // Prevent a script body from closing its own <script> tag.
 const scriptSafe = (s: string) => s.replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
 
-let katexCssCache = "";
-/** KaTeX's stylesheet with its fonts inlined (woff2 only), so math renders offline. */
-function katexCss(): string {
-  if (katexCssCache) return katexCssCache;
+type Katex = { rules: string; faces: { family: string; css: string }[]; selectors: Map<string, string[][][]> };
+let katex: Katex | null = null;
+/**
+ * KaTeX's stylesheet split into its @font-face rules (fonts inlined as woff2) and the rest, plus, per font
+ * family, the selectors that use it (each selector as compound class lists, e.g. [["katex"], ["delimsizing", "size1"]]).
+ */
+function loadKatex(): Katex {
+  if (katex) return katex;
   const dir = join(ROOT, "node_modules", "katex", "dist");
-  katexCssCache = readFileSync(join(dir, "katex.min.css"), "utf8").replace(/src:url\(fonts\/([\w-]+\.woff2)\) format\("woff2"\)[^;}]*/g, (_, f: string) => `src:url(data:font/woff2;base64,${readFileSync(join(dir, "fonts", f)).toString("base64")}) format("woff2")`);
-  return katexCssCache;
+  const css = readFileSync(join(dir, "katex.min.css"), "utf8");
+  const faces = [...css.matchAll(/@font-face\{font-family:(KaTeX_\w+)[^}]*\}/g)].map(([face, family]) => ({
+    family,
+    css: face.replace(/src:url\(fonts\/([\w-]+\.woff2)\) format\("woff2"\)[^;}]*/, (_, f: string) => `src:url(data:font/woff2;base64,${readFileSync(join(dir, "fonts", f)).toString("base64")}) format("woff2")`),
+  }));
+  const rules = css.replace(/@font-face\{[^}]*\}/g, "");
+  const selectors = new Map<string, string[][][]>();
+  for (const [, sel, family] of rules.matchAll(/([^{}]+)\{[^{}]*?\bfont(?:-family)?:[^;{}]*?(KaTeX_\w+)/g)) {
+    const list = sel.split(",").map((s) => s.split(/[\s>+~]+/).map((c) => c.match(/\.[\w-]+/g)?.map((x) => x.slice(1)) || []).filter((c) => c.length));
+    selectors.set(family, [...(selectors.get(family) || []), ...list]);
+  }
+  return (katex = { rules, faces, selectors });
+}
+
+/**
+ * KaTeX's stylesheet with only the fonts the lesson's math uses (all 20 would add ~350 KB). A family is used
+ * when one of its selectors matches: every compound in it appears together in one of the lesson's class lists.
+ */
+export function katexCss(lessonJs: string): string {
+  const k = loadKatex();
+  const classLists = [...lessonJs.matchAll(/class=\\"([^"\\]*)/g)].map(([, c]) => new Set(c.split(/\s+/)));
+  const matches = (compounds: string[][]) => compounds.every((c) => classLists.some((l) => c.every((x) => l.has(x))));
+  const used = new Set([...k.selectors].filter(([, sels]) => sels.some(matches)).map(([family]) => family));
+  return k.faces.filter((f) => used.has(f.family)).map((f) => f.css).join("") + k.rules;
 }
 
 /** Inline template, styles, simkit, shell and the lesson into one self-contained HTML file. */
 export function buildLessonHtml(lessonJs: string, title = "Lesson"): string {
   const parts: Record<string, string> = {
     TITLE: escapeHtml(title),
-    // KaTeX's stylesheet and fonts (~400 KB) only when the lesson contains rendered math.
-    CSS: (lessonJs.includes('class=\\"katex') ? katexCss() + "\n" : "") + read("template", "tokens.css") + "\n" + read("template", "shell.css"),
+    // KaTeX's stylesheet and the fonts it needs only when the lesson contains rendered math.
+    CSS: (lessonJs.includes('class=\\"katex') ? katexCss(lessonJs) + "\n" : "") + read("template", "tokens.css") + "\n" + read("template", "shell.css"),
     // Only the components this lesson uses (a lesson uses 1–2 of the ~90).
     SIMKIT: scriptSafe(simkitSource(lessonJs)),
     SHELL: scriptSafe(read("template", "shell.js")),

@@ -21,8 +21,8 @@ The model only fills in small, checked pieces; templates and examples do the res
 
 Each step gets up to two fix rounds with the check results sent back to the model. `assembleLesson`
 turns `design.json` + `scene.js` into `lesson.js`; the model never writes the UI or the level logic.
-The lesson HTML includes only the simkit files its code uses (`simkitFiles` in `server/lesson.ts`) and KaTeX
-fonts only when it has math: about 100 KB without math, about 500 KB with it.
+The lesson HTML includes only the simkit files its code uses (`simkitFiles` in `server/lesson.ts`) and only the
+KaTeX fonts its math uses (`katexCss`, usually 2 of 20): about 100 KB without math, about 300 KB with it.
 Drafts live in `data/lessons/<id>/` with every model reply (`llm/`); the check screenshots are deleted once a lesson is ready.
 
 - **Source text**: the teacher can paste a textbook section or notes; the plan and design steps base the

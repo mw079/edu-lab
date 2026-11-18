@@ -36,6 +36,8 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
     // Stage screenshots at the drawing's own 1000 : 560 shape (the page lets the stage grow to fill the window).
     await page.addStyleTag({ content: ".sim{align-self:start} .stage{flex:none;aspect-ratio:1000/560}" }).catch(() => {});
 
+    // Wait for the page instead of sleeping: two animation frames let the redraw reach the screen.
+    const settle = () => page.evaluate(() => new Promise<void>((r) => requestAnimationFrame(() => requestAnimationFrame(() => r()))));
     const shot = async (name: string) => {
       const file = join(outDir, name);
       await page.screenshot({ path: file });
@@ -48,7 +50,7 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
     for (let i = 0; i < count; i++) {
       const files: string[] = [];
       await page.evaluate((n) => (window as any).__lesson.goTo(n), i);
-      await page.waitForTimeout(150);
+      await settle();
       files.push(await shot(`${String(i + 1).padStart(2, "0")}-start.png`));
       const stageFile = join(outDir, `stage-${i + 1}.png`);
       await page.locator(".stage svg").screenshot({ path: stageFile });
@@ -57,14 +59,14 @@ export async function browserCheck(html: string, outDir: string): Promise<Browse
       const startsUnsolved = await page.evaluate(() => !(window as any).__lesson.isSolvedNow(undefined));
       await page.evaluate((n) => (window as any).__lesson.applySolution(n), i);
       await page.click("#check-btn");
-      await page.waitForTimeout(150);
+      await settle();
       for (const m of (await page.evaluate(LAYOUT_CHECK)) as string[]) layout.add(`level ${i + 1} (solved): ${m}`);
       const solvedViaUi: boolean = await page.evaluate((n) => (window as any).__lesson.solved(n), i);
       const feedback = (await page.textContent(".feedback").catch(() => "")) || "";
       // Exercise each unlocked action (e.g. "Run collision") after solving.
       const actions = await page.$$("[data-action]:visible");
       for (const a of actions) if (await a.isEnabled()) await a.click();
-      if (actions.length) await page.waitForTimeout(1200);
+      if (actions.length) await page.waitForTimeout(1200); // let animations run long enough to surface errors
       files.push(await shot(`${String(i + 1).padStart(2, "0")}-solved.png`));
       levels.push({ level: i + 1, startsUnsolved, solvedViaUi, feedback: feedback.trim(), screenshots: files });
     }
