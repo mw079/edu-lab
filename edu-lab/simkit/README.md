@@ -78,6 +78,17 @@ Physical inputs are SI unless stated.
 | `kit.physics.cuboid(l, w, h)` | `{ surface, volume, base, front, side }`. |
 | `kit.physics.ratio(a, b, x)` | `{ y, unitRate, scale }`. |
 | `kit.physics.sampling(percent, size, count)` | `{ results, last, mean, standardError, low, high, contains }`, repeatable. |
+| `kit.physics.pulley(load, ropes, lift)`, `gears(driver, driven, turns)` | `{ effort, advantage, pull, work }`; `{ ratio, outTurns, speedTimes, forceTimes, direction }`. |
+| `kit.physics.induction(turns, speed, strength)` | `{ emf (mV), size, direction }`; + speed = into the coil. |
+| `kit.physics.electromagnet(turns, current, core)` | `{ field (mT), clips, north }`; an iron core (1) makes it 200 times stronger. |
+| `kit.physics.mirror(f, dObj)` | Concave mirror: `{ dImg, m, real, upright }`. |
+| `kit.physics.circular(m, v, r)` | `{ force, accel, period, omega }`. |
+| `kit.physics.periodic(z)` | Elements 1–20: `{ symbol, name, group, period, valence, shells, radius, electronegativity, ionization, kind }`. |
+| `kit.physics.equilibrium(a, b, c, tempC, K25, dH)` | A + B ⇌ C: `{ a, b, c, K, Q, formed, shift }`. |
+| `kit.physics.enzyme(tempC, pH, bestTemp, bestPH)` | `{ rate (%), denatured, tempFactor, pHFactor }`. |
+| `kit.physics.cellParts`, `cellPart(index, kind)` | The 8 parts of a plant/animal cell; `{ name, job, present, partsInCell }`. |
+| `kit.physics.rockCycle(rock)` | `{ name, next: [{ process, to, name }] }` for rocks 0–4. |
+| `kit.physics.transform(points, kind, a, b)` | Image of a shape after translation, reflection, rotation or enlargement. |
 
 ## Components
 
@@ -112,10 +123,13 @@ give grips a radius of at least 22 so the target is about 44 px (see `DESIGN.md`
 
 ## Adding a component
 
-1. New file in `simkit/`, appended to `SIMKIT_FILES` in `server/lesson.ts`.
+1. New file in `simkit/` (lessons pick it up automatically: `server/lesson.ts` reads the folder).
 2. Factory `kit.name = (stage, opts) => api`; draw into `stage.layer()`; animate only via `stage.onFrame`/`stage.animate`.
    Follow the look above; `update` must accept any in-range value (the page passes in-between values).
 3. Physics in `kit.physics` when lessons also need it in `model()`.
 4. Add a snippet in `snippets/` (API, physics helper, an "Always visible" note, an example state and scene),
-   and an entry in `catalog.json`. `tests/snippets.test.ts` then runs it automatically.
-5. Add a request for it to `eval/requests.json` and run `npm run eval -- --only <id>`.
+   and an entry in `catalog.json`. `tests/snippets.test.ts` then runs it automatically, and `tests/extremes.test.ts`
+   draws it at both ends of every range the comment gives as "key a–b" (or "key (unit, a–b)"), so write each slider's
+   range that way.
+5. If it can be dragged or clicked, add its id to the list in the "draggable and clickable" test.
+6. Add a request for it to `eval/requests.json` and run `npm run eval -- --only <id>`.

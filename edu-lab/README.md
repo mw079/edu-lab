@@ -70,7 +70,7 @@ npm run regenerate -- <lesson-id> [--from design|build]   # redo named lessons o
 npm run eval [-- --only id1,id2]   # eval/requests.json through the whole pipeline → data/eval/<run>/summary.md
 npm run export         # the lessons in showcase.json as static pages → ../docs (free, no model calls)
 npm run check [-- id…] # re-check the examples and your lessons against today's checks, in Chrome (free)
-npm test               # validator, design checks, math, snippets, browser tests
+npm test               # validator, design checks, math, snippets (also at their slider ranges' ends), browser tests
 npm run typecheck
 ```
 
@@ -124,8 +124,8 @@ then open as a preview to approve or change. A teacher can delete their own less
 | M1 | simkit (core, plot, carts, spring, circuit, gas) + template + momentum example + checks | done |
 | M2 | Pipeline plan → steps → simulation with check-and-fix rounds; teacher app; redesign; LaTeX; pasted source text | done |
 | M3 | Visual review of step screenshots by the vision model (GLM 5.3 Flash accepts images); evaluation on 10 requests | done |
-| M4 | More components (toward 50–100 objects) and example lessons | 90 components across physics, chemistry, biology, earth science, astronomy, maths, computer science and data; second example lesson (pendulum) |
-| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 53 of 90 components (each snippet's "Direct interaction" note says how) |
+| M4 | More components (toward 50–100 objects) and example lessons | 100 components across physics, chemistry, biology, earth science, astronomy, maths, computer science and data; second example lesson (pendulum) |
+| M5 | Direct interaction: students drag and click objects on the picture, in step with the sliders | 63 of 100 components (each snippet's "Direct interaction" note says how) |
 
 ### Evaluation (`eval/requests.json`)
 

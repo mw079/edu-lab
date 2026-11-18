@@ -9,6 +9,8 @@ ctx.window = ctx;
 vm.runInNewContext(readFileSync("simkit/core.js", "utf8"), ctx);
 const P = ctx.simkit.physics;
 const near = (a: number, b: number, tol = 0.01) => assert.ok(Math.abs(a - b) <= tol, `${a} ≈ ${b}`);
+// Arrays made inside the sandbox have their own Array type: compare plain copies.
+const plain = (v: unknown) => JSON.parse(JSON.stringify(v));
 
 test("projectile: 20 m/s at 45° lands at v²/g and peaks at v²/4g", () => {
   const r = P.projectile(20, 45);
@@ -281,4 +283,68 @@ test("weather, climate and correlation helpers", () => {
   near(line.intercept, 1);
   near(line.r, 1);
   near(P.correlation([[1, 3], [2, 2], [3, 1]]).r, -1);
+});
+
+test("magnetism, mirror and circular motion helpers", () => {
+  assert.deepEqual({ ...P.induction(10, 2, 1) }, { emf: 200, size: 200, direction: "right" });
+  assert.equal(P.induction(20, -1, 2).emf, -400); // pulling out reverses the voltage
+  assert.equal(P.induction(10, 0, 3).direction, "none");
+  const em = P.electromagnet(20, 2, 1);
+  near(em.field, 100.53);
+  assert.deepEqual([em.clips, em.north], [10, "right"]);
+  near(P.electromagnet(20, 2, 0).field, 0.503); // no iron core: 200 times weaker
+  assert.deepEqual([P.electromagnet(20, -2, 1).north, P.electromagnet(100, 5, 1).clips], ["left", 12]);
+  assert.deepEqual({ ...P.mirror(10, 30) }, { dImg: 15, m: -0.5, real: true, upright: false });
+  assert.deepEqual({ ...P.mirror(10, 5) }, { dImg: -10, m: 2, real: false, upright: true }); // inside F: virtual
+  const c = P.circular(0.5, 4, 2);
+  assert.deepEqual([c.force, c.accel, c.omega], [4, 8, 2]);
+  near(c.period, Math.PI);
+  near(P.circular(0.5, 8, 2).force / c.force, 4); // double the speed, four times the force
+});
+
+test("periodic table, equilibrium and enzyme helpers", () => {
+  const C = P.periodic(6);
+  assert.deepEqual([C.symbol, C.group, C.period, C.valence, C.radius, C.electronegativity, C.ionization, C.kind], ["C", 14, 2, 4, 76, 2.55, 1086, "non-metal"]);
+  assert.deepEqual([P.periodic(18).electronegativity, P.periodic(18).valence, P.periodic(2).valence], [null, 8, 2]);
+  assert.deepEqual(plain(P.periodic(19).shells), [2, 8, 8, 1]);
+  // Trends: radius falls across period 3 and rises down group 1; electronegativity rises across period 2.
+  assert.ok(P.periodic(11).radius > P.periodic(17).radius && P.periodic(19).radius > P.periodic(3).radius);
+  assert.ok(P.periodic(9).electronegativity > P.periodic(3).electronegativity);
+  const e = P.equilibrium(2, 2, 0, 25, 2, -40);
+  near(e.c / (e.a * e.b), 2, 1e-9); // the mixture satisfies K
+  near(e.c, 1.2192, 1e-3);
+  assert.equal(e.shift, "right");
+  const more = P.equilibrium(3, 2, 0, 25, 2, -40);
+  assert.ok(more.c > e.c, "adding A makes more C");
+  const hot = P.equilibrium(2, 2, 0, 75, 2, -40);
+  assert.ok(hot.K < 2 && hot.c < e.c, "heating an exothermic reaction lowers K");
+  const back = P.equilibrium(1, 1, 3, 25, 2, -40);
+  assert.equal(back.shift, "left");
+  near(back.c / (back.a * back.b), 2, 1e-9);
+  assert.equal(P.equilibrium(0.5, 0.5, 0.5, 25, 2, -40).shift, "none"); // Q = K already
+  assert.equal(P.enzyme(37, 7).rate, 100);
+  near(P.enzyme(27, 7).rate, 50);
+  assert.ok(P.enzyme(60, 7).denatured && P.enzyme(60, 7).rate < 1);
+  near(P.enzyme(37, 5).rate, 100 * Math.exp(-Math.pow(2 / 1.5, 2)));
+  near(P.enzyme(37, 2, 37, 2).rate, 100); // pepsin: best at pH 2
+});
+
+test("cell parts, rock cycle and transformation helpers", () => {
+  assert.equal(P.cellParts.length, 8);
+  assert.deepEqual([P.cellPart(6, 0).present, P.cellPart(6, 1).present, P.cellPart(3, 0).present], [false, true, true]);
+  assert.deepEqual([P.cellPart(0, 0).partsInCell, P.cellPart(0, 1).partsInCell], [5, 8]);
+  assert.deepEqual(plain(P.rockCycle(0).next.map((n: any) => n.to)), [1]);
+  assert.deepEqual(plain(P.rockCycle(1).next.map((n: any) => [n.process, n.to])), [["weathering and erosion", 2], ["heat and pressure", 4], ["melting", 0]]);
+  assert.deepEqual(plain(P.rockCycle(2).next.map((n: any) => n.to)), [3]);
+  assert.deepEqual(plain(P.rockCycle(4).next.map((n: any) => n.to)), [2, 0]);
+  const tri = [[1, 1], [3, 1], [1, 3]];
+  assert.deepEqual(plain(P.transform(tri, 0, 3, 2)), [[4, 3], [6, 3], [4, 5]]);
+  assert.deepEqual(plain(P.transform(tri, 1, 0)), [[1, -1], [3, -1], [1, -3]]);
+  assert.deepEqual(plain(P.transform(tri, 1, 1)), [[-1, 1], [-3, 1], [-1, 3]]);
+  assert.deepEqual(plain(P.transform(tri, 1, 2)), [[1, 1], [1, 3], [3, 1]]);
+  assert.deepEqual(plain(P.transform(tri, 2, 90)), [[-1, 1], [-1, 3], [-3, 1]]);
+  assert.deepEqual(plain(P.transform(tri, 2, 180)), [[-1, -1], [-3, -1], [-1, -3]]);
+  assert.deepEqual(plain(P.transform(tri, 2, 270)), [[1, -1], [1, -3], [3, -1]]);
+  assert.deepEqual(plain(P.transform(tri, 3, 2)), [[2, 2], [6, 2], [2, 6]]);
+  assert.deepEqual(plain(P.transform(tri, 3, -1)), [[-1, -1], [-3, -1], [-1, -3]]);
 });

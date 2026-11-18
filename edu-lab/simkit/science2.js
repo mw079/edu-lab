@@ -94,10 +94,14 @@
     function draw() {
       rest.textContent = "";
       const s = sol();
-      const half = (o.r * o.pxPerUnit) / 2;
-      const len = kit.clamp(s.force * 1.6, 26, 130);
+      const radius = (m) => 12 + Math.cbrt(Math.max(m, 0.05)) * 12;
+      // At least 80 px between the surfaces, so large bodies close together never overlap.
+      const half = Math.max((o.r * o.pxPerUnit) / 2, (radius(o.m1) + radius(o.m2)) / 2 + 40);
+      // Each arrow stops before the midpoint, so it always points visibly at the other body.
+      const room = half - Math.max(radius(o.m1), radius(o.m2)) - 6 - 8;
+      const len = Math.max(20, Math.min(kit.clamp(s.force * 1.6, 26, 130), room));
       [[o.x - half, o.m1, o.label1, kit.colors.blue, "m1", 1], [o.x + half, o.m2, o.label2, kit.colors.steel, "m2", -1]].forEach(([cx, m, label, color, key, dir], i) => {
-        const R = 12 + Math.cbrt(Math.max(m, 0.05)) * 12;
+        const R = radius(m);
         const b = bodies[i];
         b.el.textContent = "";
         if (kit.linked(pull)) kit.grip(b.el, cx, o.y, R + 12);
@@ -105,8 +109,10 @@
         kit.el("circle", { cx, cy: o.y, r: R, fill: color, stroke: kit.colors.ink, "stroke-width": 2 }, b.el);
         // Each body is pulled towards the other with the same force.
         kit.arrowShape(rest, cx + dir * (R + 6), o.y, cx + dir * (R + 6 + len), o.y, { color: kit.colors.red, width: 6, head: 14 });
-        kit.el("text", { x: cx, y: o.y - R - 44, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink, text: label }, rest);
-        kit.el("text", { x: cx, y: o.y - R - 22, "text-anchor": "middle", class: "simkit-tick", text: shown[key] ? `${kit.fmt(m, m % 1 ? 1 : 0)} × 10²⁴ kg` : "? × 10²⁴ kg" }, rest);
+        // Close bodies: the two label columns stay at least 104 px apart (each label is up to ~90 px wide).
+        const lx = i === 0 ? Math.min(cx, o.x - 52) : Math.max(cx, o.x + 52);
+        kit.el("text", { x: lx, y: o.y - R - 44, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.ink, text: label }, rest);
+        kit.el("text", { x: lx, y: o.y - R - 22, "text-anchor": "middle", class: "simkit-tick", text: shown[key] ? `${kit.fmt(m, m % 1 ? 1 : 0)} × 10²⁴ kg` : "? × 10²⁴ kg" }, rest);
       });
       const by = o.y + 96;
       kit.el("path", { d: `M ${o.x - half} ${by - 8} v 8 h ${2 * half} v -8`, fill: "none", stroke: kit.colors.ink, "stroke-width": 2 }, rest);

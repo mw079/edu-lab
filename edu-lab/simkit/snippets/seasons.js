@@ -10,7 +10,7 @@
 // The text column needs 250 px to the right of x + a + 150; with the defaults use it alone on the stage.
 // Example state: { month: 6, latitude: 45 }
 function (stage, kit) {
-  const year = kit.seasons(stage, { x: 330, y: 270, a: 240, b: 110, tilt: 23.5 });
+  const year = kit.seasons(stage, { x: 370, y: 270, a: 240, b: 110, tilt: 23.5 });
   return {
     update(s, d, info) {
       year.update({ month: s.month, latitude: s.latitude });

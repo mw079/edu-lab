@@ -46,7 +46,7 @@ Also worth showing if it is on the demo machine (generated lessons are not commi
 Click **+ New lesson**. Type a request, for example *"Why some things float and others sink"*, choose
 **Middle school**, submit.
 
-- While the plan appears: "The model first picks components from a library of 90 and writes objectives.
+- While the plan appears: "The model first picks components from a library of 100 and writes objectives.
   The teacher can edit them."
 - Approve the plan. While the steps are written: "It only writes data and short formulas. The app, the level
   logic and the drawings of the objects are fixed code."
@@ -72,7 +72,7 @@ and how many visual problems the review step finds and fixes.
 
 ## 5. What is not done (20 s)
 
-- 53 of the 90 components can be dragged or clicked so far; the rest use sliders.
+- 63 of the 100 components can be dragged or clicked so far; the rest use sliders.
 - The review step still reports some problems that are not real, so its findings are suggestions and never
   block a lesson.
 - Topics outside the library (for example cell biology or plate tectonics) get a weak fit; the plan step says

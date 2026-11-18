@@ -13,12 +13,12 @@ The same folder can be served with GitHub Pages.
 
 ## How it works, in short
 
-- The model's part is kept small so a small, cheap model is enough: it picks components from a library of 90
+- The model's part is kept small so a small, cheap model is enough: it picks components from a library of 100
   tested SVG science components, writes the five steps as data (about 60 lines of JSON) and a short drawing
   function (about 30 lines). The page, the step logic and the components are fixed code.
 - Every step of every lesson is played and solved in headless Chrome before the teacher sees it; errors and
   layout problems go back to the model for a fix. A vision pass then looks at screenshots of each step.
-- In 53 components the student drags or clicks the object itself; the slider stays in step.
+- In 63 components the student drags or clicks the object itself; the slider stays in step.
 - A lesson takes about 90 seconds to generate.
 
 ## How a lesson is made
@@ -29,7 +29,9 @@ flowchart LR
   subgraph plan ["1 · Plan"]
     direction TB
     R(["Teacher's<br/>request"]) --> P["Objectives,<br/>components"]
-    P --> TP{{"Teacher<br/>approves"}}
+    P --> CP{"Checks"}
+    CP -- "fix<br/>(≤ 2)" --> P
+    CP -- "pass" --> TP{{"Teacher<br/>approves"}}
     TP -- "redo" --> P
   end
 
@@ -58,27 +60,33 @@ flowchart LR
   plan --> steps --> sim --> preview
 ```
 
-Rectangles are written by the model, diamonds are automatic checks (failures go back to the model, at most 3 or
-2 times), hexagons are the teacher's decisions.
+Rectangles are written by the model, diamonds are automatic checks (failures go back to the model with the
+problems listed, a limited number of times), hexagons are the teacher's decisions. When the fix rounds run out,
+the stage stops as failed and the teacher can try again.
 
 1. **Plan.** From the request (and any pasted textbook text) the model picks one or two components from the
-   library and writes a title and learning objectives. The teacher edits the objectives and approves, or asks
-   for a new plan.
+   library and writes a title and learning objectives. Code checks that the reply is complete and names known
+   components (up to two fix rounds). The teacher edits the objectives and approves, or asks for a new plan.
 2. **Steps.** The model writes the five steps as data: starting values, goals, questions, hints, solutions and
    short formulas. Code checks that every step starts unsolved, that its solution really solves it with the
-   sliders that step allows, and that no visible number gives the answer away. Problems go back to the model
-   (up to three fix rounds). The teacher approves the steps or sends a note to rewrite them.
+   sliders that step allows, and that no readout shown in a question step already displays its answer.
+   Problems go back to the model (up to three fix rounds). The teacher approves the steps or sends a note to rewrite them.
 3. **Simulation.** The model writes a short drawing function with the chosen components. Every step is played
    and solved in headless Chrome, and the layout is measured (overlapping or cut-off labels). Errors go back to
-   the model (up to two fix rounds).
+   the model (up to two fix rounds); layout problems that remain after them do not stop a lesson that works.
 4. **Visual review.** The same model looks at a screenshot of each step, as a student would, and reports clear
-   problems, such as a label that reveals a hidden value. One fix round is kept only if the lesson still passes
-   and the review then finds fewer problems.
+   problems, such as a label from which a hidden value can be read or worked out. This is the only check for
+   that kind of leak in the picture. One fix round is kept only if the lesson still passes and the review then
+   finds fewer problems.
 5. **Preview.** The teacher tries the finished lesson and approves it, or asks for a change (for the whole
    lesson or one step). The model decides whether only the picture or the steps change; the new version goes
    through the same checks and replaces the lesson only if it passes, and **Undo** goes back.
 
-The model never writes the page, the step logic or the components: those are fixed, tested code, and model-written
+**A pipeline, not an agent.** The order of the stages, the checks and the fix rounds are fixed code
+(`edu-lab/server/pipeline.ts`). Each model call gets one request and returns one answer: JSON (plan, steps, review,
+"picture or steps") or one short drawing function. The model has no tools, does not run or test anything itself
+and does not decide what happens next; the code runs every check and decides whether to send problems back. The
+model never writes the page, the step logic or the components: those are fixed, tested code, and model-written
 expressions are checked in a locked-down process. The finished lesson runs with no AI.
 
 Inspired by Google's "Harnessing Generative UI for Education: Tailored Learning Interactives"

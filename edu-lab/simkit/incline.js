@@ -24,7 +24,9 @@
     const forces = kit.el("g", null, g);
     const handle = kit.el("g", null, g);
     const tilt = o.drag && o.drag.angle;
-    const dragger = kit.drag(stage, handle, tilt, (p) => tilt(kit.clamp((Math.atan2(o.y - p.y, o.base) * 180) / Math.PI, 0, 45)));
+    // The slope keeps its top on the stage: at steep angles it gets narrower (base ≤ (y − 60) / tan angle).
+    const baseFor = (t) => Math.min(o.base, (o.y - 60) / Math.max(Math.tan(t), 1e-9));
+    const dragger = kit.drag(stage, handle, tilt, (p) => tilt(kit.clamp((Math.atan2(o.y - p.y, baseFor((o.angle * Math.PI) / 180)) * 180) / Math.PI, 0, 45)));
     let anim = null;
     let pos = 0; // metres slid down from the start
 
@@ -32,8 +34,9 @@
 
     function draw() {
       const t = (kit.clamp(o.angle, 0, 45) * Math.PI) / 180;
-      const h = o.base * Math.tan(t);
-      const top = { x: o.x + o.base, y: o.y - h };
+      const base = baseFor(t);
+      const h = base * Math.tan(t);
+      const top = { x: o.x + base, y: o.y - h };
       kit.set(wedge, { points: `${o.x},${o.y} ${top.x},${o.y} ${top.x},${top.y}` });
       kit.set(arc, { d: `M ${o.x + 70} ${o.y} A 70 70 0 0 0 ${o.x + 70 * Math.cos(t)} ${o.y - 70 * Math.sin(t)}` });
       handle.textContent = "";
@@ -42,7 +45,7 @@
       kit.set(angleLabel, { x: o.x + 84, y: o.y - 12 - 20 * Math.sin(t), text: `${kit.fmt(o.angle, 0)}°` });
 
       // Block: its base centre sits on the slope; start is 78% of the way up.
-      const slopePx = o.base / Math.cos(t);
+      const slopePx = base / Math.cos(t);
       const pxPerM = (slopePx * 0.6) / o.lengthM;
       const d = slopePx * 0.78 - pos * pxPerM;
       const size = 66 + Math.min(5, Math.max(0.5, o.mass)) * 6;
@@ -63,9 +66,14 @@
       // Each arrow starts at the edge of the block (so the mass label stays readable) and is at least 34 px long.
       const arrow = (ux, uy, newtons, color, text, lx, ly, anchor) => {
         if (newtons < 0.05) return;
-        const len = Math.max(34, newtons * scale);
         const x1 = mid.x + ux * (size / 2 + 4);
         const y1 = mid.y + uy * (size / 2 + 4);
+        // Shorter if it would leave the stage (its label needs about 30 px beyond the tip).
+        const room = Math.min(
+          ux > 0 ? (stage.width - 30 - x1) / ux : ux < 0 ? (x1 - 30) / -ux : Infinity,
+          uy > 0 ? (stage.height - 34 - y1) / uy : uy < 0 ? (y1 - 34) / -uy : Infinity
+        );
+        const len = Math.max(34, Math.min(newtons * scale, room));
         kit.arrowShape(forces, x1, y1, x1 + ux * len, y1 + uy * len, { color, width: 5, head: 13 });
         kit.el("text", { x: x1 + ux * len + lx, y: y1 + uy * len + ly, "text-anchor": anchor, class: "simkit-label", fill: color, text }, forces);
       };

@@ -146,7 +146,9 @@
       kit.el("circle", { cx: o.x + r2 + (r2 - 18) * Math.cos(a2), cy: o.y + (r2 - 18) * Math.sin(a2), r: 7, fill: kit.colors.blueDark, stroke: "#fff", "stroke-width": 2 }, pic);
       const by = o.y + Math.max(r1, r2) + 40;
       kit.el("text", { x: o.x - r1, y: by, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.orange, text: `driver: ${N1} teeth` }, pic);
-      kit.el("text", { x: o.x + r2, y: by, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.blue, text: `driven: ${N2} teeth` }, pic);
+      // Small gears sit close together: then the second label goes one line lower.
+      const stagger = r1 + r2 < 150 ? 24 : 0;
+      kit.el("text", { x: o.x + r2, y: by + stagger, "text-anchor": "middle", class: "simkit-label", fill: kit.colors.blue, text: `driven: ${N2} teeth` }, pic);
       const lx = o.x + 2 * 144 + 40;
       const rows = [
         [kit.colors.ink, shown.ratio ? `gear ratio: ${N2} ÷ ${N1} = ${kit.fmt(s.ratio, 2)}` : "gear ratio: ?"],

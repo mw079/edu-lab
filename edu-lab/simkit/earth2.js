@@ -141,7 +141,7 @@
         kit.el("line", { x1: gx, y1: Y(v), x2: gx + gw, y2: Y(v), stroke: kit.colors.line, "stroke-width": 1 }, pic);
         kit.el("text", { x: gx - 10, y: Y(v) + 5, "text-anchor": "end", class: "simkit-tick", text: String(v) }, pic);
       }
-      kit.el("text", { x: gx, y: o.y - 14, class: "simkit-tick", text: "total warming (°C)" }, pic);
+      kit.el("text", { x: gx, y: o.y - 26, class: "simkit-tick", text: "total warming (°C)" }, pic); // above the "↑" marks
       kit.el("text", { x: gx + gw / 2, y: o.y + gh + 48, "text-anchor": "middle", class: "simkit-tick", text: "rounds of the loop" }, pic);
       const bw = 22;
       s.series.forEach((v, k) => {

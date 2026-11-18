@@ -84,7 +84,8 @@ test("draggable and clickable components call their links", { timeout: 120_000 }
       "springMass", "cartTrack", "projectile", "rightTriangle", "fractionBars", "logicGate", "barChart", "charges", "coordinatePlane", "protractor", "incline", "refraction", "wave", "orbit",
       "membrane", "dnaStrand", "mitosis", "predatorPrey", "plateBoundary", "waterCycle", "vectorSum", "unitCircle",
       "phScale", "gravityPair", "solarSystem", "starLife", "tippingPoint", "codonChain", "robotGrid", "cuboidNet", "ratioLine", "samplingBox",
-      "cellRespiration", "heartLungs", "foodWeb", "landUse", "buffer", "oceanGyre", "feedbackLoop", "earthquake", "heatEngine", "openSets", "shapeBuilder", "axisTrick", "confidenceIntervals", "pulley", "gearTrain"];
+      "cellRespiration", "heartLungs", "foodWeb", "landUse", "buffer", "oceanGyre", "feedbackLoop", "earthquake", "heatEngine", "openSets", "shapeBuilder", "axisTrick", "confidenceIntervals", "pulley", "gearTrain",
+      "magnetCoil", "electromagnet", "mirror", "circularMotion", "periodicTable", "equilibrium", "enzyme", "cellParts", "rockCycle", "transformShape"];
     for (const id of ids) {
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)![1];

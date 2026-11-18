@@ -455,6 +455,56 @@
     "request": "Building simple robots: gears, speed and turning force"
   },
   {
+    "id": "induction",
+    "audience": "High school",
+    "request": "Electromagnetic induction: moving a magnet in a coil makes a voltage"
+  },
+  {
+    "id": "electromagnet",
+    "audience": "Middle school",
+    "request": "Electromagnets: what makes them stronger"
+  },
+  {
+    "id": "reflection",
+    "audience": "Middle school",
+    "request": "The law of reflection with a flat mirror"
+  },
+  {
+    "id": "circular",
+    "audience": "High school",
+    "request": "Circular motion: the force that keeps a ball on a string going round"
+  },
+  {
+    "id": "periodic-trends",
+    "audience": "High school",
+    "request": "Periodic table trends: atomic radius and electronegativity across a period and down a group"
+  },
+  {
+    "id": "le-chatelier",
+    "audience": "High school",
+    "request": "Le Chatelier’s principle: how adding a substance or heating shifts an equilibrium"
+  },
+  {
+    "id": "enzymes",
+    "audience": "High school",
+    "request": "How temperature and pH affect enzyme activity"
+  },
+  {
+    "id": "cells",
+    "audience": "Middle school",
+    "request": "Plant and animal cells: their parts and what they do"
+  },
+  {
+    "id": "rock-cycle",
+    "audience": "Middle school",
+    "request": "The rock cycle: how igneous, sedimentary and metamorphic rocks form"
+  },
+  {
+    "id": "transformations",
+    "audience": "Middle school",
+    "request": "Transformations: translations, reflections, rotations and enlargements on a grid"
+  },
+  {
     "id": "pasted",
     "audience": "Middle school",
     "request": "A lesson based on this text",
