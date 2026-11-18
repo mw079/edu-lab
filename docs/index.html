@@ -79,13 +79,7 @@ html { accent-color: var(--accent); caret-color: var(--accent); scrollbar-color:
 
 body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
 main { max-width: 1152px; margin: 0 auto; padding: 48px 24px 72px; }
-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; margin: 0 0 40px; }
-h1 { margin: 0; font-size: 28px; line-height: 44px; font-weight: 700; letter-spacing: -0.02em; }
-.button { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; transition: background 150ms; }
-.button::after { content: "→"; margin-left: 8px; transition: transform 150ms var(--ease-out); }
-@media (hover: hover) and (pointer: fine) { .button:hover { background: var(--ink-2); } .button:hover::after { transform: translateX(3px); } }
-.button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.note { margin: 0 auto 32px; max-width: 80ch; text-wrap: balance; text-align: center; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+h1 { margin: 0 0 32px; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
 .demo { margin: 0 0 56px; }
 .demo video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; background: #2a0d07; box-shadow: var(--shadow); }
 .section { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -103,8 +97,7 @@ li p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
 </head>
 <body>
 <main>
-<header><h1>Edu Lab</h1><a class="button" href="app/">Create a lesson</a></header>
-<p class="note">Free demo server: the first visit after a quiet spell can take about a minute to wake up.</p>
+<h1>Edu Lab</h1>
 <figure class="demo">
 <video controls preload="none" playsinline poster="video/creating-a-lesson.jpg"><source src="video/creating-a-lesson.mp4" type="video/mp4"></video>
 </figure>

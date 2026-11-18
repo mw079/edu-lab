@@ -1,5 +1,5 @@
 // Usage: npm run export
-// Writes the lessons listed in showcase.json as static pages to ../docs (the server serves that folder at /):
+// Writes the lessons listed in showcase.json as static pages to ../docs (open docs/index.html, or any static host):
 // docs/index.html, docs/lessons/<name>.html (each one self-contained and offline) and docs/thumbs/<name>.png.
 // Costs nothing: it only assembles lessons that already exist.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -52,14 +52,6 @@ for (const { item, lesson: found } of lessons) {
   console.log(`wrote ${name}.html  (${Math.round(html.length / 1024)} kB)`);
 }
 
-// The teacher app: the server serves this website at / and the app at /app/ (EDU_APP_URL= hides the button, e.g.
-// for a copy of the website hosted without the server).
-const appUrl = process.env.EDU_APP_URL ?? "app/";
-const create = appUrl
-  ? `<a class="button" href="${escapeHtml(appUrl)}">Create a lesson</a>`
-  : "";
-const note = appUrl ? `<p class="note">Free demo server: the first visit after a quiet spell can take about a minute to wake up.</p>\n` : "";
-
 // The demo video (npm run demo-video), when there is one: shown above the lessons, loaded only when played.
 const demo = existsSync(join(OUT, "video", "creating-a-lesson.mp4"))
   ? `<figure class="demo">
@@ -80,13 +72,7 @@ writeFileSync(
 ${readFileSync(join(ROOT, "template", "tokens.css"), "utf8")}
 body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--ink); }
 main { max-width: 1152px; margin: 0 auto; padding: 48px 24px 72px; }
-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; margin: 0 0 40px; }
-h1 { margin: 0; font-size: 28px; line-height: 44px; font-weight: 700; letter-spacing: -0.02em; }
-.button { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 600; transition: background 150ms; }
-.button::after { content: "→"; margin-left: 8px; transition: transform 150ms var(--ease-out); }
-@media (hover: hover) and (pointer: fine) { .button:hover { background: var(--ink-2); } .button:hover::after { transform: translateX(3px); } }
-.button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.note { margin: 0 auto 32px; max-width: 80ch; text-wrap: balance; text-align: center; font-size: 13.5px; line-height: 1.45; color: var(--muted); }
+h1 { margin: 0 0 32px; font-size: 28px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
 .demo { margin: 0 0 56px; }
 .demo video { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; background: #2a0d07; box-shadow: var(--shadow); }
 .section { margin: 0 0 18px; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
@@ -104,8 +90,8 @@ li p { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
 </head>
 <body>
 <main>
-<header><h1>Edu Lab</h1>${create}</header>
-${note}${demo}<ul>
+<h1>Edu Lab</h1>
+${demo}<ul>
 ${cards.join("\n")}
 </ul>
 </main>

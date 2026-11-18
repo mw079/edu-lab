@@ -80,6 +80,10 @@ function Home() {
   };
   return (
     <>
+      {/* How a lesson is made (npm run demo-video), loaded only when played. */}
+      <video className="demo" controls preload="none" playsInline poster="/video/creating-a-lesson.jpg" aria-label="Video: creating a lesson in Edu Lab">
+        <source src="/video/creating-a-lesson.mp4" type="video/mp4" />
+      </video>
       <div className="home-head">
         <h1>Lessons</h1>
         <div className="chips" role="group" aria-label="Audience">

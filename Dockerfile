@@ -1,4 +1,4 @@
-# Edu Lab on a host (Render, see render.yaml): the website at /, the teacher app at /app/, and the server that
+# Edu Lab on a host (Render, see render.yaml): the teacher app at / (with the demo video) and the server that
 # makes lessons, with Chromium for the lesson checks. Build from the repository root: docker build -t edu-lab .
 FROM node:22-bookworm-slim
 WORKDIR /srv/edu-lab

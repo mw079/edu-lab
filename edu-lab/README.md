@@ -51,7 +51,7 @@ otherwise Playwright's Chromium (`npx playwright install chromium` once).
 ```sh
 npm install
 npm run build          # teacher app
-npm start              # http://127.0.0.1:8787: the website (../docs) at /, the teacher app at /app/
+npm start              # http://127.0.0.1:8787
 npm run dev            # server + Vite with hot reload (http://localhost:5173)
 ```
 
@@ -64,13 +64,13 @@ FIREWORKS_MODEL=accounts/fireworks/models/glm-5p3-flash
 
 ### Host it (Render, free)
 
-`Dockerfile` and `render.yaml` in the repository root run everything as one free Render web service: the website
-at `/`, the teacher app at `/app/`, and Chromium for the checks.
+`Dockerfile` and `render.yaml` in the repository root run everything as one free Render web service: the teacher
+app (with the demo video above the lessons) and Chromium for the checks.
 
 1. Push the repository to GitHub.
 2. On render.com: **New → Blueprint**, pick the repository, and paste the Fireworks API key when asked.
 3. Open the `onrender.com` address Render shows. After 15 idle minutes the free service sleeps; the next visit
-   takes about a minute to wake it (the website says so). Lessons made there disappear when it restarts.
+   takes about a minute to wake it. Lessons made there disappear when it restarts.
 
 Settings (in Render's Environment tab): `EDU_DAILY_LIMIT` caps new lessons, changes and retries per day for
 everyone together (20; the count resets on restart), `EDU_PASSWORD` asks for a password before the teacher app
