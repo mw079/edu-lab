@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { lessonSourceFromDir } from "../server/design.ts";
-import { buildLessonHtml, loadLesson, validateLesson } from "../server/lesson.ts";
+import { buildLessonHtml, loadLesson, simkitFiles, validateLesson } from "../server/lesson.ts";
 import { extractJson } from "../server/llm.ts";
 
 const momentum = lessonSourceFromDir("examples/momentum");
@@ -98,4 +98,12 @@ test("each step must say which readouts it shows, at most 3", () => {
   const noShow = tiny().replace('show: ["double"], ', "");
   assert.ok(validateLesson(loadLesson(noShow)).errors.some((e) => /show/.test(e.message)));
   assert.ok(validateLesson(loadLesson(tiny().replace('show: ["double"]', 'show: ["ghost"]'))).errors.some((e) => /unknown readout/.test(e.message)));
+});
+
+test("a lesson includes only the simkit files it uses", () => {
+  assert.deepEqual(simkitFiles(momentum), ["core.js", "carts.js"]);
+  // A component that uses another file's helper brings that file along (slit.js draws with photoelectric's colours).
+  assert.deepEqual(simkitFiles("kit.doubleSlit(stage, {})"), ["core.js", "photoelectric.js", "slit.js"]);
+  const html = buildLessonHtml(momentum);
+  assert.ok(html.includes("simkit/carts.js") && !html.includes("simkit/pendulum.js"));
 });

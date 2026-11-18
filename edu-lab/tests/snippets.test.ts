@@ -15,10 +15,12 @@ test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs it
       const src = snippet(id);
       const state = src.match(/Example state: (\{[^}]*\})/)?.[1];
       assert.ok(state, `${id}: snippet needs an "Example state: {…}" comment`);
+      const code = src.split("\n").filter((l) => !l.startsWith("//")).join("\n");
       const page = await browser.newPage({ reducedMotion: "reduce" });
       const errors: string[] = [];
       page.on("pageerror", (e) => errors.push(e.message));
-      await page.setContent(`<div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
+      // Only the files the snippet uses, as in a real lesson: a missing dependency shows up as an error here.
+      await page.setContent(`<div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource(code)}</script>`);
       const result = await page.evaluate(
         async ([code, stateSrc, layoutSrc]) => {
           const scene = new Function(`return (${code})`)();
@@ -39,7 +41,7 @@ test("every catalogue snippet draws cleanly (no errors, no overlaps) and runs it
           }
           return { methods, layout, shapes: document.querySelectorAll("svg *").length };
         },
-        [src.split("\n").filter((l) => !l.startsWith("//")).join("\n"), state, LAYOUT_CHECK] as const
+        [code, state, LAYOUT_CHECK] as const
       );
       assert.deepEqual(errors, [], `${id}: ${errors.join("; ")}`);
       assert.ok(result.shapes > 5, `${id}: draws something`);
@@ -88,7 +90,7 @@ test("draggable and clickable components call their links", { timeout: 120_000 }
       const state = src.match(/Example state: (\{[^}]*\})/)![1];
       const code = src.split("\n").filter((l) => !l.startsWith("//")).join("\n");
       const page = await browser.newPage({ viewport: { width: 1000, height: 560 }, reducedMotion: "reduce" });
-      await page.setContent(`<body style="margin:0"><div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource()}</script>`);
+      await page.setContent(`<body style="margin:0"><div class="stage" style="width:1000px;height:560px"></div><script>${simkitSource(code)}</script>`);
       // The stand-in app records every value a link receives; update() is called again as the real app would.
       await page.evaluate(`(() => {
         const kit = window.simkit;

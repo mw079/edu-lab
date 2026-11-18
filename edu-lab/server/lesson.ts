@@ -9,8 +9,29 @@ const SIMKIT_FILES = ["core.js", "plot.js", "carts.js", "spring.js", "circuit.js
 
 const read = (...p: string[]) => readFileSync(join(ROOT, ...p), "utf8");
 
-export function simkitSource(): string {
-  return SIMKIT_FILES.map((f) => `/* ---- simkit/${f} ---- */\n${read("simkit", f)}`).join("\n");
+/** Which file defines each component (`kit.name = ...`); core.js is always included. */
+let definedIn: Map<string, string> | null = null;
+function componentFiles(): Map<string, string> {
+  definedIn ??= new Map(SIMKIT_FILES.slice(1).flatMap((f) => [...read("simkit", f).matchAll(/^\s*kit\.(\w+)\s*=/gm)].map((m) => [m[1], f] as [string, string])));
+  return definedIn;
+}
+
+/** The files `code` needs: core.js plus every file defining a `kit.x` / `simkit.x` it uses, and what those use. */
+export function simkitFiles(code: string): string[] {
+  const files = new Set(["core.js"]);
+  const queue = [code];
+  while (queue.length) {
+    for (const [, name] of queue.pop()!.matchAll(/\b(?:kit|simkit)\.(\w+)/g)) {
+      const f = componentFiles().get(name);
+      if (f && !files.has(f)) files.add(f), queue.push(read("simkit", f));
+    }
+  }
+  return SIMKIT_FILES.filter((f) => files.has(f));
+}
+
+/** simkit for a page: only the files `code` uses, or the whole library when no code is given. */
+export function simkitSource(code?: string): string {
+  return (code === undefined ? SIMKIT_FILES : simkitFiles(code)).map((f) => `/* ---- simkit/${f} ---- */\n${read("simkit", f)}`).join("\n");
 }
 
 const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -32,7 +53,8 @@ export function buildLessonHtml(lessonJs: string, title = "Lesson"): string {
     TITLE: escapeHtml(title),
     // KaTeX's stylesheet and fonts (~400 KB) only when the lesson contains rendered math.
     CSS: (lessonJs.includes('class=\\"katex') ? katexCss() + "\n" : "") + read("template", "tokens.css") + "\n" + read("template", "shell.css"),
-    SIMKIT: scriptSafe(simkitSource()),
+    // Only the components this lesson uses (a lesson uses 1–2 of the ~90).
+    SIMKIT: scriptSafe(simkitSource(lessonJs)),
     SHELL: scriptSafe(read("template", "shell.js")),
     LESSON: scriptSafe(lessonJs),
   };
