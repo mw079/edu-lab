@@ -32,6 +32,7 @@ export function thumbnail(id: string, html: string): Promise<string> {
     if (existsSync(file)) return file;
     const page = await (await launch()).newPage({ viewport: { width: 1000, height: 700 }, deviceScaleFactor: 1.5, reducedMotion: "reduce" });
     try {
+      await page.route("**/*", (route) => route.abort()); // the model-made lesson gets no network here either
       await page.setContent(html, { waitUntil: "load" });
       await page.waitForFunction(() => (window as any).__lesson?.ready === true, null, { timeout: 5000 });
       // Show only the simulation, at its natural 1000 × 560 size.

@@ -53,7 +53,8 @@ function loadKatex(): Katex {
   if (katex) return katex;
   const dir = join(ROOT, "node_modules", "katex", "dist");
   const css = readFileSync(join(dir, "katex.min.css"), "utf8");
-  const faces = [...css.matchAll(/@font-face\{font-family:(KaTeX_\w+)[^}]*\}/g)].map(([face, family]) => ({
+  // The order of the properties inside @font-face differs between KaTeX versions.
+  const faces = [...css.matchAll(/@font-face\{[^}]*?font-family:(KaTeX_\w+)[^}]*\}/g)].map(([face, family]) => ({
     family,
     css: face.replace(/src:url\(fonts\/([\w-]+\.woff2)\) format\("woff2"\)[^;}]*/, (_, f: string) => `src:url(data:font/woff2;base64,${readFileSync(join(dir, "fonts", f)).toString("base64")}) format("woff2")`),
   }));

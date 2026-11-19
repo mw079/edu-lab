@@ -114,7 +114,7 @@ test("a lesson includes only the simkit files it uses", () => {
 });
 
 test("a lesson's math gets only the KaTeX fonts it uses", () => {
-  const fonts = (text: string) => [...katexCss(JSON.stringify(richHtml(text))).matchAll(/@font-face\{font-family:(KaTeX_\w+)/g)].map((m) => m[1]).filter((f, i, a) => a.indexOf(f) === i);
+  const fonts = (text: string) => [...katexCss(JSON.stringify(richHtml(text))).matchAll(/@font-face\{[^}]*?font-family:(KaTeX_\w+)/g)].map((m) => m[1]).filter((f, i, a) => a.indexOf(f) === i);
   assert.deepEqual(fonts("$F = ma$"), ["KaTeX_Main", "KaTeX_Math"]);
   assert.ok(fonts("$x \\in \\mathbb{R}$").includes("KaTeX_AMS"));
   assert.ok(fonts("$\\left(\\dfrac{a}{b}\\right)$").some((f) => f.startsWith("KaTeX_Size")));

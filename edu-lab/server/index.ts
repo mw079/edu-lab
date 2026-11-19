@@ -12,6 +12,8 @@ import { catalog } from "./catalog.ts";
 import { DATA, approveDraft, deleteDraft, expireDrafts, getDraft, hasPrevious, listDrafts, newDraft, recoverInterrupted, runStage, touchDraft, undoRevision, type Stage } from "./pipeline.ts";
 
 const app = express();
+app.disable("x-powered-by");
+app.use((_req, res, next) => (res.set("X-Content-Type-Options", "nosniff"), next()));
 app.use(express.json({ limit: "400kb" }));
 
 // The demo video (../docs/video, made by npm run demo-video), open to everyone like the rest of the page.
@@ -153,9 +155,24 @@ function lessonHtml(id: string): string | null {
   return existsSync(generated) ? buildLessonHtml(readFileSync(generated, "utf8"), getDraft(id)?.design?.title) : null;
 }
 
+// A lesson's code is written by the model from a visitor's request, so its page is locked in: a sandbox with its own
+// empty origin (it cannot use the app's API or read the app), no network at all, and no navigating the app away
+// except through a link the viewer clicks (the lesson's "← All lessons").
+const LESSON_CSP = [
+  "sandbox allow-scripts allow-top-navigation-by-user-activation",
+  "default-src 'none'",
+  "script-src 'unsafe-inline'",
+  "style-src 'unsafe-inline'",
+  "img-src data: blob:",
+  "font-src data:",
+  "form-action 'none'",
+  "base-uri 'none'",
+].join("; ");
+
 app.get("/lessons/:id", (req, res) => {
   const html = lessonHtml(req.params.id);
-  return html ? res.type("html").send(html) : res.status(404).send("Lesson not found");
+  if (!html) return res.status(404).send("Lesson not found");
+  res.set("Content-Security-Policy", LESSON_CSP).type("html").send(html);
 });
 
 app.get("/lessons/:id/thumb.png", async (req, res) => {

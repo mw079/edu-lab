@@ -162,7 +162,8 @@ function ReviewBar({ d, onChange }: { d: Draft; onChange: (d: Draft) => void }) 
   const [viewing, setViewing] = useState(0); // the step the lesson shows (1–5), 0 = exploring or unknown
   useEffect(() => {
     const on = (e: MessageEvent) => {
-      if (e.origin === location.origin && e.data?.source === "edu-lab" && typeof e.data.step === "number") setViewing(e.data.step >= 0 && e.data.step < 5 ? e.data.step + 1 : 0);
+      // The lesson runs sandboxed (no origin of its own), so the message is recognised by the frame it comes from.
+      if (e.source === document.querySelector<HTMLIFrameElement>("iframe.lesson-view")?.contentWindow && e.data?.source === "edu-lab" && typeof e.data.step === "number") setViewing(e.data.step >= 0 && e.data.step < 5 ? e.data.step + 1 : 0);
     };
     addEventListener("message", on);
     return () => removeEventListener("message", on);
